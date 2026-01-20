@@ -1,10 +1,10 @@
 // ==================== src/types/models.types.ts ====================
 import { Document, Types } from 'mongoose';
-import { Role, Status } from './enums';
+import { Role, Status, AuthType, AuthMethod } from './enums';
 
 export interface IUser extends Document {
   fullName: string;
-  email: string; 
+  email: string;
   passwordHash: string;
   phone?: string | null;
   isVerified: boolean;
@@ -15,30 +15,20 @@ export interface IUser extends Document {
 }
 
 export interface IUserDocument extends Document {
-    fullName: string;
-    email: string;
-    passwordHash: string;
-    phone: string;
-    isVerified: boolean;
+  fullName: string;
+  email: string;
+  passwordHash: string;
+  phone: string;
+  isVerified: boolean;
 }
 
 export interface IOrganization extends Document {
   name: string;
   slug: string;
-  passwordPolicy: IPasswordPolicy;
-  phoneRequired: boolean;
-  roleRequired: boolean;
-  roles: string[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface IPasswordPolicy {
-  minLength: number;
-  requireNumbers: boolean;
-  requireUppercase: boolean;
-  requireSpecialChars: boolean;
-}
 
 export interface IMembership extends Document {
   userId: Types.ObjectId;
@@ -51,16 +41,56 @@ export interface IMembership extends Document {
 
 export interface ISession extends Document {
   userId: Types.ObjectId;
-  refreshToken: string; 
+  refreshToken: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface IProject extends Document {
-    name: string;
-    organizationId: Types.ObjectId;
-    active: boolean;
-    description: string;
-    createdAt: Date;
-    updatedAt: Date;
+  name: string;
+  organizationId: Types.ObjectId;
+  status: Status;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IProjectMembership extends Document {
+  projectId: Types.ObjectId;
+  userId: Types.ObjectId;
+  role: Role;
+  status: Status;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IEndUser extends Document {
+  projectId: Types.ObjectId;
+  userId: Types.ObjectId;
+  role: string;
+  status: Status;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IPasswordPolicy extends Document {
+  projectId: Types.ObjectId;
+  minLength: number;
+  requireNumbers: boolean;
+  requireUppercase: boolean;
+  requireSpecialChars: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface IProjectPolicy extends Document {
+  projectId: Types.ObjectId;
+  phoneRequired: boolean;
+  authRequired: boolean;
+  authType: AuthType;
+  roles: string[];
+  authMethods: AuthMethod[];
+  passwordPolicyId: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }

@@ -18,13 +18,13 @@ const membershipSchema: Schema<IMembership> = new Schema(
     },
     role: {
       type: String,
-      enum: Object.values(Role),
+      enum: Role,
       required: [true, "Role is required"],
       default: Role.MEMBER,
     },
     status: {
       type: String,
-      enum: Object.values(Status),
+      enum: Status,
       required: [true, "Status is required"],
       default: Status.ACTIVE,
     },

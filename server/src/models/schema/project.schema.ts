@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { IProject } from "../models.types";
+import { Status } from "../enums";
 
 const projectSchema = new mongoose.Schema<IProject>({
     name: {
@@ -13,10 +14,10 @@ const projectSchema = new mongoose.Schema<IProject>({
         ref: "Organization",
         required: [true, "Organization is required"],
     },
-    active: {
-        type: Boolean,
-        required: [true, "Active status is required"],
-        default: true,
+    status: {
+        type: String,
+        enum: Status,
+        default: Status.ACTIVE,
     },
     description: {
         type: String,
