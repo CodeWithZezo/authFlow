@@ -1,8 +1,8 @@
 import mongoose, { Schema, Model } from "mongoose";
-import { IMembership } from "../models.types";
+import { IOrganizationMembership } from "../models.types";
 import { Role, Status } from "../enums";
 
-const membershipSchema: Schema<IMembership> = new Schema(
+const OrganizationMembershipSchema: Schema<IOrganizationMembership> = new Schema(
     {
     userId: {
       type: Schema.Types.ObjectId,
@@ -34,8 +34,8 @@ const membershipSchema: Schema<IMembership> = new Schema(
     versionKey: false, // remove __v
   }
 );
-membershipSchema.index({ userId: 1, orgId: 1 }, { unique: true });
+OrganizationMembershipSchema.index({ userId: 1, orgId: 1 }, { unique: true });
 
-export const Membership: Model<IMembership> = mongoose.model<IMembership>("Membership", membershipSchema);
+export const OrganizationMembership: Model<IOrganizationMembership> = mongoose.model<IOrganizationMembership>("OrganizationMembership", OrganizationMembershipSchema);
 
-export default membershipSchema;
+export default OrganizationMembershipSchema;

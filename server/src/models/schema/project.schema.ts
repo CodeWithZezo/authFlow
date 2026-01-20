@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import { IProject } from "../models.types";
 import { Status } from "../enums";
 
-const projectSchema = new mongoose.Schema<IProject>({
+const projectSchema: Schema<IProject> = new Schema({
     name: {
         type: String,
         required: [true, "Project name is required"],
@@ -31,4 +31,6 @@ const projectSchema = new mongoose.Schema<IProject>({
 
 projectSchema.index({ name: 1, organizationId: 1 }, { unique: true });
 
-export default mongoose.model<IProject>("Project", projectSchema);
+export const Project: Model<IProject> = mongoose.model<IProject>("Project", projectSchema);
+
+export default projectSchema;

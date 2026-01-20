@@ -1,30 +1,32 @@
-import mongoose from "mongoose";
-import { Schema, Model } from "mongoose";
-import { Role, Status } from "../enums";
-import {IProjectMembership} from "../models.types"
+import mongoose, {Model, Schema} from 'mongoose'
+import { IPasswordPolicy } from '../models.types'
 
-const projectMembershipSchema = new Schema<IProjectMembership>({
+const passwordPolicySchema = new Schema<IPasswordPolicy>({
     projectId: {
         type: Schema.Types.ObjectId,
         ref: "Project",
         required: [true, "Project ID is required"],
-        index: true, // speeds up queries by project
+        index: true,
     },
-    userId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-        required: [true, "User ID is required"],
-        index: true, // speeds up queries by user
+    minLength: {
+        type: Number,
+        required: [true, "Minimum length is required"],
+        default: 6,
     },
-    role: {
-        type: String,
-        enum: Object.values(Role),
-        required: [true, "Role is required"],
+    requireNumbers: {
+        type: Boolean,
+        required: [true, "Require numbers is required"],
+        default: true,
     },
-    status: {
-        type: String,
-        enum: Status,
-        default: Status.ACTIVE,
+    requireUppercase: {
+        type: Boolean,
+        required: [true, "Require uppercase is required"],
+        default: true,
+    },
+    requireSpecialChars: { 
+        type: Boolean,
+        required: [true, "Require special characters is required"],
+        default: false,
     },
     createdAt: {
         type: Date,
@@ -36,6 +38,6 @@ const projectMembershipSchema = new Schema<IProjectMembership>({
     },
 })
 
-projectMembershipSchema.index({ projectId: 1, userId: 1 }, { unique: true });
+passwordPolicySchema.index({ projectId: 1 }, { unique: true });
 
-export const ProjectMembership: Model<IProjectMembership> = mongoose.model<IProjectMembership>("ProjectMembership", projectMembershipSchema);
+export const PasswordPolicy: Model<IPasswordPolicy> = mongoose.model<IPasswordPolicy>("PasswordPolicy", passwordPolicySchema);

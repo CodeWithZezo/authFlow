@@ -1,5 +1,5 @@
 import { AuthRequest } from "../../middleware/auth.middleware";
-import { Membership } from "../../models/schema/membership.schema";
+import { Membership } from "../../models/schema/organizationMembership.schema";
 import { Organization } from "../../models/schema/org.schema";
 
 export class OrgService {

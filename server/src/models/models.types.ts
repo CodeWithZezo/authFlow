@@ -30,7 +30,7 @@ export interface IOrganization extends Document {
 }
 
 
-export interface IMembership extends Document {
+export interface IOrganizationMembership extends Document {
   userId: Types.ObjectId;
   orgId: Types.ObjectId;
   role: Role;
@@ -68,7 +68,7 @@ export interface IEndUser extends Document {
   projectId: Types.ObjectId;
   userId: Types.ObjectId;
   role: string;
-  status: Status;
+  status: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -89,6 +89,7 @@ export interface IProjectPolicy extends Document {
   authRequired: boolean;
   authType: AuthType;
   roles: string[];
+  statuses: string[];
   authMethods: AuthMethod[];
   passwordPolicyId: Types.ObjectId;
   createdAt: Date;

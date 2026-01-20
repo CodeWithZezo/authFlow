@@ -1,12 +1,17 @@
-import mongoose from "mongoose";
+import mongoose , {Model, Schema} from "mongoose";
 import { IProjectPolicy } from "../models.types";
 import { AuthType, AuthMethod } from "../enums";
 
-const projectPolicySchema = new mongoose.Schema<IProjectPolicy>({
+const projectPolicySchema: Schema<IProjectPolicy> = new Schema({
     projectId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Project",
         required: [true, "Project is required"],
+    },
+    phoneRequired: {
+        type: Boolean,
+        required: [true, "Phone required is required"],
+        default: false,
     },
     authRequired: {
         type: Boolean,
@@ -19,6 +24,10 @@ const projectPolicySchema = new mongoose.Schema<IProjectPolicy>({
         default: AuthType.PASSWORD,
     },
     roles: {
+        type: [String],
+        default: [],
+    },
+    statuses: {
         type: [String],
         default: [],
     },
@@ -42,6 +51,8 @@ const projectPolicySchema = new mongoose.Schema<IProjectPolicy>({
     },
 });
 
-const ProjectPolicy = mongoose.model<IProjectPolicy>("ProjectPolicy", projectPolicySchema);
+projectPolicySchema.index({ projectId: 1 }, { unique: true });
 
-export default ProjectPolicy;
+export const ProjectPolicy: Model<IProjectPolicy> = mongoose.model<IProjectPolicy>("ProjectPolicy", projectPolicySchema);
+
+export default projectPolicySchema;

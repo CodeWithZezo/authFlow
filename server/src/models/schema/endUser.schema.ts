@@ -1,6 +1,5 @@
 import mongoose,{Schema, Model} from 'mongoose'
 import {IEndUser} from '../models.types'
-import { Role, Status } from '../enums'
 
 
 const endUserSchema = new Schema<IEndUser>({
@@ -18,13 +17,11 @@ const endUserSchema = new Schema<IEndUser>({
     },
     role: {
         type: String,
-        enum: Role,
-        required: [true, "Role is required"],
+        default: "",
     },
     status: {
         type: String,
-        enum: Status,
-        default: Status.ACTIVE,
+        default: "",
     },
     createdAt: {
         type: Date,
