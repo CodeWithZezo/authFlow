@@ -4,7 +4,7 @@ import { Role, Status } from './enums';
 
 export interface IUser extends Document {
   fullName: string;
-  email: string;
+  email: string; 
   passwordHash: string;
   phone?: string | null;
   isVerified: boolean;
@@ -27,6 +27,8 @@ export interface IOrganization extends Document {
   slug: string;
   passwordPolicy: IPasswordPolicy;
   phoneRequired: boolean;
+  roleRequired: boolean;
+  roles: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,4 +54,13 @@ export interface ISession extends Document {
   refreshToken: string; 
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IProject extends Document {
+    name: string;
+    organizationId: Types.ObjectId;
+    active: boolean;
+    description: string;
+    createdAt: Date;
+    updatedAt: Date;
 }

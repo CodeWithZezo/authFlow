@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Github, Chrome, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
-import {signup} from "../../store/auth"
+import {useAuthStore} from "../../store/auth"
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -9,12 +9,14 @@ export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone:''
   });
+
+  const signup = useAuthStore((state) => state.signup);
 
   const handleSubmit = async () => {
     if (formData.password !== formData.confirmPassword) {
@@ -91,10 +93,10 @@ export default function SignUp() {
               <div className="relative">
                 <User className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
                 <input
-                  id="name"
-                  name="name"
+                  id="fullName"
+                  name="fullName"
                   type="text"
-                  value={formData.name}
+                  value={formData.fullName}
                   onChange={handleChange}
                   className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-slate-500 transition"
                   placeholder="John Doe"

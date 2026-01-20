@@ -1,90 +1,140 @@
-// auth.js
-import { create } from "zustand";
-import axios from "axios";
-import Cookies from "js-cookie";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-export const useAuthStore = create((set, get) => ({
-  user: null,
-  isAuthenticated: false,
-  loading: false,
-  error: null,
+const API_BASE_URL =  'http://localhost:5000/api';
 
-  // Signup action
-  signup: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      const response = await axios.post("/api/users/signup", data, {
-        withCredentials: true, // important to allow cookie storage
-      });
-      set({
-        user: response.data.user,
-        isAuthenticated: true,
-        loading: false,
-      });
-    } catch (err) {
-      set({
-        error: err.response?.data?.message || "Signup failed",
-        loading: false,
-      });
+export const useAuthStore = create(
+  persist(
+    (set, get) => ({
+      // Initial state
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+
+      // Actions
+      signup: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(`${API_BASE_URL}/users/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // Important for cookies
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || 'Signup failed');
+          }
+
+          set({
+            user: result.user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Signup failed',
+            isLoading: false,
+          });
+          throw error;
+        }
+      },
+
+      login: async (data) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await fetch(`${API_BASE_URL}/users/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(data),
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.message || 'Login failed');
+          }
+
+          set({
+            user: result.user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error) {
+          set({
+            error: error instanceof Error ? error.message : 'Login failed',
+            isLoading: false,
+          });
+          throw error;
+        }
+      },
+
+      logout: async () => {
+        set({ isLoading: true });
+        try {
+          // Optional: Call logout endpoint if you have one
+          await fetch(`${API_BASE_URL}/users/logout`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: null,
+          });
+        }
+      },
+
+      getCurrentUser: async () => {
+        set({ isLoading: true });
+        try {
+          const response = await fetch(`${API_BASE_URL}/users/me`, {
+            method: 'GET',
+            credentials: 'include',
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to fetch user');
+          }
+
+          const result = await response.json();
+
+          set({
+            user: result.user,
+            isAuthenticated: true,
+            isLoading: false,
+            error: null,
+          });
+        } catch (error) {
+          set({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
+            error: error instanceof Error ? error.message : 'Failed to fetch user',
+          });
+        }
+      },
+
+      clearError: () => set({ error: null }),
+
+      setLoading: (loading) => set({ isLoading: loading }),
+    }),
+    {
+      name: 'auth-storage',
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
-  },
-
-  // Login action
-  login: async (data) => {
-    set({ loading: true, error: null });
-    try {
-      const response = await axios.post("/api/users/login", data, {
-        withCredentials: true,
-      });
-      set({
-        user: response.data.user,
-        isAuthenticated: true,
-        loading: false,
-      });
-    } catch (err) {
-      set({
-        error: err.response?.data?.message || "Login failed",
-        loading: false,
-      });
-    }
-  },
-
-  // Logout action
-  logout: async () => {
-    try {
-      // Clear backend cookies if you have an endpoint for it
-      await axios.post("/api/users/logout", {}, { withCredentials: true });
-    } catch (err) {
-      console.warn("Logout request failed:", err);
-    } finally {
-      set({
-        user: null,
-        isAuthenticated: false,
-      });
-      // Optionally remove cookies manually
-      Cookies.remove("accessToken");
-      Cookies.remove("refreshToken");
-    }
-  },
-
-  // Check authentication status on app load
-  checkAuth: async () => {
-    set({ loading: true });
-    try {
-      const response = await axios.get("/api/users/me", {
-        withCredentials: true,
-      });
-      set({
-        user: response.data.user,
-        isAuthenticated: true,
-        loading: false,
-      });
-    } catch (err) {
-      set({
-        user: null,
-        isAuthenticated: false,
-        loading: false,
-      });
-    }
-  },
-}));
+  )
+);

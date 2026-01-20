@@ -75,3 +75,128 @@ Table audit_logs {
 // Ref: projects.organization_id > organizations.id
 // Ref: audit_logs.organization_id > organizations.id
 // Ref: audit_logs.user_id > users.id
+
+
+
+
+
+//working
+
+// =======================================================
+// Multi-Tenant Auth System (Clerk-style)
+// dbdiagram.io compatible, production-ready
+// =======================================================
+
+// --------------------
+// Users (Identity)
+// --------------------
+Table users {
+  id varchar [pk, note: "Mongo ObjectId"]
+  full_name varchar [not null]
+  email varchar [unique, not null]
+  phone varchar
+  is_verified boolean [default: false]
+  public_metadata json
+  private_metadata json
+  created_at datetime
+  updated_at datetime
+}
+
+// --------------------
+// Organizations (Tenancy)
+// --------------------
+Table organizations {
+  id varchar [pk, note: "Mongo ObjectId"]
+  name varchar [not null]
+  slug varchar [unique, not null]
+  password_policy json [note: "Defines minLength, requireNumbers, uppercase, specialChars, etc."]
+  require_phone boolean [default: false]
+  created_at datetime
+  updated_at datetime
+}
+
+// --------------------
+// Memberships (Roles per Org)
+// --------------------
+Table memberships {
+  id varchar [pk]
+  user_id varchar [ref: > users.id, not null]
+  organization_id varchar [ref: > organizations.id, not null]
+  role varchar [note: "owner | admin | member"]
+  created_at datetime
+  updated_at datetime
+}
+
+// --------------------
+// Sessions (Browser / Interactive)
+// --------------------
+Table sessions {
+  id varchar [pk]
+  user_id varchar [ref: > users.id, not null]
+  token varchar [unique]
+  expires_at datetime
+  created_at datetime
+  updated_at datetime
+}
+
+// --------------------
+// Projects (Org-scoped resources)
+// --------------------
+Table projects {
+  id varchar [pk, note: "Mongo ObjectId"]
+  organization_id varchar [ref: > organizations.id, not null]
+  name varchar
+  description text
+  created_at datetime
+  updated_at datetime
+}
+
+// --------------------
+// Optional: Project Memberships (Fine-grained access)
+// --------------------
+Table project_memberships {
+  id varchar [pk]
+  project_id varchar [ref: > projects.id, not null]
+  user_id varchar [ref: > users.id, not null]
+  role varchar [note: "manager | contributor | viewer"]
+  created_at datetime
+}
+
+// --------------------
+// Audit Logs
+// --------------------
+Table audit_logs {
+  id varchar [pk]
+  organization_id varchar [ref: > organizations.id]
+  user_id varchar [ref: > users.id]
+  action varchar
+  metadata json
+  ip_address varchar
+  created_at datetime
+}
+
+Table end_user {
+  id varchar [pk]
+  project_id varchar [ref: > projects.id, not null]
+  user_id varchar [ref: > users.id, not null]
+  role varchar [note: "viewer | contributor | tester"]
+  created_at datetime
+}
+
+
+// --------------------
+// Relationships
+// --------------------
+
+// Ref: memberships.user_id > users.id
+// Ref: memberships.organization_id > organizations.id
+
+// Ref: sessions.user_id > users.id
+
+// Ref: projects.organization_id > organizations.id
+
+// Ref: project_memberships.project_id > projects.id
+// Ref: project_memberships.user_id > users.id
+
+// Ref: audit_logs.organization_id > organizations.id
+// Ref: audit_logs.user_id > users.id

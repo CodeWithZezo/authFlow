@@ -32,7 +32,7 @@ const orgSchema: Schema<IOrganization> = new Schema(
     },
     passwordPolicy: {
       type: passwordPolicySchema,
-      required: true,
+      required: false,
       default: () => ({
         minLength: 8,
         requireNumbers: true,
@@ -44,6 +44,16 @@ const orgSchema: Schema<IOrganization> = new Schema(
       type: Boolean,
       required: [true, "phone is required"],
       default: false,
+    },
+    roleRequired: {
+      type: Boolean,
+      required: [true, "role is required"],
+      default: false,
+    },
+    roles: {
+      type: [String],
+      required: [true, "roles are required"],
+      default: ["user"],
     },
   },
   {

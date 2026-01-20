@@ -9,10 +9,10 @@ export const authConfig = {
     saltRoundes: 10,
   },
   password: {
-    minLength: 8,
-    requireUppercase: true,
-    requireLowercase: true,
-    requireNumbers: true,
-    requireSpecialChars: true,
+    minLength: 6,
+    requireUppercase: false,
+    requireLowercase: false,
+    requireNumbers: false,
+    requireSpecialChars: false,
   },
 };

@@ -8,7 +8,7 @@ export class UserController {
     this.userService = userService ?? new UserService();
   }
 
-  signup = async (req: Request, res: Response) => {
+  signup = async (req: Request, res: Response) => { 
     try {
       const { status, body } = await this.userService.signup(req.body);
 
