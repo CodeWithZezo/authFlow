@@ -1,5 +1,5 @@
 import { AuthRequest } from "../../middleware/auth.middleware";
-import { Membership } from "../../models/schema/organizationMembership.schema";
+import { OrganizationMembership } from "../../models/schema/organizationMembership.schema";
 import { Organization } from "../../models/schema/org.schema";
 
 export class OrgService {
@@ -15,7 +15,7 @@ export class OrgService {
             throw new Error("org already exists");
         }
         const org = await Organization.create({ name, slug })
-        await Membership.create({ userId: user._id, orgId: org._id, role: "owner" })
+        await OrganizationMembership.create({ userId: user._id, orgId: org._id, role: "owner" })
         return { status: 201, body: org }
         } catch (error) {
             return { status: 500, body: error }

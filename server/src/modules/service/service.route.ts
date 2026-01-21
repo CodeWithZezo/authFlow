@@ -8,6 +8,6 @@ router.use(cookieParser());
     
 const serviceController = new ServiceController();
 
-router.post("/get-api-key", authenticate, serviceController.getApiKeyController);
+router.post("/get-api", authenticate, serviceController.getApiKeyController);
 
 export default router;

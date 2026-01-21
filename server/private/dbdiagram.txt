@@ -1,99 +1,11 @@
-// ============================
-// Multi-Tenant Auth System (Clerk-style)
-// Includes Password Policies & Memberships
-// dbdiagram.io compatible
-// ============================
+// ==================== Multi-Tenant Auth System ====================
 
+// Users
 Table users {
-  id varchar [pk, note: "Mongo ObjectId"]
+  id ObjectId [pk]
   full_name varchar [not null]
   email varchar [unique, not null]
-  password varchar [not null]
-  phone varchar [note: "optional"]
-  isVerified boolean
-  public_metadata json
-  private_metadata json
-  created_at datetime
-  updated_at datetime
-}
-
-Table organizations {
-  id varchar [pk, note: "Mongo ObjectId"]
-  name varchar [not null]
-  slug varchar [unique, not null]
-  password_policy json [note: "Defines minLength, requireNumbers, uppercase, specialChars, etc."]
-  require_phone boolean [default: false, note: "If true, org users must provide phone"]
-  created_at datetime
-  updated_at datetime
-}
-
-Table memberships {
-  id varchar [pk, note: "Mongo ObjectId"]
-  user_id varchar [ref: > users.id, not null]
-  organization_id varchar [ref: > organizations.id, not null]
-  role varchar [note: "owner, admin, member"]
-  created_at datetime
-  updated_at datetime
-}
-
-Table sessions {
-  id varchar [pk, note: "Mongo ObjectId"]
-  user_id varchar [ref: > users.id, not null]
-  token varchar
-  expires_at datetime
-  created_at datetime
-  updated_at datetime
-}
-
-Table projects {
-  id varchar [pk, note: "Example resource scoped to org"]
-  organization_id varchar [ref: > organizations.id, not null]
-  name varchar
-  description text
-  created_at datetime
-  updated_at datetime
-}
-
-Table audit_logs {
-  id varchar [pk, note: "Optional"]
-  organization_id varchar [ref: > organizations.id]
-  user_id varchar [ref: > users.id]
-  action varchar
-  metadata json
-  created_at datetime
-}
-
-// ============================
-// Relationships
-// ============================
-
-// Ref: memberships.user_id > users.id
-// Ref: memberships.organization_id > organizations.id
-
-// Ref: sessions.user_id > users.id
-
-// Ref: projects.organization_id > organizations.id
-// Ref: audit_logs.organization_id > organizations.id
-// Ref: audit_logs.user_id > users.id
-
-
-
-
-
-//working
-
-// =======================================================
-// Multi-Tenant Auth System (Clerk-style)
-// dbdiagram.io compatible, production-ready
-// =======================================================
-
-// --------------------
-// Users (Identity)
-// --------------------
-Table users {
-  id varchar [pk, note: "Mongo ObjectId"]
-  full_name varchar [not null]
-  email varchar [unique, not null]
+  password_hash varchar [not null]
   phone varchar
   is_verified boolean [default: false]
   public_metadata json
@@ -102,101 +14,91 @@ Table users {
   updated_at datetime
 }
 
-// --------------------
-// Organizations (Tenancy)
-// --------------------
+// Organizations
 Table organizations {
-  id varchar [pk, note: "Mongo ObjectId"]
+  id ObjectId [pk]
   name varchar [not null]
   slug varchar [unique, not null]
-  password_policy json [note: "Defines minLength, requireNumbers, uppercase, specialChars, etc."]
-  require_phone boolean [default: false]
   created_at datetime
   updated_at datetime
 }
 
-// --------------------
-// Memberships (Roles per Org)
-// --------------------
-Table memberships {
-  id varchar [pk]
-  user_id varchar [ref: > users.id, not null]
-  organization_id varchar [ref: > organizations.id, not null]
-  role varchar [note: "owner | admin | member"]
+// Organization Memberships
+Table organization_memberships {
+  id ObjectId [pk]
+  user_id ObjectId [ref: > users.id, not null]
+  org_id ObjectId [ref: > organizations.id, not null]
+  role enum('owner','admin','member') [default: 'member']
+  status enum('active','inactive','pending','suspended') [default: 'pending']
   created_at datetime
   updated_at datetime
 }
 
-// --------------------
-// Sessions (Browser / Interactive)
-// --------------------
+// Sessions
 Table sessions {
-  id varchar [pk]
-  user_id varchar [ref: > users.id, not null]
-  token varchar [unique]
-  expires_at datetime
+  id ObjectId [pk]
+  user_id ObjectId [ref: > users.id, not null]
+  refresh_token varchar
   created_at datetime
   updated_at datetime
 }
 
-// --------------------
-// Projects (Org-scoped resources)
-// --------------------
+// Projects
 Table projects {
-  id varchar [pk, note: "Mongo ObjectId"]
-  organization_id varchar [ref: > organizations.id, not null]
+  id ObjectId [pk]
+  organization_id ObjectId [ref: > organizations.id, not null]
   name varchar
   description text
+  status enum('active','inactive','pending','suspended') [default: 'active']
   created_at datetime
   updated_at datetime
 }
 
-// --------------------
-// Optional: Project Memberships (Fine-grained access)
-// --------------------
+// Project Memberships
 Table project_memberships {
-  id varchar [pk]
-  project_id varchar [ref: > projects.id, not null]
-  user_id varchar [ref: > users.id, not null]
-  role varchar [note: "manager | contributor | viewer"]
+  id ObjectId [pk]
+  project_id ObjectId [ref: > projects.id, not null]
+  user_id ObjectId [ref: > users.id, not null]
+  role enum('manager','contributor','viewer') [default: 'viewer']
+  status enum('active','inactive','pending','suspended') [default: 'pending']
   created_at datetime
+  updated_at datetime
 }
 
-// --------------------
-// Audit Logs
-// --------------------
-Table audit_logs {
-  id varchar [pk]
-  organization_id varchar [ref: > organizations.id]
-  user_id varchar [ref: > users.id]
-  action varchar
-  metadata json
-  ip_address varchar
+// End Users (Project-specific roles)
+Table end_users {
+  id ObjectId [pk]
+  project_id ObjectId [ref: > projects.id, not null]
+  user_id ObjectId [ref: > users.id, not null]
+  role enum('manager','contributor','viewer') [default: 'viewer']
+  status enum('active','inactive','pending','suspended') [default: 'active']
   created_at datetime
+  updated_at datetime
 }
 
-Table end_user {
-  id varchar [pk]
-  project_id varchar [ref: > projects.id, not null]
-  user_id varchar [ref: > users.id, not null]
-  role varchar [note: "viewer | contributor | tester"]
+// Password Policy
+Table password_policy {
+  id ObjectId [pk]
+  project_id ObjectId [ref: > projects.id, not null]
+  min_length int [default: 8]
+  require_numbers boolean [default: true]
+  require_uppercase boolean [default: true]
+  require_special_chars boolean [default: false]
   created_at datetime
+  updated_at datetime
 }
 
-
-// --------------------
-// Relationships
-// --------------------
-
-// Ref: memberships.user_id > users.id
-// Ref: memberships.organization_id > organizations.id
-
-// Ref: sessions.user_id > users.id
-
-// Ref: projects.organization_id > organizations.id
-
-// Ref: project_memberships.project_id > projects.id
-// Ref: project_memberships.user_id > users.id
-
-// Ref: audit_logs.organization_id > organizations.id
-// Ref: audit_logs.user_id > users.id
+// Project Policy
+Table project_policy {
+  id ObjectId [pk]
+  project_id ObjectId [ref: > projects.id, not null]
+  phone_required boolean [default: false]
+  auth_required boolean [default: true]
+  auth_type enum('password','oauth','2fa') [default: 'password']
+  roles string[] [note: "Allowed roles for end users"]
+  statuses string[] [note: "Allowed statuses for end users"]
+  auth_methods string[] [note: "Allowed auth methods per project"]
+  password_policy_id ObjectId [ref: > password_policy.id, note: "Required if auth_type = password"]
+  created_at datetime
+  updated_at datetime
+}
