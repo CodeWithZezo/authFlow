@@ -11,14 +11,10 @@ export class EndUserService {
   constructor() {}
 
   signupService = async (data: any) => {
-
-const { body } = data;
+    const { body } = data;
     const { project, passwordPolicy, projectPolicy } = body.context;
     /* 1. Policy validation */
-    const validation = validateSignupAgainstProjectPolicy(
-      body,
-      passwordPolicy,
-    );
+    const validation = validateSignupAgainstProjectPolicy(body, passwordPolicy);
 
     if (!validation.valid) {
       throw {
@@ -32,9 +28,8 @@ const { body } = data;
       email,
       password,
       phone,
-      authMethod,
-      role = body.role,
-      status = body.status,
+      role,
+      status,
     } = body;
 
     /* 2. Auth handling */
@@ -54,21 +49,21 @@ const { body } = data;
         };
       }
       hashedPassword = await PasswordUtils.hash(password);
-    } else{ // this is temporary if i made oath then i will remove this and work for other auth types
-      return{
+    } else {
+      // this is temporary if i made oath then i will remove this and work for other auth types
+      return {
         status: 400,
         body: {
           message: "auth type not supported",
           errors: ["auth type not supported"],
         },
-      }
+      };
     }
-
 
     const user = await User.create({
       email,
       passwordHash: hashedPassword,
-      phone
+      phone,
     });
 
     const endUser = await EndUser.create({
@@ -78,19 +73,18 @@ const { body } = data;
       status,
     });
 
-
     return {
       status: 201,
       body: {
         message: "User created successfully",
-        user:{
+        user: {
           fullName: user.fullName,
           email: user.email,
           phone: user.phone,
           role: endUser.role,
           status: endUser.status,
-        }
+        },
       },
     };
-}
+  };
 }

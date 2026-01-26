@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import routes from './modules/index';
 import { logger } from './utils/logger';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 import connectDB from './config/database';
 
@@ -36,7 +37,7 @@ app.use('/api/', limiter);
 // ----------------------------
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
+app.use(cookieParser()); 
 // ----------------------------
 // Health check endpoint
 // ----------------------------

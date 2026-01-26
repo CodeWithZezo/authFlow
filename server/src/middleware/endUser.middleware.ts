@@ -3,8 +3,19 @@ import { Project } from "../models/schema/project.schema";
 import { Status } from "../models/enums";
 import { ProjectPolicy } from "../models/schema/projectPolicy.schema";
 import { PasswordPolicy } from "../models/schema/passwordPolicy.schema";
+import { IPasswordPolicy, IProject, IProjectPolicy } from "../models/models.types";
 
-export const resolveProjectContext = async (req:Request, res:Response, next:NextFunction) => {
+
+interface ResolvedRequest extends Request {
+  body: {
+    context: {
+      project: IProject;
+      projectPolicy: IProjectPolicy;
+      passwordPolicy: IPasswordPolicy;
+    };
+  };
+}
+export const resolveProjectContext = async (req:ResolvedRequest, res:Response, next:NextFunction) => {
   try {
     const { projectId } = req.params;
 
@@ -22,8 +33,8 @@ export const resolveProjectContext = async (req:Request, res:Response, next:Next
       PasswordPolicy.findOne({ project_id: project._id }).lean()
     ]);
 
-    if (!projectPolicy) {
-      return res.status(500).json({ message: "Project policy missing" });
+    if (!projectPolicy || !passwordPolicy) {
+      return res.status(500).json({ message: "Project policy or password policy not found" });
     }
 
     req.body.context = {
