@@ -7,7 +7,7 @@ export class EndUserController {
         this.userService = new EndUserService()
     }
     async signup(req: Request, res: Response) {
-        const {status, body } = await this.userService.signup(req.body)
+        const {status, body } = await this.userService.signup(req)
         return res.status(status).json(body)
     }
 }
