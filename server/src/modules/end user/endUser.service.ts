@@ -193,9 +193,11 @@ export class EndUserService {
 
   logOutService =async (user:any,context:any) => {
     try {
-      const {_id} = user;  
+      const {userId} = user;  
       const {project} = context;
-      if (!_id || !project._id) {
+
+      
+      if (!userId|| !project._id) {
         return {
           status: 404,
           body: {
@@ -205,9 +207,9 @@ export class EndUserService {
         };
       }
       const session = await Session.findOne({
-        userId: _id,
-        projectId: project._id,
+        userId
       });
+      
       if (!session) {
         return {
           status: 404,
