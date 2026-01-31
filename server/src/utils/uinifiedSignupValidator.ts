@@ -5,8 +5,9 @@ import { User } from "../models/schema/user.schema";
 import { EndUser } from "../models/schema/endUser.schema";
 
 interface SignupInput {
+  fullName: string;
   email: string;
-  password?: string;
+  password: string;
   phone?: string;
   authMethod: AuthMethod;
   role?: Role;
@@ -23,8 +24,9 @@ export const validateSignupAgainstProjectPolicy = (
   projectPolicy: IProjectPolicy,
   passwordPolicy?: any
 ): PolicyCheckResult => {
-  const errors: string[] = [];
-
+  try {
+    const errors: string[] = [];
+    
   /* ---------- Auth Required ---------- */
   if (projectPolicy.authRequired && !payload.authMethod) {
     errors.push("Authentication method is required");
@@ -94,13 +96,21 @@ export const validateSignupAgainstProjectPolicy = (
     valid: errors.length === 0,
     errors
   };
+  } catch (error) {
+    console.log(error);
+    return {
+      valid: false,
+      errors: ["Internal Server Error"],
+    };
+  }
 };
 
 export const findUserByEmailInProject = async (
   email: string,
   projectId: string
 ) => {
-  /* 1. Find user by email */
+ try {
+   /* 1. Find user by email */
   const user = await User.findOne({ email }).lean();
 
   if (!user) {
@@ -122,4 +132,8 @@ export const findUserByEmailInProject = async (
     user,
     endUser
   };
+ } catch (error) {
+  console.log(error);
+  return null;
+ }
 };

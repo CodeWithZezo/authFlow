@@ -3,25 +3,32 @@ import { Project } from "../models/schema/project.schema";
 import { Status } from "../models/enums";
 import { ProjectPolicy } from "../models/schema/projectPolicy.schema";
 import { PasswordPolicy } from "../models/schema/passwordPolicy.schema";
-import { IPasswordPolicy, IProject, IProjectPolicy } from "../models/models.types";
+import {
+  IPasswordPolicy,
+  IProject,
+  IProjectPolicy,
+} from "../models/models.types";
 
-
-interface ResolvedRequest extends Request {
-  body: {
-    context: {
-      project: IProject;
-      projectPolicy: IProjectPolicy;
-      passwordPolicy: IPasswordPolicy;
-    };
+export interface ResolvedRequest extends Request {
+  context: {
+    project: IProject;
+    projectPolicy: IProjectPolicy;
+    passwordPolicy: IPasswordPolicy;
   };
 }
-export const resolveProjectContext = async (req:ResolvedRequest, res:Response, next:NextFunction) => {
+export const resolveProjectContext = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
   try {
     const { projectId } = req.params;
-
+    if (!projectId) {
+      return res.status(400).json({ message: "Project ID is required" });
+    }
     const project = await Project.findOne({
       _id: projectId,
-      status: Status.ACTIVE
+      status: Status.ACTIVE,
     }).lean();
 
     if (!project) {
@@ -29,18 +36,20 @@ export const resolveProjectContext = async (req:ResolvedRequest, res:Response, n
     }
 
     const [projectPolicy, passwordPolicy] = await Promise.all([
-      ProjectPolicy.findOne({ project_id: project._id }).lean(),
-      PasswordPolicy.findOne({ project_id: project._id }).lean()
+      ProjectPolicy.findOne({ projectId: project._id }).lean(),
+      PasswordPolicy.findOne({ projectId: project._id }).lean(),
     ]);
 
     if (!projectPolicy || !passwordPolicy) {
-      return res.status(500).json({ message: "Project policy or password policy not found" });
+      return res
+        .status(500)
+        .json({ message: "Project policy or password policy not found" });
     }
 
-    req.body.context = {
+    (req as ResolvedRequest).context = {
       project,
       projectPolicy,
-      passwordPolicy
+      passwordPolicy,
     };
 
     next();

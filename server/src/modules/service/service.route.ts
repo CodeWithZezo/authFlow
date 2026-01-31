@@ -1,7 +1,7 @@
 import { Router } from "express";
 import cookieParser from "cookie-parser";
-import { authenticate } from "../../middleware/auth.middleware";
 import { ServiceController } from "./service.controller";
+import { authenticate } from "../../middleware/auth.middleware";
 
 const router = Router();
 router.use(cookieParser());

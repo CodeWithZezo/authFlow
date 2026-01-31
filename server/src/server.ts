@@ -8,7 +8,6 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 dotenv.config();
 import connectDB from './config/database';
-
 const app = express();
 
 // ----------------------------

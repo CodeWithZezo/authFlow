@@ -9,9 +9,9 @@ export class OrgController {
         this.orgService = orgService ?? new OrgService();
       }
     
-    createOrgController = async(authReq: AuthRequest, req: Request, res: Response) => {
+    createOrgController = async(req: Request, res: Response) => {
        try {
-        const {status, body } = await this.orgService.createOrg(authReq, req)
+        const {status, body } = await this.orgService.createOrg(req)
         res.status(status).json(body)
        } catch (error: any) {
         res.status(500).json({ message: error.message })
