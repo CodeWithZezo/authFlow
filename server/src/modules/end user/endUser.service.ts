@@ -1,6 +1,9 @@
 import { AuthType } from "../../models/enums";
+import { IUser } from "../../models/models.types";
 import { EndUser } from "../../models/schema/endUser.schema";
+import { Session } from "../../models/schema/session.schema";
 import { User } from "../../models/schema/user.schema";
+import { JWTUtils } from "../../utils/jwt.utils";
 import { PasswordUtils } from "../../utils/password.utils";
 import {
   findUserByEmailInProject,
@@ -13,7 +16,6 @@ export class EndUserService {
   signupService = async (body: any, context: any) => {
     try {
       const { project, passwordPolicy, projectPolicy } = context;
-
       /* 1. Policy validation */
       const validation = validateSignupAgainstProjectPolicy(
         body,
@@ -34,10 +36,12 @@ export class EndUserService {
       /* 2. Auth handling */
       let hashedPassword;
       if (projectPolicy.authType === AuthType.PASSWORD) {
+        
         const existingUser = await findUserByEmailInProject(
           email,
           project._id,
         );
+        
         if (existingUser) {
           return {
             status: 400,
@@ -73,11 +77,18 @@ export class EndUserService {
         status,
       });
 
+      const {accessToken, refreshToken} = this.tokenResponse(user);
+      await Session.create({
+        userId: user._id,
+        refreshToken: refreshToken,
+      })
+      
       return {
         status: 201,
         body: {
           message: "User created successfully",
           user: {
+            _id: user._id,
             fullName: user.fullName,
             email: user.email,
             phone: user.phone,
@@ -85,9 +96,10 @@ export class EndUserService {
             status: endUser.status,
           },
         },
+        accessToken,
+        refreshToken,
       };
     } catch (error) {
-      console.log(error);
       return {
         status: 500,
         body: {
@@ -97,4 +109,16 @@ export class EndUserService {
       };
     }
   };
+
+   private tokenResponse(user: IUser) {
+      const payload = {
+        userId: user._id.toString(),
+        email: user.email
+      };
+  
+      return {
+        accessToken: JWTUtils.generateAccessToken(payload),
+        refreshToken: JWTUtils.generateRefreshToken(payload)
+      };
+    }
 }

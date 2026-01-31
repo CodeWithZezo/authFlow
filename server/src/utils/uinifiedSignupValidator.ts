@@ -109,9 +109,10 @@ export const findUserByEmailInProject = async (
   email: string,
   projectId: string
 ) => {
+
  try {
    /* 1. Find user by email */
-  const user = await User.findOne({ email }).lean();
+  const user = await User.findOne({ email:email }).lean();
 
   if (!user) {
     return null; // user does not exist at all
@@ -119,14 +120,15 @@ export const findUserByEmailInProject = async (
 
   /* 2. Check project membership */
   const endUser = await EndUser.findOne({
-    user_id: user._id,
-    project_id: projectId,
+    userId: user._id,
+    projectId: projectId,
     status: { $ne: Status.SUSPENDED }
   }).lean();
 
   if (!endUser) {
     return null; // user exists but not in this project
   }
+
 
   return {
     user,
