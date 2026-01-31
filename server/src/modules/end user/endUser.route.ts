@@ -8,5 +8,8 @@ const router = Router({ mergeParams: true });
 const endUserController = new EndUserController();
 
 router.post("/signup", resolveProjectContext, endUserController.signup);
-
+router.post("/login", resolveProjectContext, endUserController.login);
+router.get("/logout",authenticate, endUserController.logout);
+// router.post("/refresh-token", endUserController.refreshToken);
+// router.get("/me", authenticate, endUserController.me);
 export default router;

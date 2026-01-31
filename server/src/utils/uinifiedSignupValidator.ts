@@ -112,10 +112,11 @@ export const findUserByEmailInProject = async (
 
  try {
    /* 1. Find user by email */
-  const user = await User.findOne({ email:email }).lean();
+  const user = await User.findOne({ email:email }).select('+passwordHash').lean();
 
   if (!user) {
     return null; // user does not exist at all
+    
   }
 
   /* 2. Check project membership */

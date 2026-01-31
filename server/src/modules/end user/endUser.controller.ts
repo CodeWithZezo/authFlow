@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { EndUserService } from "./endUser.service";
 import { ResolvedRequest } from "../../middleware/endUser.middleware";
+import { AuthRequest } from "../../middleware/auth.middleware";
 
 export class EndUserController {
   private userService: EndUserService;
@@ -10,8 +11,7 @@ export class EndUserController {
   signup = async (req: Request, res: Response) => {
     try {
       const context = (req as ResolvedRequest).context;
-      const { status, body, refreshToken, accessToken } =
-        await this.userService.signupService(req.body, context);
+      const { status, body, refreshToken, accessToken } =await this.userService.signupService(req.body, context);
       this.setTokenCookies(res, accessToken, refreshToken);
       return res.status(status).json({ body });
     } catch (error) {
@@ -21,6 +21,27 @@ export class EndUserController {
       });
     }
   };
+
+  login = async (req: Request, res: Response) => {
+    try {
+      const context = (req as ResolvedRequest).context;
+      const { status, refreshToken, accessToken, body } =await this.userService.loginService(req.body, context);
+      this.setTokenCookies(res, accessToken, refreshToken);
+      return res.status(status).json({ body });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        errors: ["Internal Server Error"],
+      });
+    }
+  };
+
+  logout =async (req: AuthRequest, res:Response) => {
+    const context = (req as ResolvedRequest).context;
+    const user = (req as AuthRequest).user;
+    const { status, body } =await this.userService.logOutService(user, context);
+    return res.status(status).json({ body });
+  }
 
   private setTokenCookies(
     res: Response,
