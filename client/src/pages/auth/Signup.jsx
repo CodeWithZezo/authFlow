@@ -15,6 +15,7 @@ export default function SignUp() {
     password: '',
     confirmPassword: '',
     phone:''
+    
   });
 
   const signup = useAuthStore((state) => state.signup);
