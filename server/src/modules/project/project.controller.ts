@@ -1,4 +1,3 @@
-import { Organization } from "../../models/schema/org.schema";
 import ProjectService from "./project.service";
 import { Request, Response } from "express";
 import { AuthRequest } from "../../middleware/auth.middleware";

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Shield, Github, Chrome, Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
 import {useAuthStore} from "../../store/auth"
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { validateEmail, validateFullName, validatePassword, validatePhone } from '../../validators/validators';
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -17,22 +18,69 @@ export default function SignUp() {
   });
 
   const signup = useAuthStore((state) => state.signup);
+  const error = useAuthStore((state) => state.error);
+  const setError = useAuthStore((state) => state.setError);
+
+  useEffect(() => {
+    if(error){
+      toast.error(error);
+      setError(null);
+    }
+  }, [error]);
 
   const handleSubmit = async () => {
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
-      return;
-    }
-    console.log('Sign up attempt:', formData);
-    const res = await signup(formData);
-    if(res.success){
-      toast.success("Signup successful");
-      navigate("/dashboard");
-    }
-    else{
-      toast.error(res.message);
-    }
-  };
+  const {
+    email,
+    fullName,
+    phone,
+    password,
+    confirmPassword,
+  } = formData;
+
+  // Email
+  if (!validateEmail(email)) {
+    toast.error("Please enter a valid email address");
+    return;
+  }
+
+  // Full name (max 100 chars)
+  if (!validateFullName(fullName)) {
+    toast.error("Full name must be between 1 and 100 characters");
+    return;
+  }
+
+  // Phone
+  if(phone.length > 0){
+    if (!validatePhone(phone)) {
+    toast.error("Please enter a valid phone number");
+    return;
+  }
+  }
+
+  // Password match
+  if (password !== confirmPassword) {
+    toast.error("Passwords do not match");
+    return;
+  }
+
+  // Password rules
+  // const passwordCheck = validatePassword(password);
+  // if (!passwordCheck.valid) {
+  //   toast.error("Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number");
+  //   return;
+  // }
+
+  // Frontend-only validation passed
+  const res = await signup(formData);
+
+  if (res.success) {
+    toast.success("Signup successful");
+    navigate("/dashboard");
+  } else {
+    toast.error(res.message);
+  }
+};
+
 
   const handleChange = (e) => {
     setFormData({
@@ -63,7 +111,7 @@ export default function SignUp() {
         {/* Sign Up Card */}
         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-slate-700">
           {/* Social Sign Up Buttons */}
-          <div className="space-y-3 mb-6">
+          {/* <div className="space-y-3 mb-6">
             <button className="w-full flex items-center justify-center space-x-3 bg-slate-700/50 border border-slate-600 rounded-lg py-3 hover:bg-slate-700 transition text-white font-medium">
               <Github className="w-5 h-5" />
               <span>Continue with GitHub</span>
@@ -72,17 +120,17 @@ export default function SignUp() {
               <Chrome className="w-5 h-5" />
               <span>Continue with Google</span>
             </button>
-          </div>
+          </div> */}
 
           {/* Divider */}
-          <div className="relative mb-6">
+          {/* <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-slate-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-3 bg-slate-800/50 text-slate-400">Or continue with email</span>
             </div>
-          </div>
+          </div> */}
 
           {/* Sign Up Form */}
           <div className="space-y-5">

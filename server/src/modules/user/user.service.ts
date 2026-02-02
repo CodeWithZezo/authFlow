@@ -103,6 +103,29 @@ export class UserService {
     }
   }
 
+  async refreshToken(req: AuthRequest) {
+    try {
+      const user = await User.findById(req.user?.userId);
+      if (!user) return { status: 404, body: { message: "User not found" } };
+      const { accessToken, refreshToken } = this.tokenResponse(user);
+      return { status: 200, body: { user } };
+    } catch (error) {
+      console.error(error);
+      return { status: 500, body: { message: "Internal server error" } };
+    }
+  }
+  
+  async logout(req: AuthRequest) {
+    try {
+      const user = await User.findById(req.user?.userId);
+      if (!user) return { status: 404, body: { message: "User not found" } };
+      return { status: 200, body: { user } };
+    } catch (error) {
+      console.error(error);
+      return { status: 500, body: { message: "Internal server error" } };
+    }
+  }
+  
   private tokenResponse(user: IUser) {
     const payload = {
       userId: user._id.toString(),
@@ -114,4 +137,5 @@ export class UserService {
       refreshToken: JWTUtils.generateRefreshToken(payload)
     };
   }
+  
 }

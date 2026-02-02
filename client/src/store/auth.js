@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-const API_BASE_URL =  'http://localhost:5000/api';
+const API_BASE_URL = 'http://localhost:5000/api/users';
 
 export const useAuthStore = create(
   persist(
@@ -11,12 +11,12 @@ export const useAuthStore = create(
       isAuthenticated: false,
       isLoading: false,
       error: null,
-
+      setError: (error) => set({ error }),
       // Actions
       signup: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE_URL}/users/signup`, {
+          const response = await fetch(`${API_BASE_URL}/signup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include', // Important for cookies
@@ -26,6 +26,7 @@ export const useAuthStore = create(
           const result = await response.json();
 
           if (!response.ok) {
+            setError(result.message||'Signup failed');
             throw new Error(result.message || 'Signup failed');
           }
 
@@ -47,7 +48,7 @@ export const useAuthStore = create(
       login: async (data) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await fetch(`${API_BASE_URL}/users/login`, {
+          const response = await fetch(`${API_BASE_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -79,7 +80,7 @@ export const useAuthStore = create(
         set({ isLoading: true });
         try {
           // Optional: Call logout endpoint if you have one
-          await fetch(`${API_BASE_URL}/users/logout`, {
+          await fetch(`${API_BASE_URL}/logout`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -98,7 +99,7 @@ export const useAuthStore = create(
       getCurrentUser: async () => {
         set({ isLoading: true });
         try {
-          const response = await fetch(`${API_BASE_URL}/users/me`, {
+          const response = await fetch(`${API_BASE_URL}/me`, {
             method: 'GET',
             credentials: 'include',
           });

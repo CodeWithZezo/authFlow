@@ -56,6 +56,26 @@ export class UserController {
     }
   }
 
+  refreshToken =async (req:Request,res:Response)=>{ 
+    try {
+      const {status,body}=await this.userService.refreshToken(req)
+      return res.status(status).json(body)
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  }
+
+  logout =async (req:Request,res:Response)=>{ 
+    try {
+      const {status,body}=await this.userService.logout(req)
+      return res.status(status).json(body)
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  }
+  
   private setTokenCookies(res: Response, accessToken: string, refreshToken: string) {
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
