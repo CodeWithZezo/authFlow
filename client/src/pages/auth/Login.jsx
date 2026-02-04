@@ -1,16 +1,27 @@
 import React, { useState } from 'react';
-import { Shield, Github, Chrome, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Shield, Github, Chrome, Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 
-export default function Login() {
+export const Login = () => {
+  const navigate = useNavigate();
+  const { login, isLoading, error, clearError } = useAuth();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
 
-  const handleSubmit = () => {
-    console.log('Login attempt:', formData);
-    // Add your login logic here
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    clearError();
+    
+    const result = await login(formData);
+    
+    if (result.success) {
+      navigate('/dashboard');
+    }
   };
 
   const handleChange = (e) => {
@@ -41,13 +52,29 @@ export default function Login() {
 
         {/* Login Card */}
         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-slate-700">
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 bg-red-500/10 border border-red-500/50 rounded-lg p-4 flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+            </div>
+          )}
+
           {/* Social Login Buttons */}
           <div className="space-y-3 mb-6">
-            <button className="w-full flex items-center justify-center space-x-3 bg-slate-700/50 border border-slate-600 rounded-lg py-3 hover:bg-slate-700 transition text-white font-medium">
+            <button 
+              type="button"
+              className="w-full flex items-center justify-center space-x-3 bg-slate-700/50 border border-slate-600 rounded-lg py-3 hover:bg-slate-700 transition text-white font-medium"
+            >
               <Github className="w-5 h-5" />
               <span>Continue with GitHub</span>
             </button>
-            <button className="w-full flex items-center justify-center space-x-3 bg-slate-700/50 border border-slate-600 rounded-lg py-3 hover:bg-slate-700 transition text-white font-medium">
+            <button 
+              type="button"
+              className="w-full flex items-center justify-center space-x-3 bg-slate-700/50 border border-slate-600 rounded-lg py-3 hover:bg-slate-700 transition text-white font-medium"
+            >
               <Chrome className="w-5 h-5" />
               <span>Continue with Google</span>
             </button>
@@ -64,7 +91,7 @@ export default function Login() {
           </div>
 
           {/* Login Form */}
-          <div className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
                 Email address
@@ -79,6 +106,8 @@ export default function Login() {
                   onChange={handleChange}
                   className="w-full pl-11 pr-4 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-slate-500 transition"
                   placeholder="you@example.com"
+                  disabled={isLoading}
+                  required
                 />
               </div>
             </div>
@@ -97,6 +126,8 @@ export default function Login() {
                   onChange={handleChange}
                   className="w-full pl-11 pr-12 py-3 bg-slate-900/50 border border-slate-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none text-white placeholder-slate-500 transition"
                   placeholder="••••••••"
+                  disabled={isLoading}
+                  required
                 />
                 <button
                   type="button"
@@ -117,27 +148,38 @@ export default function Login() {
                 />
                 <span className="text-sm text-slate-300">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-indigo-400 hover:text-indigo-300 transition">
+              <Link to="/forgot-password" className="text-sm text-indigo-400 hover:text-indigo-300 transition">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             {/* Submit Button */}
             <button
-              onClick={handleSubmit}
-              className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-500 transition font-medium shadow-lg shadow-indigo-500/30"
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-500 transition font-medium shadow-lg shadow-indigo-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Sign in
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
             </button>
-          </div>
+          </form>
 
           {/* Sign Up Link */}
           <div className="mt-6 text-center">
             <p className="text-slate-400">
               Don't have an account?{' '}
-              <a href="#" className="text-indigo-400 hover:text-indigo-300 font-medium transition">
+              <Link to="/signup" className="text-indigo-400 hover:text-indigo-300 font-medium transition">
                 Sign up
-              </a>
+              </Link>
             </p>
           </div>
         </div>
@@ -150,4 +192,4 @@ export default function Login() {
       </div>
     </div>
   );
-}
+};

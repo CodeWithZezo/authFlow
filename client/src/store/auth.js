@@ -1,141 +1,219 @@
+// src/store/authStore.js
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import { devtools } from 'zustand/middleware';
+import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/users';
+// ==================== API Configuration ====================
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true, // Important for cookies
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor
+api.interceptors.request.use(
+  (config) => {
+    // Tokens are in httpOnly cookies, so we don't need to manually add them
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for handling token refresh
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    // If error is 401 and we haven't tried to refresh yet
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Try to refresh the token
+        await api.post('/users/refresh-token');
+        
+        // Retry the original request
+        return api(originalRequest);
+      } catch (refreshError) {
+        // If refresh fails, logout user
+        useAuthStore.getState().reset();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// ==================== Initial State ====================
+const initialState = {
+  user: null,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+};
+
+// ==================== Zustand Store ====================
 export const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      // Initial state
-      user: null,
-      isAuthenticated: false,
-      isLoading: false,
-      error: null,
-      setError: (error) => set({ error }),
-      // Actions
-      signup: async (data) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await fetch(`${API_BASE_URL}/signup`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // Important for cookies
-            body: JSON.stringify(data),
-          });
+  devtools(
+    persist(
+      (set, get) => ({
+        ...initialState,
 
-          const result = await response.json();
-
-          if (!response.ok) {
-            setError(result.message||'Signup failed');
-            throw new Error(result.message || 'Signup failed');
+        // ==================== Signup ====================
+        signup: async (data) => {
+          set({ isLoading: true, error: null });
+          
+          try {
+            const response = await api.post('/users/signup', data);
+            
+            set({
+              user: response.data.user,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+          } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Signup failed';
+            
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: errorMessage,
+            });
+            
+            throw error;
           }
+        },
 
-          set({
-            user: result.user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Signup failed',
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
-
-      login: async (data) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await fetch(`${API_BASE_URL}/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify(data),
-          });
-
-          const result = await response.json();
-
-          if (!response.ok) {
-            throw new Error(result.message || 'Login failed');
+        // ==================== Login ====================
+        login: async (data) => {
+          set({ isLoading: true, error: null });
+          
+          try {
+            const response = await api.post('/users/login', data);
+            
+            set({
+              user: response.data.user,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+          } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Login failed';
+            
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: errorMessage,
+            });
+            
+            throw error;
           }
+        },
 
-          set({
-            user: result.user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-        } catch (error) {
-          set({
-            error: error instanceof Error ? error.message : 'Login failed',
-            isLoading: false,
-          });
-          throw error;
-        }
-      },
-
-      logout: async () => {
-        set({ isLoading: true });
-        try {
-          // Optional: Call logout endpoint if you have one
-          await fetch(`${API_BASE_URL}/logout`, {
-            method: 'POST',
-            credentials: 'include',
-          });
-        } catch (error) {
-          console.error('Logout error:', error);
-        } finally {
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: null,
-          });
-        }
-      },
-
-      getCurrentUser: async () => {
-        set({ isLoading: true });
-        try {
-          const response = await fetch(`${API_BASE_URL}/me`, {
-            method: 'GET',
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to fetch user');
+        // ==================== Logout ====================
+        logout: async () => {
+          set({ isLoading: true, error: null });
+          
+          try {
+            await api.post('/users/logout');
+            
+            set({
+              ...initialState,
+            });
+          } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Logout failed';
+            
+            set({
+              isLoading: false,
+              error: errorMessage,
+            });
+            
+            // Even if logout fails, clear local state
+            set({
+              ...initialState,
+            });
           }
+        },
 
-          const result = await response.json();
+        // ==================== Get Current User ====================
+        getCurrentUser: async () => {
+          set({ isLoading: true, error: null });
+          
+          try {
+            const response = await api.post('/users/me');
+            
+            set({
+              user: response.data.user,
+              isAuthenticated: true,
+              isLoading: false,
+              error: null,
+            });
+          } catch (error) {
+            const errorMessage = error.response?.data?.message || 'Failed to get user';
+            
+            set({
+              user: null,
+              isAuthenticated: false,
+              isLoading: false,
+              error: errorMessage,
+            });
+          }
+        },
 
-          set({
-            user: result.user,
-            isAuthenticated: true,
-            isLoading: false,
-            error: null,
-          });
-        } catch (error) {
-          set({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false,
-            error: error instanceof Error ? error.message : 'Failed to fetch user',
-          });
-        }
-      },
+        // ==================== Refresh Token ====================
+        refreshToken: async () => {
+          try {
+            await api.post('/users/refresh-token');
+          } catch (error) {
+            // If refresh fails, logout
+            get().reset();
+            throw error;
+          }
+        },
 
-      clearError: () => set({ error: null }),
+        // ==================== Clear Error ====================
+        clearError: () => {
+          set({ error: null });
+        },
 
-      setLoading: (loading) => set({ isLoading: loading }),
-    }),
-    {
-      name: 'auth-storage',
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
+        // ==================== Reset State ====================
+        reset: () => {
+          set(initialState);
+        },
       }),
+      {
+        name: 'auth-storage', // unique name for localStorage key
+        storage: createJSONStorage(() => localStorage),
+        partialize: (state) => ({
+          // Only persist user and isAuthenticated
+          user: state.user,
+          isAuthenticated: state.isAuthenticated,
+        }),
+      }
+    ),
+    {
+      name: 'AuthStore', // DevTools name
     }
   )
 );
+
+// ==================== Selectors (for optimized re-renders) ====================
+export const useUser = () => useAuthStore((state) => state.user);
+export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
+export const useAuthLoading = () => useAuthStore((state) => state.isLoading);
+export const useAuthError = () => useAuthStore((state) => state.error);
+
+// ==================== Export API instance ====================
+export { api };
