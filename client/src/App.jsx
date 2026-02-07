@@ -8,6 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Dashboard from "./pages/user/Dashboard";
 import Organization from "./pages/org/Organization";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import UserSettings from "./pages/user/Setting";
 const App = () => {
   return (
     <>
@@ -18,6 +19,7 @@ const App = () => {
         <Route path="/signup" element={<Signup />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/settings" element={<UserSettings />} />
           <Route path="/:xwujndci" element={<Organization />} />
         </Route>
       </Routes>

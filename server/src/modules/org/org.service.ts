@@ -2,16 +2,24 @@ import { OrganizationMembership } from "../../models/schema/organizationMembersh
 import { Organization } from "../../models/schema/org.schema";
 
 export class OrgService {
+
   async createOrg(req: any) {
     try {
       const user = req.user;
       if (!user) {
-        throw new Error("User is not verified");
+        return{
+          status: 401,
+          body: { message: "Unauthorized" },
+        }
       }
+      
       const { name, slug } = req.body;
-      const exsistingOrg = Organization.findOne({ slug });
-      if (!exsistingOrg) {
-        throw new Error("org already exists");
+      const existingOrg = await Organization.findOne({ slug });
+      if (existingOrg) {
+        return {
+          status: 409,
+          body: { message: "Organization already exists" },
+        };
       }
       const org = await Organization.create({ name, slug });
       await OrganizationMembership.create({
@@ -20,8 +28,27 @@ export class OrgService {
         role: "owner",
       });
       return { status: 201, body: org };
-    } catch (error) {
-      return { status: 500, body: error };
+    } catch (error: any) {
+      return {
+        status: 500,
+        body: { message: error.message || "Internal server error" },
+      };
+    }
+  }
+
+  async getAllOrg(req: any) {
+    try {
+      const user = req.user;
+      //this will return all the orgs that the user is a member of, along with the role of the user in each org
+      const organizations = await OrganizationMembership.find({
+        userId: user.userId,
+      }).populate("orgId");
+      return { status: 200, body: organizations };
+    } catch (error: any) {
+      return {
+        status: 500,
+        body: { message: error.message || "Internal server error" },
+      };
     }
   }
 }

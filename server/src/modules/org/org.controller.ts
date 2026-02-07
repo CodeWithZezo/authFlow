@@ -17,4 +17,13 @@ export class OrgController {
         res.status(500).json({ message: error.message })
        }
     };
+
+    getAllOrgController =async(req: AuthRequest, res: Response) => {
+      try {
+        const { status, body } = await this.orgService.getAllOrg(req);
+        res.status(status).json(body);
+      } catch (error: any) {
+        res.status(500).json({ message: error.message });
+      }
+}
 }
