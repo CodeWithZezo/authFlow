@@ -95,10 +95,13 @@ const Organization = () => {
   };
 
   const handleSelectOrg = (membership) => {
-    setCurrentOrg(membership.orgId);
-    // Navigate to the organization page using the slug
-    navigate(`/org/${membership.orgId?.slug}`);
-  };
+  setCurrentOrg(membership.orgId);
+
+  const url = `/org/${membership.orgId?.slug}`;
+
+  // Open in new tab
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 
   const handleCancel = () => {
     setShowCreateForm(false);

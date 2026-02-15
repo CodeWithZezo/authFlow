@@ -20,7 +20,7 @@ const App = () => {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<UserSettings />} />
-          <Route path="/:xwujndci" element={<Organization />} />
+          <Route path="/org/:orgslug" element={<Organization />} />
         </Route>
       </Routes>
     </>

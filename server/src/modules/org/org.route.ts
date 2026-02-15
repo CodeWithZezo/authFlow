@@ -5,6 +5,8 @@ import { OrgController } from "./org.controller";
 
 const router = Router();
 const orgController = new OrgController();
+//prg auth becasue we made a sepraet tabs for organizations
+router.post("/login", orgController.login)
 
 router.post("/create-org", authenticate, orgController.createOrgController);
 router.post("/get-all-org", authenticate, orgController.getAllOrgController);

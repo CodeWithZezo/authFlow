@@ -1,9 +1,15 @@
-import React from 'react'
+import { useParams } from "react-router-dom";
 
 const Organization = () => {
-  return (
-    <div>Organization</div>
-  )
-}
+  const { orgslug } = useParams();
 
-export default Organization
+  
+
+  return (
+    <div>
+      <h1>Organization: {orgslug}</h1>
+    </div>
+  );
+};
+
+export default Organization;

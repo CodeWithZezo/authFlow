@@ -2,17 +2,16 @@ import { OrganizationMembership } from "../../models/schema/organizationMembersh
 import { Organization } from "../../models/schema/org.schema";
 
 export class OrgService {
-
   async createOrg(req: any) {
     try {
       const user = req.user;
       if (!user) {
-        return{
+        return {
           status: 401,
           body: { message: "Unauthorized" },
-        }
+        };
       }
-      
+
       const { name, slug } = req.body;
       const existingOrg = await Organization.findOne({ slug });
       if (existingOrg) {
@@ -44,6 +43,40 @@ export class OrgService {
         userId: user.userId,
       }).populate("orgId");
       return { status: 200, body: organizations };
+    } catch (error: any) {
+      return {
+        status: 500,
+        body: { message: error.message || "Internal server error" },
+      };
+    }
+  }
+
+  async login(req: any) {
+    try {
+      const { slug } = req.body;
+      const org = await Organization.findOne({ slug });
+      if (!org) {
+        return {
+          status: 404,
+          body: { message: "Organization not found" },
+        };
+      }
+      const {email, password} = req.body
+      if(email && password){
+        const membership = await OrganizationMembership.findOne({
+          orgId: org._id,
+          email: email,
+        });
+        if (!membership) {
+          return {
+            status: 404,
+            body: { message: "Membership not found" },
+          };
+        }
+      }
+      cons
+
+      return { status: 200, body: org };
     } catch (error: any) {
       return {
         status: 500,
