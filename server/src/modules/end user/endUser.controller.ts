@@ -9,6 +9,7 @@ export class EndUserController {
     try {
       const context = (req as ResolvedRequest).context;
       const result = await this.userService.signupService(req.body, context);
+      this.setTokenCookies(res, result?.accessToken, result?.refreshToken);
       return res.status(result.status).json(result.body);
     } catch (err:any) {
       console.error("Signup Error:", err);
@@ -20,6 +21,7 @@ export class EndUserController {
     try {
       const context = (req as ResolvedRequest).context;
       const result = await this.userService.loginService(req.body, context);
+      this.setTokenCookies(res, result?.accessToken, result?.refreshToken);
       return res.status(result.status).json(result.body);
     } catch (err: any) {
       console.error("Login Error:", err);

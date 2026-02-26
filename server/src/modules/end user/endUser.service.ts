@@ -54,7 +54,7 @@ export class EndUserService {
     if (!valid) return { status: 401, body: { message: "Invalid password", errors: ["Invalid password"] } };
 
     const tokens = this.tokenResponse(user);
-    await Session.create({ userId: user._id, refreshToken: tokens.refreshToken });
+     await Session.create({ userId: user._id, refreshToken: tokens.refreshToken });
 
     return {
       status: 200,
@@ -64,9 +64,9 @@ export class EndUserService {
   };
 
   logOutService = async (user: any, context: any) => {
-    if (!user?._id) return { status: 404, body: { message: "Invalid credentials", errors: ["Invalid credentials"] } };
+    if (!user?.userId) return { status: 404, body: { message: "Invalid credentials", errors: ["Invalid credentials"] } };
 
-    const session = await Session.findOne({ userId: user._id });
+    const session = await Session.findOne({ userId: user.userId });
     if (!session) return { status: 404, body: { message: "Session not found", errors: ["Session not found"] } };
 
     await session.deleteOne();

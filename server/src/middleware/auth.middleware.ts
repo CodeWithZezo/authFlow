@@ -12,7 +12,7 @@ export const authenticate = (
 ) => {
   try {
     let token = req.cookies?.accessToken;
-
+    
     if (!token) {
       return res.status(401).json({
         status: 401,
