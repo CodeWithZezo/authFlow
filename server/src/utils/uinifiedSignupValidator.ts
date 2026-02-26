@@ -7,7 +7,7 @@ import { EndUser } from "../models/schema/endUser.schema";
 interface SignupInput {
   fullName: string;
   email: string;
-  password: string;
+  password?: string;
   phone?: string;
   authMethod: AuthMethod;
   role?: Role;
@@ -24,119 +24,77 @@ export const validateSignupAgainstProjectPolicy = (
   projectPolicy: IProjectPolicy,
   passwordPolicy?: any
 ): PolicyCheckResult => {
-  try {
-    const errors: string[] = [];
-    
-  /* ---------- Auth Required ---------- */
+  const errors: string[] = [];
+
+  // ---------- Auth Required ----------
   if (projectPolicy.authRequired && !payload.authMethod) {
     errors.push("Authentication method is required");
   }
 
-  /* ---------- Allowed Auth Methods ---------- */
-  if (
-    projectPolicy.authMethods?.length &&
-    !projectPolicy.authMethods.includes(payload.authMethod)
-  ) {
+  // ---------- Allowed Auth Methods ----------
+  if (projectPolicy.authMethods?.length && !projectPolicy.authMethods.includes(payload.authMethod)) {
     errors.push(`Auth method '${payload.authMethod}' is not allowed`);
   }
 
-  /* ---------- Auth Type Enforcement ---------- */
+  // ---------- Auth Type Enforcement ----------
   if (projectPolicy.authType === AuthType.PASSWORD) {
-    if (!payload.password) {
-      errors.push("Password is required for password authentication");
-    }
-  } else {
-    if (payload.password) {
-      errors.push("Password should not be provided for this authentication type");
-    }
+    if (!payload.password) errors.push("Password is required for password authentication");
+  } else if (payload.password) {
+    errors.push("Password should not be provided for this authentication type");
   }
 
-  /* ---------- Phone Requirement ---------- */
-  if (projectPolicy.phoneRequired) {
-    if (
-      payload.authMethod === AuthMethod.PHONE &&
-      !payload.phone
-    ) {
-      errors.push("Phone number is required for phone authentication");
-    }
+  // ---------- Phone Requirement ----------
+  if (projectPolicy.phoneRequired && payload.authMethod === AuthMethod.PHONE && !payload.phone) {
+    errors.push("Phone number is required for phone authentication");
   }
 
-  /* ---------- Role Enforcement ---------- */
-  if (
-    payload.role &&
-    !projectPolicy.roles.includes(payload.role)
-  ) {
+  // ---------- Role Enforcement ----------
+  if (payload.role && projectPolicy.roles?.length && !projectPolicy.roles.includes(payload.role)) {
     errors.push(`Role '${payload.role}' is not allowed for this project`);
   }
 
-  /* ---------- Status Enforcement ---------- */
-  if (
-    payload.status &&
-    !projectPolicy.statuses.includes(payload.status)
-  ) {
+  // ---------- Status Enforcement ----------
+  if (payload.status && projectPolicy.statuses?.length && !projectPolicy.statuses.includes(payload.status)) {
     errors.push(`Status '${payload.status}' is not allowed for this project`);
   }
 
-  /* ---------- Password Policy ---------- */
-  if (
-    projectPolicy.authType === AuthType.PASSWORD &&
-    payload.password
-  ) {
-    if (!passwordPolicy) {
-      errors.push("Password policy not configured");
-    } else {
+  // ---------- Password Policy ----------
+  if (projectPolicy.authType === AuthType.PASSWORD && payload.password) {
+    if (!passwordPolicy) errors.push("Password policy not configured");
+    else {
       const pwdResult = validatePassword(payload.password, passwordPolicy);
-      if (!pwdResult.valid) {
-        errors.push(...pwdResult.errors);
-      }
+      if (!pwdResult.valid) errors.push(...pwdResult.errors);
     }
   }
 
-  return {
-    valid: errors.length === 0,
-    errors
-  };
-  } catch (error) {
-    console.log(error);
-    return {
-      valid: false,
-      errors: ["Internal Server Error"],
-    };
-  }
+  return { valid: errors.length === 0, errors };
 };
+
 
 export const findUserByEmailInProject = async (
   email: string,
   projectId: string
 ) => {
+  if (!email || !projectId) return null;
 
- try {
-   /* 1. Find user by email */
-  const user = await User.findOne({ email:email }).select('+passwordHash').lean();
+  try {
+    // 1️⃣ Fetch user + password hash in one query
+    const user = await User.findOne({ email: email.toLowerCase() })
+      .select("+passwordHash")
+      .lean();
+    if (!user) return null;
 
-  if (!user) {
-    return null; // user does not exist at all
-    
+    // 2️⃣ Check if user exists in this project
+    const endUser = await EndUser.findOne({
+      userId: user._id,
+      projectId: projectId,
+      status: { $ne: Status.SUSPENDED }
+    }).lean();
+    if (!endUser) return null;
+
+    return { user, endUser };
+  } catch (err) {
+    console.error(err);
+    return null;
   }
-
-  /* 2. Check project membership */
-  const endUser = await EndUser.findOne({
-    userId: user._id,
-    projectId: projectId,
-    status: { $ne: Status.SUSPENDED }
-  }).lean();
-
-  if (!endUser) {
-    return null; // user exists but not in this project
-  }
-
-
-  return {
-    user,
-    endUser
-  };
- } catch (error) {
-  console.log(error);
-  return null;
- }
 };

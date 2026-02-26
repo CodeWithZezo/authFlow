@@ -9,6 +9,7 @@ import Dashboard from "./pages/user/Dashboard";
 import Organization from "./pages/org/Organization";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import UserSettings from "./pages/user/Setting";
+import Project from "./pages/project/Project";
 const App = () => {
   return (
     <>
@@ -21,6 +22,7 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<UserSettings />} />
           <Route path="/org/:orgslug" element={<Organization />} />
+          <Route path="/org/:orgslug/:projectId" element={<Project />} />
         </Route>
       </Routes>
     </>

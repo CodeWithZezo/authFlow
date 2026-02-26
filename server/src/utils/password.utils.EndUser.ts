@@ -1,8 +1,8 @@
 import { IPasswordPolicy } from "../models/models.types";
 
 export interface PasswordValidationResult {
-    valid: boolean;
-    errors: string[];
+  valid: boolean;
+  errors: string[];
 }
 
 export const validatePassword = (
@@ -12,30 +12,23 @@ export const validatePassword = (
   const errors: string[] = [];
 
   if (!password || typeof password !== "string") {
-    return {
-      valid: false,
-      errors: ["Password is required"]
-    };
+    return { valid: false, errors: ["Password is required"] };
   }
 
-  if (password.length < policy.minLength) {
-    errors.push(`Password must be at least ${policy.minLength} characters long`);
-  }
+  const { minLength, requireNumbers, requireUppercase, requireSpecialChars } = policy;
 
-  if (policy.requireNumbers && !/\d/.test(password)) {
+  if (password.length < minLength) {
+    errors.push(`Password must be at least ${minLength} characters long`);
+  }
+  if (requireNumbers && !/\d/.test(password)) {
     errors.push("Password must contain at least one number");
   }
-
-  if (policy.requireUppercase && !/[A-Z]/.test(password)) {
+  if (requireUppercase && !/[A-Z]/.test(password)) {
     errors.push("Password must contain at least one uppercase letter");
   }
-
-  if (policy.requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+  if (requireSpecialChars && !/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
     errors.push("Password must contain at least one special character");
   }
 
-  return {
-    valid: errors.length === 0,
-    errors
-  };
+  return { valid: errors.length === 0, errors };
 };

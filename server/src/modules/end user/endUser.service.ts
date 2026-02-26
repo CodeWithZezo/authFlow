@@ -1,253 +1,80 @@
-import { AuthType } from "../../models/enums";
-import { IUser } from "../../models/models.types";
 import { EndUser } from "../../models/schema/endUser.schema";
-import { Session } from "../../models/schema/session.schema";
 import { User } from "../../models/schema/user.schema";
-import { JWTUtils } from "../../utils/jwt.utils";
+import { Session } from "../../models/schema/session.schema";
 import { PasswordUtils } from "../../utils/password.utils";
-import {
-  findUserByEmailInProject,
-  validateSignupAgainstProjectPolicy,
-} from "../../utils/uinifiedSignupValidator";
+import { JWTUtils } from "../../utils/jwt.utils";
+import { findUserByEmailInProject, validateSignupAgainstProjectPolicy } from "../../utils/uinifiedSignupValidator";
 
 export class EndUserService {
-  constructor() {}
 
   signupService = async (body: any, context: any) => {
-    try {
-      const { project, passwordPolicy, projectPolicy } = context;
-      if (!project || !projectPolicy || !projectPolicy) {
-        return {
-          status: 404,
-          body: {
-            message: "Invalid credentials",
-            errors: ["Invalid credentials"],
-          },
-        };
-      }
-      /* 1. Policy validation */
-      const validation = validateSignupAgainstProjectPolicy(
-        body,
-        projectPolicy,
-        passwordPolicy,
-      );
+    const { project, projectPolicy, passwordPolicy } = context;
 
-      if (!validation.valid) {
-        return {
-          status: 400,
-          body: {
-            message: "Signup validation failed",
-            errors: validation.errors,
-          },
-        };
-      }
+    if (!project || !projectPolicy) return { status: 404, body: { message: "Invalid credentials", errors: ["Invalid credentials"] } };
 
-      const { fullName, email, password, phone, role, status } = body;
+    const validation = validateSignupAgainstProjectPolicy(body, projectPolicy, passwordPolicy);
+    if (!validation.valid) return { status: 400, body: { message: "Signup validation failed", errors: validation.errors } };
 
-      /* 2. Auth handling */
-      let hashedPassword;
-      if (projectPolicy.authType === AuthType.PASSWORD) {
-        const existingUser = await findUserByEmailInProject(email, project._id);
+    const { fullName, email, password, phone, role, status } = body;
 
-        if (existingUser) {
-          return {
-            status: 400,
-            body: {
-              message: "User already exists",
-              errors: ["User already exists"],
-            },
-          };
-        }
-        hashedPassword = await PasswordUtils.hash(password);
-      } else {
-        // this is temporary if i made oath then i will remove this and work for other auth types
-        return {
-          status: 400,
-          body: {
-            message: "auth type not supported",
-            errors: ["auth type not supported"],
-          },
-        };
-      }
+    // check existing user
+    const existing = await findUserByEmailInProject(email, project._id);
+    if (existing) return { status: 400, body: { message: "User already exists", errors: ["User already exists"] } };
 
-      const user = await User.create({
-        fullName,
-        email,
-        passwordHash: hashedPassword,
-        phone,
-      });
+    // hash password
+    const passwordHash = projectPolicy.authType === "password" ? await PasswordUtils.hash(password) : null;
 
-      const endUser = await EndUser.create({
-        userId: user._id,
-        projectId: project._id,
-        role,
-        status,
-      });
+    // create user
+    const user = await User.create({ fullName, email, passwordHash, phone });
 
-      const { accessToken, refreshToken } = this.tokenResponse(user);
-      await Session.create({
-        userId: user._id,
-        refreshToken: refreshToken,
-      });
+    // create end user
+    const endUser = await EndUser.create({ userId: user._id, projectId: project._id, role, status });
 
-      return {
-        status: 201,
-        body: {
-          message: "User created successfully",
-          user: {
-            _id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-            phone: user.phone,
-            role: endUser.role,
-            status: endUser.status,
-          },
-        },
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      console.log(error);
-      return {
-        status: 500,
-        body: {
-          message: "Internal Server Error",
-          errors: ["Internal Server Error"],
-        },
-      };
-    }
+    const tokens = this.tokenResponse(user);
+
+    // store session
+    await Session.create({ userId: user._id, refreshToken: tokens.refreshToken });
+
+    return {
+      status: 201,
+      body: { message: "User created successfully", user: { _id: user._id, fullName: user.fullName, email: user.email, phone: user.phone, role: endUser.role, status: endUser.status } },
+      ...tokens
+    };
   };
 
   loginService = async (body: any, context: any) => {
-    try {
-      const { email, password } = body;
-      const { project } = context;
-      if (!project._id || !email) {
-        return {
-          status: 404,
-          body: {
-            message: "Invalid credentials",
-            errors: ["Invalid credentials"],
-          },
-        };
-      }
-      const existingUser = await findUserByEmailInProject(email, project._id);
-      if (!existingUser) {
-        return {
-          status: 404,
-          body: {
-            message: "User not found",
-            errors: ["User not found"],
-          },
-        };
-      }
-      const { user, endUser } = existingUser;
+    const { email, password } = body;
+    const { project } = context;
 
-      const isPasswordValid = await PasswordUtils.compare(
-        password,
-        user.passwordHash,
-      );
-      if (!isPasswordValid) {
-        return {
-          status: 401,
-          body: {
-            message: "Invalid password",
-            errors: ["Invalid password"],
-          },
-        };
-      }
-      const { accessToken, refreshToken } = this.tokenResponse(
-        existingUser.user,
-      );
-      await Session.create({
-        userId: user._id,
-        refreshToken: refreshToken,
-      });
-      return {
-        status: 200,
-        body: {
-          message: "User logged in successfully",
-          user: {
-            _id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-            phone: user.phone,
-            role: endUser.role,
-            status: endUser.status,
-          },
-        },
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      console.log(error);
-      return {
-        status: 500,
-        body: {
-          message: "Internal Server Error",
-          errors: ["Internal Server Error"],
-        },
-      };
-    }
-  };
+    const existing = await findUserByEmailInProject(email, project._id);
+    if (!existing) return { status: 404, body: { message: "User not found", errors: ["User not found"] } };
 
-  logOutService =async (user:any,context:any) => {
-    try {
-      const {userId} = user;  
-      const {project} = context;
+    const { user, endUser } = existing;
+    const valid = await PasswordUtils.compare(password, user.passwordHash);
+    if (!valid) return { status: 401, body: { message: "Invalid password", errors: ["Invalid password"] } };
 
-      
-      if (!userId|| !project._id) {
-        return {
-          status: 404,
-          body: {
-            message: "Invalid credentials",
-            errors: ["Invalid credentials"],
-          },
-        };
-      }
-      const session = await Session.findOne({
-        userId
-      });
-      
-      if (!session) {
-        return {
-          status: 404,
-          body: {
-            message: "Session not found",
-            errors: ["Session not found"],
-          },
-        };
-      }
-      await session.deleteOne();
-      return {
-        status: 200,
-        body: {
-          message: "User logged out successfully",
-        },
-      };
-
-    } catch (error) {
-      console.log(error);
-      return {
-        status: 500,
-        body: {
-          message: "Internal Server Error",
-          errors: ["Internal Server Error"],
-        },
-      };
-    }
-  }
-
-  private tokenResponse(user: IUser) {
-    const payload = {
-      userId: user._id.toString(),
-      email: user.email,
-    };
+    const tokens = this.tokenResponse(user);
+    await Session.create({ userId: user._id, refreshToken: tokens.refreshToken });
 
     return {
-      accessToken: JWTUtils.generateAccessToken(payload),
-      refreshToken: JWTUtils.generateRefreshToken(payload),
+      status: 200,
+      body: { message: "User logged in successfully", user: { _id: user._id, fullName: user.fullName, email: user.email, phone: user.phone, role: endUser.role, status: endUser.status } },
+      ...tokens
     };
+  };
+
+  logOutService = async (user: any, context: any) => {
+    if (!user?._id) return { status: 404, body: { message: "Invalid credentials", errors: ["Invalid credentials"] } };
+
+    const session = await Session.findOne({ userId: user._id });
+    if (!session) return { status: 404, body: { message: "Session not found", errors: ["Session not found"] } };
+
+    await session.deleteOne();
+    return { status: 200, body: { message: "User logged out successfully" } };
+  };
+
+  private tokenResponse(user: any) {
+    const payload = { userId: user._id.toString(), email: user.email };
+    return { accessToken: JWTUtils.generateAccessToken(payload), refreshToken: JWTUtils.generateRefreshToken(payload) };
   }
-}
+} 

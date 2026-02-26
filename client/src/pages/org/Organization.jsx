@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 const Organization = () => {
   const { orgslug } = useParams();
 
-  
+
 
   return (
     <div>
