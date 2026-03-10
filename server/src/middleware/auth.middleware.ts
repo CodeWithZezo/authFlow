@@ -3,7 +3,10 @@ import { JWTUtils } from "../utils/jwt.utils";
 import { Organization } from "../models/schema/org.schema";
 import { Project } from "../models/schema/project.schema";
 import { check } from "zod";
-import { checkOrganizationMembershipByUserId, checkOrganizationMembershipByUserIdAndOrgId, checkProjectMembershipByUserIdAndProjectId } from "../utils/user.utils";
+import {
+  checkOrganizationMembershipByUserIdAndOrgId,
+  checkProjectMembershipByUserIdAndProjectId,
+} from "../utils/user.utils";
 
 export interface AuthRequest extends Request {
   user?: { userId: string; email: string };
@@ -48,7 +51,7 @@ export const authenticate = (
     }
 
     req.user = payload;
-    
+
     next();
   } catch (error) {
     console.error("AUTH ERROR:", error);
@@ -90,7 +93,10 @@ export const roleAuthorize = (
             },
           });
         }
-        membership = await checkOrganizationMembershipByUserIdAndOrgId(user.userId, orgId);
+        membership = await checkOrganizationMembershipByUserIdAndOrgId(
+          user.userId,
+          orgId,
+        );
       }
 
       if (type === "project") {
@@ -106,10 +112,13 @@ export const roleAuthorize = (
           });
         }
 
-        membership = await checkProjectMembershipByUserIdAndProjectId(user.userId, projectId);
+        membership = await checkProjectMembershipByUserIdAndProjectId(
+          user.userId,
+          projectId,
+        );
       }
 
-      if(!membership) {
+      if (!membership) {
         return res.status(404).json({
           status: 404,
           body: {
@@ -118,7 +127,7 @@ export const roleAuthorize = (
           },
         });
       }
-      if(membership.role.toString() !== user.userId) {
+      if (membership.role.toString() !== user.userId) {
         return res.status(403).json({
           status: 403,
           body: {
@@ -127,7 +136,6 @@ export const roleAuthorize = (
           },
         });
       }
-
     } catch (error) {
       console.log(error);
       res.status(403).json({
