@@ -2,8 +2,13 @@ import { PasswordPolicy } from "../models/schema/passwordPolicy.schema";
 import { Project } from "../models/schema/project.schema";
 import { ProjectPolicy } from "../models/schema/projectPolicy.schema";
 
-export const getProjectWithPolicy = async (projectId: string) => {
-  // Fetch project and project policy in parallel
+interface ProjectContext {
+  project: any;
+  projectPolicy: any | null;
+  passwordPolicy: any | null;
+}
+
+export const getProjectWithPolicy = async (projectId: string): Promise<ProjectContext | null> => {
   const projectPromise = Project.findOne(
     { _id: projectId, status: "active" },
     { _id: 1, name: 1, organizationId: 1 }
@@ -16,9 +21,8 @@ export const getProjectWithPolicy = async (projectId: string) => {
 
   const [project, projectPolicy] = await Promise.all([projectPromise, projectPolicyPromise]);
 
-  if (!project) return null; // Project doesn't exist
+  if (!project) return null; // Project not found
 
-  // Fetch password policy if it exists
   let passwordPolicy = null;
   if (projectPolicy?.passwordPolicyId) {
     passwordPolicy = await PasswordPolicy.findOne(
@@ -27,9 +31,5 @@ export const getProjectWithPolicy = async (projectId: string) => {
     ).lean();
   }
 
-  return {
-    project,
-    projectPolicy,
-    passwordPolicy,
-  };
+  return { project, projectPolicy: projectPolicy || null, passwordPolicy };
 };
