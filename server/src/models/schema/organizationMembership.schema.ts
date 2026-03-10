@@ -7,7 +7,7 @@ const OrganizationMembershipSchema: Schema<IOrganizationMembership> = new Schema
     userId: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User ID is required"],
+      required: [true, "User ID is required"], 
       index: true, // speeds up queries by user
     },
     orgId: {

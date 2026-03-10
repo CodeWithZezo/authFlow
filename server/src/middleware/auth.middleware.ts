@@ -56,3 +56,7 @@ export const authenticate = (
     });
   }
 };
+
+export const rbacMiddleware=({userId})=>{
+  const 
+}
