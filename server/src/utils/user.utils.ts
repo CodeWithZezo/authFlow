@@ -15,7 +15,7 @@ export const findOrganizationsByUserId = async (userId: string) => {
     return organizations;
 }
 //there i can find the role for a specific user in a specific organization, and then i can check if that role has the necessary permissions for a specific action.
-export const findOrganizationMembershipByUserId = async (userId: string, orgId: string) => {
+export const checkOrganizationMembershipByUserIdAndOrgId = async (userId: string, orgId: string) => {
     const orgMembership = await OrganizationMembership.findOne({ userId: userId, orgId: orgId }).lean();
     return orgMembership;
 }
@@ -32,7 +32,7 @@ export const findProjectsByUserId = async (userId: string) => {
     return projects;
 }
 //here i can check the role of the user in the project and then i can check if that role has the necessary permissions for a specific action. this is useful for checking if a user has the necessary permissions to perform a specific action in a project.
-export const findProjectMembershipByUserIdAndProjectId = async (userId: string, projectId: string) => {
+export const checkProjectMembershipByUserIdAndProjectId = async (userId: string, projectId: string) => {
     const projectMembership = await ProjectMembership.findOne({ userId: userId, projectId: projectId }).lean();
     return projectMembership;
 }
