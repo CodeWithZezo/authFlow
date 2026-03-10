@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { Project } from "../models/schema/project.schema";
 import { ProjectPolicy } from "../models/schema/projectPolicy.schema";
 import { PasswordPolicy } from "../models/schema/passwordPolicy.schema";
+import { findPasswordPolicyByPasswordProjectId, findProjectByProjectId, findProjectPolicyByProjectId } from "../utils/user.utils";
 
 export interface ResolvedRequest extends Request {
   context: {
@@ -22,24 +23,15 @@ export const resolveProjectContext = async (
       return res.status(400).json({ message: "Invalid or missing project ID" });
 
     // Fetch project and policy in parallel
-    const project = await Project.findOne(
-      { _id: projectId, status: "active" },
-      { _id: 1, name: 1, organizationId: 1 }
-    ).lean();
+    const project = await findProjectByProjectId(projectId);
     if (!project) return res.status(404).json({ message: "Project not found" });
 
-    const projectPolicy = await ProjectPolicy.findOne(
-      { projectId: project._id },
-      { _id: 1, authType: 1, roles: 1, statuses: 1, authMethods: 1, passwordPolicyId: 1 }
-    ).lean();
+    const projectPolicy = await findProjectPolicyByProjectId(projectId);
     if (!projectPolicy) return res.status(500).json({ message: "Project policy not found" });
 
     let passwordPolicy;
     if (projectPolicy.authType === "password" && projectPolicy.passwordPolicyId) {
-      passwordPolicy = await PasswordPolicy.findOne(
-        { _id: projectPolicy.passwordPolicyId },
-        { _id: 1, minLength: 1, requireNumbers: 1, requireUppercase: 1, requireSpecialChars: 1 }
-      ).lean();
+      passwordPolicy = await findPasswordPolicyByPasswordProjectId(projectPolicy.passwordPolicyId);
       if (!passwordPolicy) return res.status(500).json({ message: "Password policy not found" });
     }
 
@@ -49,3 +41,10 @@ export const resolveProjectContext = async (
     next(err);
   }
 };
+
+export const RoleAuthorize = (requiredRole: string) => {
+  return async (req: ResolvedRequest, res: Response, next: NextFunction) => {
+
+  }
+
+}
