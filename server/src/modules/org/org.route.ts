@@ -1,17 +1,24 @@
-// org.routes.ts
 import { Router } from "express";
-import { authenticate } from "../../middleware/auth.middleware";
 import { OrgController } from "./org.controller";
+import { authenticate, roleAuthorize } from "../../middleware/auth.middleware";
+import cookieParser from "cookie-parser";
 
 const router = Router();
 const orgController = new OrgController();
-//prg auth becasue we made a sepraet tabs for organizations
-router.post("/login", orgController.login)
 
-router.post("/create-org", authenticate, orgController.createOrgController);
-router.post("/get-all-org", authenticate, orgController.getAllOrgController);
-// router.post("/delete-org/", authenticate, orgController.deleteOrgController);
-// router.get("/:orgId", authenticate, orgController.getOrgController);
+router.use(cookieParser());
 
-// router.post("/update-org", authenticate, orgController.updateOrgController);
+// ─── Organization CRUD ────────────────────────────────────────────────────────
+router.post("/", authenticate, orgController.createOrg);
+router.get("/:orgId", authenticate, orgController.getOrg);
+router.patch("/:orgId", authenticate, roleAuthorize("admin", "organization"), orgController.updateOrg);
+router.delete("/:orgId", authenticate, roleAuthorize("owner", "organization"), orgController.deleteOrg);
+
+// ─── Organization Members ─────────────────────────────────────────────────────
+router.get("/:orgId/members", authenticate, roleAuthorize("member", "organization"), orgController.getOrgMembers);
+router.post("/:orgId/members", authenticate, roleAuthorize("admin", "organization"), orgController.addOrgMember);
+router.get("/:orgId/members/:userId", authenticate, roleAuthorize("member", "organization"), orgController.getOrgMember);
+router.patch("/:orgId/members/:userId", authenticate, roleAuthorize("admin", "organization"), orgController.updateOrgMember);
+router.delete("/:orgId/members/:userId", authenticate, roleAuthorize("admin", "organization"), orgController.removeOrgMember);
+
 export default router;
