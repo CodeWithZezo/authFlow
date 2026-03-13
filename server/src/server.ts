@@ -23,7 +23,7 @@ app.use(
 
 // ----------------------------
 // Rate limiting middleware
-// ----------------------------
+// ---------------------------- 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // max requests per IP
@@ -51,7 +51,7 @@ app.get('/health', async (req, res) => {
 // ----------------------------
 // API routes
 // ----------------------------
-app.use('/api', routes);
+app.use('/api/v1', routes);
 
 // ----------------------------
 // 404 handler (catch-all)

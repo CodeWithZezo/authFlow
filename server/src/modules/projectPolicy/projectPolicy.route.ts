@@ -10,9 +10,9 @@ router.use(cookieParser());
 
 // ─── Project Policy ───────────────────────────────────────────────────────────
 // Mount at: /api/v1/projects/:projectId/policy
-router.post("/", authenticate, roleAuthorize(["owner","admin"], "project"), projectPolicyController.createPolicy);
-router.get("/", authenticate, roleAuthorize(["owner","admin","member"], "project"), projectPolicyController.getPolicy);
-router.patch("/", authenticate, roleAuthorize(["owner","admin"], "project"), projectPolicyController.updatePolicy);
-router.delete("/", authenticate, roleAuthorize(["owner"], "project"), projectPolicyController.deletePolicy);
+router.post("/", authenticate, roleAuthorize(["manager", "contributor"], "project"), projectPolicyController.createPolicy);
+router.get("/", authenticate, roleAuthorize(["manager", "viewer", "contributor"], "project"), projectPolicyController.getPolicy);
+router.patch("/", authenticate, roleAuthorize(["manager", "contributor"], "project"), projectPolicyController.updatePolicy);
+router.delete("/", authenticate, roleAuthorize(["manager", "contributor"], "project"), projectPolicyController.deletePolicy);
 
 export default router;

@@ -10,9 +10,9 @@ router.use(cookieParser());
 
 // ─── Password Policy ──────────────────────────────────────────────────────────
 // Mount at: /api/v1/projects/:projectId/password-policy
-router.post("/", authenticate, roleAuthorize("admin", "project"), passwordPolicyController.createPasswordPolicy);
-router.get("/", authenticate, roleAuthorize("member", "project"), passwordPolicyController.getPasswordPolicy);
-router.patch("/", authenticate, roleAuthorize("admin", "project"), passwordPolicyController.updatePasswordPolicy);
-router.delete("/", authenticate, roleAuthorize("owner", "project"), passwordPolicyController.deletePasswordPolicy);
-
+router.post("/", authenticate, roleAuthorize(["manager", "contributor"], "project"), passwordPolicyController.createPasswordPolicy);
+router.get("/", authenticate, roleAuthorize(["manager", "viewer", "contributor"], "project"), passwordPolicyController.getPasswordPolicy);
+router.patch("/", authenticate, roleAuthorize(["manager", "contributor"], "project"), passwordPolicyController.updatePasswordPolicy);
+router.delete("/", authenticate, roleAuthorize(["manager", "contributor"], "project"), passwordPolicyController.deletePasswordPolicy);
+ 
 export default router;
