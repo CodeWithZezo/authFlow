@@ -7,6 +7,8 @@ import { AuthLayout }     from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
 import { LoginPage }  from "@/routes/_auth/login";
 import { SignupPage } from "@/routes/_auth/signup";
+import Docs from "./pages/Docs";
+import { Home } from "./pages/Home";
 
 // Layouts
 const AppLayout       = lazy(() => import("@/layouts/AppLayout").then(m      => ({ default: m.AppLayout })));
@@ -56,10 +58,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route index element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/docs" element={<Docs />} />
 
         {/* ── Auth (public) ── */}
         <Route element={<AuthLayout />}>
+
           <Route path="login"  element={<LoginPage />} />
           <Route path="signup" element={<SignupPage />} />
         </Route>
