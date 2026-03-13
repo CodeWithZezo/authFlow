@@ -13,5 +13,6 @@ router.post("/login", userController.login);
 router.get("/me", authenticate, userController.currentUser);         // FIX: was POST
 router.post("/refresh-token", userController.refreshToken);
 router.post("/logout", authenticate, userController.logout);
+router.patch("/change-password", authenticate, userController.requestPasswordReset);
 
 export default router;

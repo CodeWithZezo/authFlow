@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { UserService } from "./user.service";
+import { AuthRequest } from "../../middleware/auth.middleware";
 
 export class UserController {
   private userService: UserService;
@@ -40,7 +41,7 @@ export class UserController {
       console.error(error);
       return res.status(500).json({ message: "Internal server error" });
     }
-  };
+  }; 
 
   currentUser = async (req: Request, res: Response) => {
     try {
@@ -84,6 +85,25 @@ export class UserController {
     }
   };
 
+    requestPasswordReset = async (req: AuthRequest, res: Response) => {
+    try {      
+      const newPassword = req.body.newPassword;
+      const email = req.user?.email;
+      const currentPassword = req.body.currentPassword;
+      
+       if (!currentPassword) {
+        return res.status(400).json({ message: "Current password is required" });
+      }
+      if (!newPassword) {
+        return res.status(400).json({ message: "New password is required" });
+      }
+      const { status, body } = await this.userService.requestPasswordReset(newPassword, email, currentPassword);  
+      return res.status(status).json(body);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  };
   private setTokenCookies(res: Response, accessToken: string, refreshToken: string) {
     res.cookie("accessToken", accessToken, {
       httpOnly: true,

@@ -11,6 +11,7 @@ import {
 import { IUser } from "../../models/models.types";
 import { AuthRequest } from "../../middleware/auth.middleware";
 
+
 export class UserService {
 
   // ─── Signup ────────────────────────────────────────────────────────────────
@@ -206,6 +207,41 @@ export class UserService {
     }
   }
 
+  requestPasswordReset = async (newPassword: string, email:string|undefined, currentPassword:string): Promise<IServiceResponse<{message: string; errors?: any }>> => {
+    try {
+      if(!email){
+        return { status: 400, body: { message: "Email is required" } };
+      }
+      const user = await User.findOne({ email: email }).select("+passwordHash") as IUser | null;
+      if (!user) {
+        return { status: 404, body: { message: "User not found" } };
+      }
+      console.log(currentPassword,user.passwordHash);
+      
+      const isCurrentPasswordValid = await PasswordUtils.compare(currentPassword, user.passwordHash);
+      if (!isCurrentPasswordValid) {
+        return { status: 401, body: { message: "Current password is incorrect" } };
+      }
+
+      //hash the new password and update the user record
+       const passwordValidation = PasswordUtils.validate(newPassword);
+    if (!passwordValidation.valid) {
+      return {
+        status: 400,
+        body: { message: "Invalid password", errors: passwordValidation.errors },
+      };
+    }
+
+    const passwordHash = await PasswordUtils.hash(newPassword);
+      user.passwordHash = passwordHash;
+      await user.save();
+
+      return { status: 200, body: { message: "Password reset instructions sent if email exists" } };
+    } catch (error) {
+      console.error(error);
+      return { status: 500, body: { message: "Internal server error" } };
+    }
+  }
   // ─── Private Helpers ───────────────────────────────────────────────────────
   private generateTokens(user: IUser) {
     const payload = {

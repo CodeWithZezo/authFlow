@@ -64,14 +64,12 @@ export const authenticate = (
     });
   }
 };
-//here role for organization and project will be checked in the rbac middleware, and then the user will be authorized to perform a specific action based on their role in the organization or project. this is useful for checking if a user has the necessary permissions to perform a specific action in an organization or project.
 export const roleAuthorize = (
-  requriedRole: string,
+  requiredRoles: string | string[], // now can be a string or array of strings
   type: "organization" | "project",
 ) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      let membership;
       const user = req.user;
       if (!user) {
         return res.status(401).json({
@@ -82,8 +80,10 @@ export const roleAuthorize = (
           },
         });
       }
+
+      let membership;
       if (type === "organization") {
-        let orgId = req.params.orgId || req.body.orgId || req.query.orgId;
+        const orgId = req.params.orgId || req.body.orgId || req.query.orgId;
         if (!orgId) {
           return res.status(400).json({
             status: 400,
@@ -97,10 +97,8 @@ export const roleAuthorize = (
           user.userId,
           orgId,
         );
-      }
-
-      if (type === "project") {
-        let projectId =
+      } else if (type === "project") {
+        const projectId =
           req.params.projectId || req.body.projectId || req.query.projectId;
         if (!projectId) {
           return res.status(400).json({
@@ -111,7 +109,6 @@ export const roleAuthorize = (
             },
           });
         }
-
         membership = await checkProjectMembershipByUserIdAndProjectId(
           user.userId,
           projectId,
@@ -127,7 +124,13 @@ export const roleAuthorize = (
           },
         });
       }
-      if (membership.role.toString() !== user.userId) {
+
+      // Normalize to array
+      const rolesArray = Array.isArray(requiredRoles)
+        ? requiredRoles
+        : [requiredRoles];
+
+      if (!rolesArray.includes(membership.role.toString())) {
         return res.status(403).json({
           status: 403,
           body: {
@@ -136,8 +139,10 @@ export const roleAuthorize = (
           },
         });
       }
+
+      next(); // user has required role, proceed
     } catch (error) {
-      console.log(error);
+      console.error(error);
       res.status(403).json({
         status: 403,
         body: {
