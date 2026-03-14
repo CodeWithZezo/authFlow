@@ -1,0 +1,58 @@
+Project:
+  type: object
+  properties:
+    _id:
+      type: string
+      pattern: '^[a-f\d]{24}$'
+      example: "64f1a2b3c4d5e6f7a8b9c0d3"
+    name:
+      type: string
+      example: "My App"
+    description:
+      type: string
+      nullable: true
+      example: "Customer-facing web application"
+    organizationId:
+      type: string
+      pattern: '^[a-f\d]{24}$'
+      example: "64f1a2b3c4d5e6f7a8b9c0d1"
+    status:
+      type: string
+      enum: [active, inactive, pending, suspended]
+      example: active
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+ProjectMembership:
+  type: object
+  properties:
+    _id:
+      type: string
+      pattern: '^[a-f\d]{24}$'
+      example: "64f1a2b3c4d5e6f7a8b9c0d4"
+    projectId:
+      type: string
+      pattern: '^[a-f\d]{24}$'
+      example: "64f1a2b3c4d5e6f7a8b9c0d3"
+    userId:
+      description: Raw ObjectId string, or populated user object when fetched via list/get endpoints
+      oneOf:
+        - type: string
+          pattern: '^[a-f\d]{24}$'
+        - $ref: './user.yml#/PopulatedUser'
+    role:
+      type: string
+      enum: [manager, contributor, viewer]
+    status:
+      type: string
+      enum: [active, inactive, pending, suspended]
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time

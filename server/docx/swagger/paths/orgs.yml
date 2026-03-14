@@ -1,0 +1,373 @@
+paths:
+  /organizations:
+    post:
+      tags: [Organizations]
+      summary: Create an organization
+      description: |
+        Creates a new organization and automatically assigns the authenticated user
+        as `owner` with `active` status.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, slug]
+              properties:
+                name:
+                  type: string
+                  example: "Acme Corp"
+                slug:
+                  type: string
+                  example: "acme-corp"
+                  description: URL-safe unique identifier for the organization
+      responses:
+        '201':
+          description: Organization created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Organization created successfully"
+                  org:
+                    $ref: '../schemas/org.yml#/Organization'
+        '400':
+          description: Missing name or slug
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "Name and slug are required"
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '409':
+          description: Organization slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "Organization slug already exists"
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+  /organizations/{orgId}:
+    parameters:
+      - $ref: '../parameters/path.yml#/orgId'
+
+    get:
+      tags: [Organizations]
+      summary: Get organization by ID
+      description: Returns the organization. The authenticated user must be a member.
+      responses:
+        '200':
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Organization fetched successfully"
+                  org:
+                    $ref: '../schemas/org.yml#/Organization'
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          description: Not a member of this organization
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "You are not a member of this organization"
+        '404':
+          $ref: '../responses/errors.yml#/NotFound'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+    patch:
+      tags: [Organizations]
+      summary: Update organization
+      description: Update organization name and/or slug. Requires `admin` role or higher.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Acme Corporation"
+                slug:
+                  type: string
+                  example: "acme-corporation"
+      responses:
+        '200':
+          description: Organization updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Organization updated successfully"
+                  org:
+                    $ref: '../schemas/org.yml#/Organization'
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          $ref: '../responses/errors.yml#/Forbidden'
+        '404':
+          $ref: '../responses/errors.yml#/NotFound'
+        '409':
+          $ref: '../responses/errors.yml#/Conflict'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+    delete:
+      tags: [Organizations]
+      summary: Delete organization
+      description: Permanently deletes the organization and all memberships. Requires `owner` role.
+      responses:
+        '200':
+          description: Organization deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Organization deleted successfully"
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          $ref: '../responses/errors.yml#/Forbidden'
+        '404':
+          $ref: '../responses/errors.yml#/NotFound'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+  /organizations/{orgId}/members:
+    parameters:
+      - $ref: '../parameters/path.yml#/orgId'
+
+    get:
+      tags: [Organization Members]
+      summary: List all organization members
+      description: |
+        Returns all memberships with userId populated (fullName, email, phone, isVerified).
+        Requires `member` role or higher.
+      responses:
+        '200':
+          description: Members list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Members fetched successfully"
+                  members:
+                    type: array
+                    items:
+                      $ref: '../schemas/org.yml#/OrganizationMembership'
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          $ref: '../responses/errors.yml#/Forbidden'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+    post:
+      tags: [Organization Members]
+      summary: Add a member to the organization
+      description: |
+        Adds an existing user to the organization with the given role.
+        Requires `admin` role or higher.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId:
+                  type: string
+                  pattern: '^[a-f\d]{24}$'
+                  example: "64f1a2b3c4d5e6f7a8b9c0d1"
+                role:
+                  type: string
+                  enum: [owner, admin, member]
+                  default: member
+      responses:
+        '201':
+          description: Member added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Member added successfully"
+                  membership:
+                    $ref: '../schemas/org.yml#/OrganizationMembership'
+        '400':
+          description: userId is required
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "userId is required"
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          $ref: '../responses/errors.yml#/Forbidden'
+        '404':
+          description: Organization not found
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+        '409':
+          description: User is already a member of this organization
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "User is already a member of this organization"
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+  /organizations/{orgId}/members/{userId}:
+    parameters:
+      - $ref: '../parameters/path.yml#/orgId'
+      - $ref: '../parameters/path.yml#/userId'
+
+    get:
+      tags: [Organization Members]
+      summary: Get a specific organization member
+      description: Returns a single membership with populated user. Requires `member` role.
+      responses:
+        '200':
+          description: Member details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Member fetched successfully"
+                  membership:
+                    $ref: '../schemas/org.yml#/OrganizationMembership'
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          $ref: '../responses/errors.yml#/Forbidden'
+        '404':
+          description: Member not found in this organization
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "Member not found in this organization"
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+    patch:
+      tags: [Organization Members]
+      summary: Update member role or status
+      description: |
+        Update a member's role and/or status. Requires `admin` role.
+        Cannot downgrade or remove the last owner of an organization.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [owner, admin, member]
+                status:
+                  type: string
+                  enum: [active, inactive, pending, suspended]
+      responses:
+        '200':
+          description: Member updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Member updated successfully"
+                  membership:
+                    $ref: '../schemas/org.yml#/OrganizationMembership'
+        '400':
+          description: Cannot change role of the last owner
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "Cannot change role of the last owner"
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          $ref: '../responses/errors.yml#/Forbidden'
+        '404':
+          $ref: '../responses/errors.yml#/NotFound'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+    delete:
+      tags: [Organization Members]
+      summary: Remove a member from the organization
+      description: |
+        Removes a user's membership. Requires `admin` role.
+        Cannot remove the last owner.
+      responses:
+        '200':
+          description: Member removed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Member removed successfully"
+        '400':
+          description: Cannot remove the last owner
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "Cannot remove the last owner of an organization"
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '403':
+          $ref: '../responses/errors.yml#/Forbidden'
+        '404':
+          $ref: '../responses/errors.yml#/NotFound'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'

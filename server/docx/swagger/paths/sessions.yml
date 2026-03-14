@@ -1,0 +1,95 @@
+paths:
+  /sessions:
+    get:
+      tags: [Sessions]
+      summary: List all active sessions
+      description: |
+        Returns all active sessions for the authenticated user, sorted newest first.
+        The `refreshToken` field is never included in responses.
+      responses:
+        '200':
+          description: Sessions list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Sessions fetched successfully"
+                  count:
+                    type: integer
+                    description: Total number of active sessions
+                    example: 3
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '../schemas/session.yml#/Session'
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+    delete:
+      tags: [Sessions]
+      summary: Revoke all sessions
+      description: |
+        Deletes every session for the authenticated user, effectively logging out from all devices.
+        The current session is also revoked — clear local auth state after calling this.
+      responses:
+        '200':
+          description: All sessions revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "All sessions revoked successfully"
+                  revokedCount:
+                    type: integer
+                    description: Number of sessions that were deleted
+                    example: 3
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'
+
+  /sessions/{sessionId}:
+    parameters:
+      - $ref: '../parameters/path.yml#/sessionId'
+
+    delete:
+      tags: [Sessions]
+      summary: Revoke a specific session
+      description: |
+        Deletes a single session by ID. Scoped to the authenticated user —
+        users cannot revoke sessions belonging to other users.
+      responses:
+        '200':
+          description: Session revoked
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Session revoked successfully"
+                  isCurrentSession:
+                    type: boolean
+                    description: True if the revoked session was the caller's active session
+                    example: false
+        '401':
+          $ref: '../responses/errors.yml#/Unauthorized'
+        '404':
+          description: Session not found or belongs to another user
+          content:
+            application/json:
+              schema:
+                $ref: '../schemas/error.yml#/Error'
+              example:
+                message: "Session not found"
+        '500':
+          $ref: '../responses/errors.yml#/InternalError'

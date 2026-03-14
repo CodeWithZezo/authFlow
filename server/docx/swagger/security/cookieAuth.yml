@@ -1,0 +1,5 @@
+cookieAuth:
+  type: apiKey
+  in: cookie
+  name: accessToken
+  description: "HTTP-only cookie set automatically on login/signup. Send requests with credentials: include."

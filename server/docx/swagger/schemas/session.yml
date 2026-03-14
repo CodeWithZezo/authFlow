@@ -1,0 +1,20 @@
+Session:
+  type: object
+  description: Active login session. The refreshToken field is never exposed.
+  properties:
+    _id:
+      type: string
+      pattern: '^[a-f\d]{24}$'
+      example: "64f1a2b3c4d5e6f7a8b9c0d7"
+    userId:
+      type: string
+      pattern: '^[a-f\d]{24}$'
+      example: "64f1a2b3c4d5e6f7a8b9c0d1"
+    createdAt:
+      type: string
+      format: date-time
+      example: "2024-09-01T10:00:00.000Z"
+    updatedAt:
+      type: string
+      format: date-time
+      example: "2024-09-01T12:30:00.000Z"
