@@ -18,7 +18,7 @@ export class UserService {
   async signup(
     data: ISignupRequest
   ): Promise<IServiceResponse<AuthResponse | { message: string; errors?: any }>> {
-    const { fullName, email, password, phone } = data;
+    const { fullName, email, password, phone, avatarUrl } = data;
 
     const passwordValidation = PasswordUtils.validate(password);
     if (!passwordValidation.valid) {
@@ -37,6 +37,7 @@ export class UserService {
         phone: phone ? phone.toString() : null,
         passwordHash,
         isVerified: false,
+        avatarUrl: avatarUrl? avatarUrl :null,
       });
 
       const { accessToken, refreshToken } = this.generateTokens(user);
@@ -51,6 +52,7 @@ export class UserService {
             id: user._id,
             fullName: user.fullName,
             email: user.email,
+            avatarUrl: user.avatarUrl ?? undefined,
             phone: user.phone?.toString() ?? undefined,
           },
           accessToken,
@@ -98,6 +100,7 @@ export class UserService {
           fullName: user.fullName,
           email: user.email,
           phone: user.phone?.toString() ?? undefined,
+          avatarUrl: user.avatarUrl ?? undefined,
         },
         accessToken,
         refreshToken,

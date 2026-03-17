@@ -4,6 +4,8 @@ import { IOrganization, IOrganizationMembership } from "../../models/models.type
 import { IServiceResponse } from "../../types/auth.types";
 import { Role, Status } from "../../models/enums";
 import { logger } from "../../utils/logger";
+import { User } from "../../models/schema/user.schema";
+import { isVerifiedUser } from "../../utils/user.utils";
 
 interface ICreateOrgRequest {
   name: string;
@@ -34,7 +36,13 @@ export class OrgService {
   ): Promise<IServiceResponse<any>> {
     try {
       const { name, slug } = data;
-
+      const isVerified = await isVerifiedUser(userId);
+      if (!isVerified) {
+        return {
+          status: 403,
+          body: { message: "Email verification required to create an organization" },
+        };
+      }
       if (!name || !slug) {
         return {
           status: 400,

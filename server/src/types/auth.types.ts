@@ -14,6 +14,7 @@ export interface AuthResponse {
     fullName: string;
     email: string;
     phone: string | undefined | null;
+    avatarUrl: string | undefined | null;
   };
   accessToken: string;
   refreshToken: string;
@@ -30,7 +31,8 @@ export interface ISignupRequest {
   fullName: string; 
   email: string;
   password: string;
-  phone: string;
+  phone?: string;
+  avatarUrl?: string;
 }
 // Generic service response
 export interface IServiceResponse<T> {

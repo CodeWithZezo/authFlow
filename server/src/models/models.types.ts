@@ -7,6 +7,7 @@ export interface IUser extends Document {
   email: string;
   passwordHash: string;
   phone?: string | null;
+  avatarUrl?: string | null;
   isVerified: boolean;
   publicMetadata: Map<string, any>;
   privateMetadata: Map<string, any>;

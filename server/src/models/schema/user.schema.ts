@@ -39,6 +39,11 @@ const userSchema: Schema<IUser> = new Schema(
       type: Boolean,
       default: false,
     },
+    avatarUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     publicMetadata: {
       type: Map,
       of: Schema.Types.Mixed,

@@ -5,6 +5,7 @@ import { PasswordPolicy } from "../models/schema/passwordPolicy.schema";
 import { Project } from "../models/schema/project.schema";
 import { ProjectMembership } from "../models/schema/projectMembership.schema";
 import { ProjectPolicy } from "../models/schema/projectPolicy.schema";
+import { User } from "../models/schema/user.schema";
 
 //there i can find the organization membership for a user in a specific organization, and then i can find the organization details for that organization. this is useful for checking if a user is a member of an organization and what their role is in that organization.
 export const findOrganizationByUserId = async (
@@ -85,7 +86,10 @@ export const findOrganizationMembershipByUserIdAndOrgId = async (
   return orgMembership;
 };
 
-
+export const isVerifiedUser = async (userId: string) => {
+  const user = await User.findById(userId).select("isVerified").lean();
+  return user?.isVerified ?? false;
+}
 
 
 
