@@ -2,8 +2,12 @@
 // Tests GET/DELETE /api/v1/sessions
 
 import request from "supertest";
-import app     from "../../helpers/app";
-import { createUser, createSession, authCookiesForUser } from "../../helpers/factories";
+import app from "../../helpers/app.js";
+import {
+  createUser,
+  createSession,
+  authCookiesForUser,
+} from "../../helpers/factories.js";
 
 // ─── GET /sessions ────────────────────────────────────────────────────────────
 describe("GET /api/v1/sessions", () => {
@@ -25,7 +29,9 @@ describe("GET /api/v1/sessions", () => {
   });
 
   it("does not return the refreshToken field on any session", async () => {
-    const { user } = await createUser({ email: "sessions-notoken@example.com" });
+    const { user } = await createUser({
+      email: "sessions-notoken@example.com",
+    });
     await createSession(user._id);
     const { cookieHeader } = await authCookiesForUser(user._id, user.email);
 
@@ -63,12 +69,16 @@ describe("GET /api/v1/sessions", () => {
     const { cookieHeader } = await authCookiesForUser(user._id, user.email);
 
     // Delete the session that was just created by authCookiesForUser
-    const { Session } = await import("../../../src/models/schema/session.schema");
+    const { Session } =
+      await import("../../../models/schema/session.schema.js");
     await (Session as any).deleteMany({ userId: user._id });
 
     // Create a fresh valid token to still authenticate (session is gone but cookie is still valid JWT)
-    const { JWTUtils } = await import("../../../src/utils/jwt.utils");
-    const freshToken = JWTUtils.generateAccessToken({ userId: user._id.toString(), email: user.email });
+    const { JWTUtils } = await import("../../../utils/jwt.utils.js");
+    const freshToken = JWTUtils.generateAccessToken({
+      userId: user._id.toString(),
+      email: user.email,
+    });
 
     const res = await request(app)
       .get("/api/v1/sessions")
@@ -95,7 +105,9 @@ describe("DELETE /api/v1/sessions/:sessionId", () => {
   });
 
   it("the revoked session no longer appears in the sessions list", async () => {
-    const { user } = await createUser({ email: "sessions-afterrevoke@example.com" });
+    const { user } = await createUser({
+      email: "sessions-afterrevoke@example.com",
+    });
     const { session } = await createSession(user._id);
     const { cookieHeader } = await authCookiesForUser(user._id, user.email);
 
@@ -112,7 +124,9 @@ describe("DELETE /api/v1/sessions/:sessionId", () => {
   });
 
   it("returns 404 when the session does not exist", async () => {
-    const { user } = await createUser({ email: "sessions-notfound@example.com" });
+    const { user } = await createUser({
+      email: "sessions-notfound@example.com",
+    });
     const { cookieHeader } = await authCookiesForUser(user._id, user.email);
 
     const res = await request(app)
@@ -126,7 +140,10 @@ describe("DELETE /api/v1/sessions/:sessionId", () => {
     const userA = await createUser({ email: "sessions-a@example.com" });
     const userB = await createUser({ email: "sessions-b@example.com" });
     const { session: sessionA } = await createSession(userA.user._id);
-    const { cookieHeader: cookieB } = await authCookiesForUser(userB.user._id, userB.user.email);
+    const { cookieHeader: cookieB } = await authCookiesForUser(
+      userB.user._id,
+      userB.user.email,
+    );
 
     const res = await request(app)
       .delete(`/api/v1/sessions/${sessionA._id}`)
@@ -140,7 +157,9 @@ describe("DELETE /api/v1/sessions/:sessionId", () => {
 // ─── DELETE /sessions (revoke all) ────────────────────────────────────────────
 describe("DELETE /api/v1/sessions", () => {
   it("revokes all sessions and returns the count — returns 200", async () => {
-    const { user } = await createUser({ email: "sessions-revokeall@example.com" });
+    const { user } = await createUser({
+      email: "sessions-revokeall@example.com",
+    });
     await createSession(user._id);
     await createSession(user._id);
     const { cookieHeader } = await authCookiesForUser(user._id, user.email);

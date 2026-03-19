@@ -2,11 +2,10 @@
 // Tests GET /api/v1/auth/me — requires valid accessToken cookie.
 
 import request from "supertest";
-import app     from "../../helpers/app";
-import { createUser, authCookiesForUser } from "../../helpers/factories";
+import app from "../../helpers/app.js";
+import { createUser, authCookiesForUser } from "../../helpers/factories.js";
 
 describe("GET /api/v1/auth/me", () => {
-
   it("returns 200 with the user document when authenticated", async () => {
     const { user } = await createUser({ email: "me@example.com" });
     const { cookieHeader } = await authCookiesForUser(user._id, user.email);
@@ -57,11 +56,11 @@ describe("GET /api/v1/auth/me", () => {
   });
 
   it("returns 404 when the userId in the token no longer exists in the DB", async () => {
-    const { JWTUtils } = await import("../../../src/utils/jwt.utils");
+    const { JWTUtils } = await import("../../../utils/jwt.utils.js");
     // Use a valid-looking but non-existent ObjectId
     const fakeToken = JWTUtils.generateAccessToken({
       userId: "000000000000000000000000",
-      email:  "ghost@example.com",
+      email: "ghost@example.com",
     });
 
     const res = await request(app)
