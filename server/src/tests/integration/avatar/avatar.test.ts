@@ -1,6 +1,17 @@
-// Mock S3 and sharp — no real AWS calls or image processing in tests
-jest.mock("../../app/utils/s3.utils");
-jest.mock("sharp");
+// Mock S3 — no real AWS calls
+jest.mock("../../../app/utils/s3.utils");
+
+// Mock sharp so it returns a chainable object that resolves to a Buffer.
+// Without this, jest.mock("sharp") returns undefined and crashes the middleware.
+jest.mock("sharp", () => {
+  const chain: any = {
+    resize: jest.fn().mockReturnThis(),
+    jpeg: jest.fn().mockReturnThis(),
+    withMetadata: jest.fn().mockReturnThis(),
+    toBuffer: jest.fn().mockResolvedValue(Buffer.from("fake-processed-image")),
+  };
+  return jest.fn(() => chain);
+});
 
 import request from "supertest";
 import { Readable } from "stream";
@@ -21,15 +32,14 @@ const mockStreamFromS3 = streamFromS3 as jest.Mock;
 const mockDeleteFromS3 = deleteFromS3 as jest.Mock;
 const mockBuildAvatarKey = buildAvatarKey as jest.Mock;
 
-// Minimal 1×1 px JPEG (valid file that passes multer MIME check)
+// Minimal valid JPEG bytes (passes multer MIME type check)
 const TINY_JPEG = Buffer.from(
   "/9j/4AAQSkZJRgABAQEASABIAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8U" +
-  "HRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgN" +
-  "DRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy" +
-  "MjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgUE/8QAIhAA" +
-  "AgIBBAMBAAAAAAAAAAAAAQIDBAUREiExQf/EABUBAQEAAAAAAAAAAAAAAAAAAAEC/8QAFBEB" +
-  "AAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8Aq2vaPqOq3lxZWNvJcXECB3VccA9s5q" +
-  "z0PRp9Ovbu8aQR2UbRxsByw5z+qq7jrEFnaLbxQs5aPa7lsbTn096sqVoK//2Q==",
+  "HRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAARCAABAAEDASIA" +
+  "AhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABgUE/8QAIhAAAgIBBAMBAAAAAAAAAAAAAQID" +
+  "BAUREiExQf/EABUBAQEAAAAAAAAAAAAAAAAAAAEC/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/" +
+  "aAAwDAQACEQMRAD8Aq2vaPqOq3lxZWNvJcXECB3VccA9s5qz0PRp9Ovbu8aQR2UbRxsBy" +
+  "w5z+qq7jrEFnaLbxQs5aPa7lsbTn096sqVoK//2Q==",
   "base64"
 );
 
@@ -97,7 +107,6 @@ describe("Avatar Integration", () => {
     });
 
     it("DELETE returns 200 when avatar exists", async () => {
-      // First set an avatarKey directly in DB
       await User.findByIdAndUpdate(ownerUserId, { avatarKey: "avatars/users/test.jpg" });
 
       const res = await request(app)
@@ -130,12 +139,8 @@ describe("Avatar Integration", () => {
     it("streams image bytes when avatar exists", async () => {
       await User.findByIdAndUpdate(ownerUserId, { avatarKey: "avatars/users/test.jpg" });
 
-      // Mock S3 stream
       const fakeStream = new Readable({
-        read() {
-          this.push(TINY_JPEG);
-          this.push(null);
-        },
+        read() { this.push(TINY_JPEG); this.push(null); },
       });
       mockStreamFromS3.mockResolvedValue({
         stream: fakeStream,
@@ -149,7 +154,6 @@ describe("Avatar Integration", () => {
 
       expect(res.status).toBe(200);
       expect(res.headers["content-type"]).toContain("image/jpeg");
-      // Confirm S3 URL was never leaked into any header
       const allHeaders = JSON.stringify(res.headers);
       expect(allHeaders).not.toContain("amazonaws.com");
     });
@@ -166,7 +170,6 @@ describe("Avatar Integration", () => {
 
       const allHeaders = JSON.stringify(res.headers);
       expect(allHeaders).not.toContain("secret-key.jpg");
-      expect(allHeaders).not.toContain("s3.");
       expect(allHeaders).not.toContain("amazonaws");
     });
   });

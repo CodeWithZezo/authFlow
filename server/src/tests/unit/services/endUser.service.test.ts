@@ -19,8 +19,20 @@ import mongoose from "mongoose";
 
 const fakeUserId = new mongoose.Types.ObjectId().toString();
 const fakeProjectId = new mongoose.Types.ObjectId().toString();
-const fakeUser = { _id: fakeUserId, fullName: "End User", email: "eu@test.com", phone: null, passwordHash: "hashed" };
-const fakeEndUser = { _id: "eu1", userId: fakeUserId, projectId: fakeProjectId, role: "user", status: "active" };
+const fakeUser = {
+  _id: fakeUserId,
+  fullName: "End User",
+  email: "eu@test.com",
+  phone: null,
+  passwordHash: "hashed",
+};
+const fakeEndUser = {
+  _id: "eu1",
+  userId: fakeUserId,
+  projectId: fakeProjectId,
+  role: "user",
+  status: "active",
+};
 const fakeContext = {
   project: { _id: fakeProjectId, name: "Test Project" },
   projectPolicy: { authType: "password", authMethods: ["email"], authRequired: true },
@@ -52,7 +64,7 @@ describe("EndUserService", () => {
 
       const result = await service.signupService({ email: "x@x.com" }, fakeContext);
       expect(result.status).toBe(400);
-      expect(result.body.errors).toContain("Auth method required");
+      expect((result as any).body.errors).toContain("Auth method required");
     });
 
     it("returns 400 when user already exists in project", async () => {
@@ -61,7 +73,7 @@ describe("EndUserService", () => {
 
       const result = await service.signupService({ email: "eu@test.com", password: "pass" }, fakeContext);
       expect(result.status).toBe(400);
-      expect((result.body as any).message).toMatch(/already exists/i);
+      expect((result as any).body.message).toMatch(/already exists/i);
     });
 
     it("returns 201 with tokens on successful signup", async () => {
@@ -75,7 +87,7 @@ describe("EndUserService", () => {
       const result = await service.signupService(
         { fullName: "End User", email: "eu@test.com", password: "pass123", authMethod: "email" },
         fakeContext
-      );
+      ) as any;
 
       expect(result.status).toBe(201);
       expect(result.accessToken).toBe("access_token");
@@ -110,7 +122,11 @@ describe("EndUserService", () => {
         lean: jest.fn().mockResolvedValue({ _id: fakeUserId, avatarKey: null }),
       });
 
-      const result = await service.loginService({ email: "eu@test.com", password: "pass123" }, fakeContext);
+      const result = await service.loginService(
+        { email: "eu@test.com", password: "pass123" },
+        fakeContext
+      ) as any;
+
       expect(result.status).toBe(200);
       expect(result.accessToken).toBe("access_token");
       expect(result.body.user.avatarUrl).toBeNull();
@@ -125,9 +141,12 @@ describe("EndUserService", () => {
         lean: jest.fn().mockResolvedValue({ _id: fakeUserId, avatarKey: "avatars/endusers/eu.jpg" }),
       });
 
-      const result = await service.loginService({ email: "eu@test.com", password: "pass" }, fakeContext);
-      const url = result.body.user.avatarUrl as string;
+      const result = await service.loginService(
+        { email: "eu@test.com", password: "pass" },
+        fakeContext
+      ) as any;
 
+      const url = result.body.user.avatarUrl as string;
       expect(url).toContain(`/api/v1/project/${fakeProjectId}/end-user/avatar/`);
       expect(url).not.toContain("amazonaws.com");
     });

@@ -9,18 +9,24 @@ import {
   createTestEndUser,
 } from "../../helpers/testFactories";
 
+// Helper: safely extract set-cookie header as array
+const getCookies = (res: request.Response): string[] => {
+  const raw = res.headers["set-cookie"];
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : [raw as unknown as string];
+};
+
 describe("EndUser Integration", () => {
   let projectId: string;
   let BASE: string;
 
   beforeEach(async () => {
-    const { user, accessToken } = await createVerifiedUser();
+    const { user } = await createVerifiedUser();
     const org = await createTestOrg(user._id.toString());
     const project = await createTestProject(org._id.toString(), user._id.toString());
     projectId = project._id.toString();
     BASE = `/api/v1/project/${projectId}/end-user`;
 
-    // Set up policies required for end-user auth
     const pp = await createTestPasswordPolicy(projectId);
     await createTestProjectPolicy(projectId, pp._id.toString());
   });
@@ -102,8 +108,8 @@ describe("EndUser Integration", () => {
         });
 
       expect(res.status).toBe(201);
-      const cookies = res.headers["set-cookie"] as string[];
-      expect(cookies.some((c: string) => c.startsWith("accessToken="))).toBe(true);
+      const cookies = getCookies(res);
+      expect(cookies.some((c) => c.startsWith("accessToken="))).toBe(true);
     });
   });
 

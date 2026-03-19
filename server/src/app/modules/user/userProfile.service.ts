@@ -4,19 +4,17 @@ import { buildAvatarKey, deleteFromS3, uploadToS3 } from "../../utils/s3.utils";
 import { logger } from "../../utils/logger";
 
 export class UserProfileService {
+
   // ─── Upload / replace avatar ────────────────────────────────────────────────
-  // Accepts the already-resized buffer from the upload middleware.
-  // Deletes the old S3 object before uploading the new one to avoid orphans.
   async uploadAvatar(
     userId: string,
     fileBuffer: Buffer,
-    _mimeType: string // always jpeg after sharp — kept for clarity
+    _mimeType: string
   ): Promise<IServiceResponse<any>> {
     try {
       const user = await User.findById(userId).select("avatarKey").lean();
       if (!user) return { status: 404, body: { message: "User not found" } };
 
-      // Delete previous avatar from S3 if one exists
       if ((user as any).avatarKey) {
         await deleteFromS3((user as any).avatarKey).catch((err) =>
           logger.warn("Could not delete old avatar from S3", err)
@@ -25,15 +23,12 @@ export class UserProfileService {
 
       const key = buildAvatarKey("users", userId, "jpg");
       await uploadToS3(key, fileBuffer, "image/jpeg");
-
-      // Store only the S3 key — never the full URL
       await User.findByIdAndUpdate(userId, { avatarKey: key });
 
       return {
         status: 200,
         body: {
           message: "Avatar uploaded successfully",
-          // Return a backend streaming URL — not the S3 URL
           avatarUrl: `/api/v1/auth/avatar/${userId}`,
         },
       };
@@ -44,11 +39,16 @@ export class UserProfileService {
   }
 
   // ─── Get full profile ───────────────────────────────────────────────────────
+  // FIX: avatarKey has select:false so it is never in a normal query result.
+  // We must do a second explicit query with .select("avatarKey") to check it.
   async getProfile(userId: string): Promise<IServiceResponse<any>> {
     try {
-      const user = await User.findById(userId)
-        .select("-passwordHash -privateMetadata -avatarKey")
-        .lean();
+      const [user, avatarDoc] = await Promise.all([
+        User.findById(userId)
+          .select("-passwordHash -privateMetadata -avatarKey")
+          .lean(),
+        User.findById(userId).select("avatarKey").lean(),
+      ]);
 
       if (!user) return { status: 404, body: { message: "User not found" } };
 
@@ -58,8 +58,7 @@ export class UserProfileService {
           message: "Profile fetched successfully",
           user: {
             ...user,
-            // Expose a streaming URL, not the raw S3 key / S3 URL
-            avatarUrl: (user as any).avatarKey
+            avatarUrl: (avatarDoc as any)?.avatarKey
               ? `/api/v1/auth/avatar/${userId}`
               : null,
           },
@@ -84,13 +83,12 @@ export class UserProfileService {
         };
       }
 
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { $set: data },
-        { new: true, runValidators: true }
-      )
-        .select("-passwordHash -privateMetadata -avatarKey")
-        .lean();
+      const [user, avatarDoc] = await Promise.all([
+        User.findByIdAndUpdate(userId, { $set: data }, { new: true, runValidators: true })
+          .select("-passwordHash -privateMetadata -avatarKey")
+          .lean(),
+        User.findById(userId).select("avatarKey").lean(),
+      ]);
 
       if (!user) return { status: 404, body: { message: "User not found" } };
 
@@ -100,7 +98,7 @@ export class UserProfileService {
           message: "Profile updated successfully",
           user: {
             ...user,
-            avatarUrl: (user as any).avatarKey
+            avatarUrl: (avatarDoc as any)?.avatarKey
               ? `/api/v1/auth/avatar/${userId}`
               : null,
           },

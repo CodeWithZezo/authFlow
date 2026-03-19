@@ -8,10 +8,10 @@ export class EndUserController {
   signup = async (req: Request, res: Response) => {
     try {
       const context = (req as ResolvedRequest).context;
-      const result = await this.userService.signupService(req.body, context);
+      const result = await this.userService.signupService(req.body, context) as any;
       this.setTokenCookies(res, result?.accessToken, result?.refreshToken);
       return res.status(result.status).json(result.body);
-    } catch (err:any) {
+    } catch (err: any) {
       console.error("Signup Error:", err);
       return res.status(500).json({ message: "Internal Server Error", errors: [err.message || "Unknown error"] });
     }
@@ -20,7 +20,7 @@ export class EndUserController {
   login = async (req: Request, res: Response) => {
     try {
       const context = (req as ResolvedRequest).context;
-      const result = await this.userService.loginService(req.body, context);
+      const result = await this.userService.loginService(req.body, context) as any;
       this.setTokenCookies(res, result?.accessToken, result?.refreshToken);
       return res.status(result.status).json(result.body);
     } catch (err: any) {

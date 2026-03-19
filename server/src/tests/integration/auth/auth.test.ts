@@ -1,10 +1,15 @@
 import request from "supertest";
 import app from "../../../app";
 import { createTestUser, createVerifiedUser } from "../../helpers/testFactories";
-import { User } from "../../../app/models/schema/user.schema";
 import { Session } from "../../../app/models/schema/session.schema";
 
 const BASE = "/api/v1/auth";
+
+const getCookies = (res: request.Response): string[] => {
+  const raw = res.headers["set-cookie"];
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : [raw as unknown as string];
+};
 
 describe("Auth Integration", () => {
   // ─── POST /auth/signup ──────────────────────────────────────────────────────
@@ -17,10 +22,9 @@ describe("Auth Integration", () => {
       expect(res.status).toBe(201);
       expect(res.body.user.email).toBe("alice@test.com");
       expect(res.body.user).not.toHaveProperty("passwordHash");
-      expect(res.headers["set-cookie"]).toBeDefined();
-      const cookies = res.headers["set-cookie"] as string[];
-      expect(cookies.some((c: string) => c.startsWith("accessToken="))).toBe(true);
-      expect(cookies.some((c: string) => c.startsWith("refreshToken="))).toBe(true);
+      const cookies = getCookies(res);
+      expect(cookies.some((c) => c.startsWith("accessToken="))).toBe(true);
+      expect(cookies.some((c) => c.startsWith("refreshToken="))).toBe(true);
     });
 
     it("returns 400 for duplicate email", async () => {
@@ -42,10 +46,11 @@ describe("Auth Integration", () => {
       expect(res.body.errors).toBeDefined();
     });
 
-    it("returns 400 when required fields missing", async () => {
+    // FIX: missing password now returns 400 (guarded before .validate())
+    it("returns 400 when password is missing", async () => {
       const res = await request(app)
         .post(`${BASE}/signup`)
-        .send({ email: "noname@test.com" });
+        .send({ fullName: "Bob", email: "nopass@test.com" });
 
       expect(res.status).toBe(400);
     });
@@ -62,8 +67,8 @@ describe("Auth Integration", () => {
 
       expect(res.status).toBe(200);
       expect(res.body.user.email).toBe("login@test.com");
-      const cookies = res.headers["set-cookie"] as string[];
-      expect(cookies.some((c: string) => c.startsWith("accessToken="))).toBe(true);
+      const cookies = getCookies(res);
+      expect(cookies.some((c) => c.startsWith("accessToken="))).toBe(true);
     });
 
     it("returns 404 for unknown email", async () => {
@@ -128,25 +133,29 @@ describe("Auth Integration", () => {
         .set("Cookie", `refreshToken=${refreshToken}`);
 
       expect(res.status).toBe(200);
-      const cookies = res.headers["set-cookie"] as string[];
-      expect(cookies.some((c: string) => c.startsWith("accessToken="))).toBe(true);
-      expect(cookies.some((c: string) => c.startsWith("refreshToken="))).toBe(true);
+      const cookies = getCookies(res);
+      expect(cookies.some((c) => c.startsWith("accessToken="))).toBe(true);
+      expect(cookies.some((c) => c.startsWith("refreshToken="))).toBe(true);
     });
 
-    it("returns 401 when refresh token already revoked", async () => {
-      const { refreshToken } = await createVerifiedUser("revoked@test.com");
+    // FIX: after the first refresh the old session is deleted.
+    // The second call with the SAME old token must fail with 401
+    // because that session no longer exists in the DB.
+    it("returns 401 when refresh token already revoked (token rotation)", async () => {
+      const { refreshToken: oldToken } = await createVerifiedUser("revoked@test.com");
 
-      // First refresh — consumes the token
-      await request(app)
+      // First refresh — consumes the old token, creates a new session
+      const first = await request(app)
         .post(`${BASE}/refresh-token`)
-        .set("Cookie", `refreshToken=${refreshToken}`);
+        .set("Cookie", `refreshToken=${oldToken}`);
+      expect(first.status).toBe(200);
 
-      // Second refresh with same token — should fail
-      const res = await request(app)
+      // Second refresh with the ORIGINAL (now revoked) token — must fail
+      const second = await request(app)
         .post(`${BASE}/refresh-token`)
-        .set("Cookie", `refreshToken=${refreshToken}`);
+        .set("Cookie", `refreshToken=${oldToken}`);
 
-      expect(res.status).toBe(401);
+      expect(second.status).toBe(401);
     });
   });
 

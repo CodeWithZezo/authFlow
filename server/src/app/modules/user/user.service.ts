@@ -11,7 +11,6 @@ import {
 import { IUser } from "../../models/models.types";
 import { AuthRequest } from "../../middleware/auth.middleware";
 
-
 export class UserService {
 
   // ─── Signup ────────────────────────────────────────────────────────────────
@@ -19,6 +18,14 @@ export class UserService {
     data: ISignupRequest
   ): Promise<IServiceResponse<AuthResponse | { message: string; errors?: any }>> {
     const { fullName, email, password, phone, avatarUrl } = data;
+
+    // FIX: guard against missing password (returns 400 instead of crashing)
+    if (!password) {
+      return {
+        status: 400,
+        body: { message: "Invalid password", errors: ["Password is required"] },
+      };
+    }
 
     const passwordValidation = PasswordUtils.validate(password);
     if (!passwordValidation.valid) {
@@ -37,11 +44,10 @@ export class UserService {
         phone: phone ? phone.toString() : null,
         passwordHash,
         isVerified: false,
-        avatarUrl: avatarUrl? avatarUrl :null,
+        avatarUrl: avatarUrl ? avatarUrl : null,
       });
 
       const { accessToken, refreshToken } = this.generateTokens(user);
-
       await Session.create({ userId: user._id, refreshToken });
 
       return {
@@ -88,7 +94,6 @@ export class UserService {
     }
 
     const { accessToken, refreshToken } = this.generateTokens(user);
-
     await Session.create({ userId: user._id, refreshToken });
 
     return {
@@ -100,7 +105,6 @@ export class UserService {
           fullName: user.fullName,
           email: user.email,
           phone: user.phone?.toString() ?? undefined,
-          // Return the streaming URL — never the S3 key or S3 URL
           avatarUrl: (user as any).avatarKey
             ? `/api/v1/auth/avatar/${user._id}`
             : user.avatarUrl ?? undefined,
@@ -124,7 +128,6 @@ export class UserService {
         return { status: 404, body: { message: "User not found" } };
       }
 
-      // Fetch avatarKey separately (select: false in schema)
       const avatarDoc = await User.findById(req.user?.userId)
         .select("avatarKey")
         .lean();
@@ -150,7 +153,6 @@ export class UserService {
   }
 
   // ─── Refresh Token ─────────────────────────────────────────────────────────
-  // FIX: validate incoming refresh token, delete old session, create new one
   async refreshToken(
     req: AuthRequest
   ): Promise<IServiceResponse<any>> {
@@ -161,16 +163,18 @@ export class UserService {
         return { status: 401, body: { message: "Refresh token missing" } };
       }
 
-      const payload = JWTUtils.verifyRefreshToken(incomingRefreshToken) as {
-        userId: string;
-        email: string;
-      } | null;
+      let payload: { userId: string; email: string } | null = null;
+      try {
+        payload = JWTUtils.verifyRefreshToken(incomingRefreshToken) as { userId: string; email: string };
+      } catch {
+        return { status: 401, body: { message: "Invalid or expired refresh token" } };
+      }
 
       if (!payload) {
         return { status: 401, body: { message: "Invalid or expired refresh token" } };
       }
 
-      // Validate session exists in DB (prevents reuse of revoked tokens)
+      // Validate session exists (prevents reuse of revoked tokens)
       const session = await Session.findOne({
         userId: payload.userId,
         refreshToken: incomingRefreshToken,
@@ -185,7 +189,7 @@ export class UserService {
         return { status: 404, body: { message: "User not found" } };
       }
 
-      // Rotate tokens — delete old session, create new one
+      // Rotate: delete old session, create new one
       await Session.deleteOne({ _id: session._id });
 
       const { accessToken, refreshToken } = this.generateTokens(user);
@@ -195,11 +199,7 @@ export class UserService {
         status: 200,
         body: {
           message: "Token refreshed successfully",
-          user: {
-            id: user._id,
-            fullName: user.fullName,
-            email: user.email,
-          },
+          user: { id: user._id, fullName: user.fullName, email: user.email },
           accessToken,
           refreshToken,
         },
@@ -211,13 +211,11 @@ export class UserService {
   }
 
   // ─── Logout ────────────────────────────────────────────────────────────────
-  // FIX: delete session from DB on logout
   async logout(req: AuthRequest): Promise<IServiceResponse<{ message: string }>> {
     try {
       const incomingRefreshToken = req.cookies?.refreshToken;
 
       if (incomingRefreshToken) {
-        // Delete only the current session (single device logout)
         await Session.deleteOne({
           userId: req.user?.userId,
           refreshToken: incomingRefreshToken,
@@ -231,32 +229,35 @@ export class UserService {
     }
   }
 
-  requestPasswordReset = async (newPassword: string, email:string|undefined, currentPassword:string): Promise<IServiceResponse<{message: string; errors?: any }>> => {
+  requestPasswordReset = async (
+    newPassword: string,
+    email: string | undefined,
+    currentPassword: string
+  ): Promise<IServiceResponse<{ message: string; errors?: any }>> => {
     try {
-      if(!email){
+      if (!email) {
         return { status: 400, body: { message: "Email is required" } };
       }
-      const user = await User.findOne({ email: email }).select("+passwordHash") as IUser | null;
+      const user = await User.findOne({ email }).select("+passwordHash") as IUser | null;
       if (!user) {
         return { status: 404, body: { message: "User not found" } };
       }
-      console.log(currentPassword,user.passwordHash);
-      
+      console.log(currentPassword, user.passwordHash);
+
       const isCurrentPasswordValid = await PasswordUtils.compare(currentPassword, user.passwordHash);
       if (!isCurrentPasswordValid) {
         return { status: 401, body: { message: "Current password is incorrect" } };
       }
 
-      //hash the new password and update the user record
-       const passwordValidation = PasswordUtils.validate(newPassword);
-    if (!passwordValidation.valid) {
-      return {
-        status: 400,
-        body: { message: "Invalid password", errors: passwordValidation.errors },
-      };
-    }
+      const passwordValidation = PasswordUtils.validate(newPassword);
+      if (!passwordValidation.valid) {
+        return {
+          status: 400,
+          body: { message: "Invalid password", errors: passwordValidation.errors },
+        };
+      }
 
-    const passwordHash = await PasswordUtils.hash(newPassword);
+      const passwordHash = await PasswordUtils.hash(newPassword);
       user.passwordHash = passwordHash;
       await user.save();
 
@@ -265,14 +266,11 @@ export class UserService {
       console.error(error);
       return { status: 500, body: { message: "Internal server error" } };
     }
-  }
+  };
+
   // ─── Private Helpers ───────────────────────────────────────────────────────
   private generateTokens(user: IUser) {
-    const payload = {
-      userId: user._id.toString(),
-      email: user.email,
-    };
-
+    const payload = { userId: user._id.toString(), email: user.email };
     return {
       accessToken: JWTUtils.generateAccessToken(payload),
       refreshToken: JWTUtils.generateRefreshToken(payload),

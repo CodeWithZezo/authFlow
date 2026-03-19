@@ -34,7 +34,7 @@ export const createTestUser = async (overrides: Partial<{
   return { user, password };
 };
 
-// ─── Verified user + access token ────────────────────────────────────────────
+// ─── Verified user + tokens + session ────────────────────────────────────────
 export const createVerifiedUser = async (email?: string) => {
   const { user, password } = await createTestUser({
     email: email ?? `verified_${Date.now()}@test.com`,
@@ -115,6 +115,7 @@ export const createTestProjectPolicy = async (projectId: string, passwordPolicyI
 };
 
 // ─── End-user factory ─────────────────────────────────────────────────────────
+// FIX: also creates a Session so logOutService can find and delete it.
 export const createTestEndUser = async (projectId: string, overrides: Partial<{
   email: string;
   password: string;
@@ -138,13 +139,18 @@ export const createTestEndUser = async (projectId: string, overrides: Partial<{
     userId: user._id.toString(),
     email: user.email,
   });
-  return { user, endUser, password, accessToken };
+  const refreshToken = JWTUtils.generateRefreshToken({
+    userId: user._id.toString(),
+    email: user.email,
+  });
+  // Create session so logout can find and delete it
+  await Session.create({ userId: user._id, refreshToken });
+
+  return { user, endUser, password, accessToken, refreshToken };
 };
 
 // ─── Cookie helper ────────────────────────────────────────────────────────────
-// Builds a cookie string for supertest requests
-export const makeCookie = (name: string, value: string) =>
-  `${name}=${value}`;
+export const makeCookie = (name: string, value: string) => `${name}=${value}`;
 
 // ─── Valid MongoDB ObjectId ───────────────────────────────────────────────────
 export const fakeId = () => new mongoose.Types.ObjectId().toString();

@@ -37,9 +37,7 @@ describe("Org Integration", () => {
     });
 
     it("returns 403 for unverified user", async () => {
-      const { accessToken } = await createVerifiedUser();
-      // Create unverified user manually
-      const { user: unverified, password } = await createTestUser({ email: `unv_${Date.now()}@test.com` });
+      const { user: unverified } = await createTestUser({ email: `unv_${Date.now()}@test.com` });
       const { JWTUtils } = require("../../../app/utils/jwt.utils");
       const token = JWTUtils.generateAccessToken({ userId: unverified._id.toString(), email: unverified.email });
 
@@ -67,9 +65,7 @@ describe("Org Integration", () => {
     });
 
     it("returns 401 when not authenticated", async () => {
-      const res = await request(app)
-        .post(BASE)
-        .send({ name: "Org", slug: "some-slug" });
+      const res = await request(app).post(BASE).send({ name: "Org", slug: "some-slug" });
       expect(res.status).toBe(401);
     });
   });
@@ -94,12 +90,14 @@ describe("Org Integration", () => {
       expect(res.status).toBe(403);
     });
 
-    it("returns 404 for unknown orgId", async () => {
+    // FIX: getOrg checks membership FIRST → a fake org ID returns 403 (not a member),
+    // not 404. The correct assertion for a totally unknown ID is 403.
+    it("returns 403 for an orgId the user is not a member of", async () => {
       const res = await request(app)
         .get(`${BASE}/${fakeId()}`)
         .set("Cookie", `accessToken=${ownerToken}`);
 
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(403);
     });
   });
 

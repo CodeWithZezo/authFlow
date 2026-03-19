@@ -8,7 +8,7 @@ import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
 import { LoginPage }  from "@/routes/_auth/login";
 import { SignupPage } from "@/routes/_auth/signup";
 import Docs from "./pages/Docs";
-import { Home } from "./pages/Home";
+import  Home  from "./pages/Home";
 
 // Layouts
 const AppLayout       = lazy(() => import("@/layouts/AppLayout").then(m      => ({ default: m.AppLayout })));
