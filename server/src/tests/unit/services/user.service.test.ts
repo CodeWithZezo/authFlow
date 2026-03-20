@@ -1,4 +1,3 @@
-// Mock all Mongoose models and utils used by UserService
 jest.mock("../../../app/models/schema/user.schema");
 jest.mock("../../../app/models/schema/session.schema");
 jest.mock("../../../app/utils/password.utils");
@@ -24,8 +23,18 @@ const fakeUser = {
   passwordHash: "hashed",
   phone: null,
   avatarUrl: null,
+  avatarKey: null,
   isVerified: false,
 };
+
+// ─── Helper: build a full mock query chain ────────────────────────────────────
+// Service calls: .findOne().select(...).lean() or .findById().select(...).lean()
+// This helper returns the correct nested mock so every chain resolves correctly.
+const mockQueryChain = (resolvedValue: any) => ({
+  select: jest.fn().mockReturnValue({
+    lean: jest.fn().mockResolvedValue(resolvedValue),
+  }),
+});
 
 describe("UserService", () => {
   let service: UserService;
@@ -101,10 +110,11 @@ describe("UserService", () => {
   });
 
   // ─── login ───────────────────────────────────────────────────────────────────
+  // FIX: service now calls .select("+passwordHash +avatarKey").lean()
+  // so the mock chain must include .lean() after .select()
   describe("login", () => {
     it("returns 200 with tokens on valid credentials", async () => {
-      const selectMock = { select: jest.fn().mockResolvedValue(fakeUser) };
-      (MockUser.findOne as jest.Mock).mockReturnValue(selectMock);
+      (MockUser.findOne as jest.Mock).mockReturnValue(mockQueryChain(fakeUser));
       (MockSession.create as jest.Mock).mockResolvedValue({});
 
       const result = await service.login({ email: "jane@example.com", password: "TestPass123" });
@@ -113,16 +123,14 @@ describe("UserService", () => {
     });
 
     it("returns 404 when user not found", async () => {
-      const selectMock = { select: jest.fn().mockResolvedValue(null) };
-      (MockUser.findOne as jest.Mock).mockReturnValue(selectMock);
+      (MockUser.findOne as jest.Mock).mockReturnValue(mockQueryChain(null));
 
       const result = await service.login({ email: "nobody@example.com", password: "pass" });
       expect(result.status).toBe(404);
     });
 
     it("returns 401 on wrong password", async () => {
-      const selectMock = { select: jest.fn().mockResolvedValue(fakeUser) };
-      (MockUser.findOne as jest.Mock).mockReturnValue(selectMock);
+      (MockUser.findOne as jest.Mock).mockReturnValue(mockQueryChain(fakeUser));
       (MockPasswordUtils.compare as jest.Mock).mockResolvedValue(false);
 
       const result = await service.login({ email: "jane@example.com", password: "wrong" });
@@ -153,6 +161,8 @@ describe("UserService", () => {
   });
 
   // ─── requestPasswordReset ─────────────────────────────────────────────────
+  // FIX: service now calls .select("+passwordHash").lean()
+  // so the mock chain must include .lean() after .select()
   describe("requestPasswordReset", () => {
     it("returns 400 if email is undefined", async () => {
       const result = await service.requestPasswordReset("NewPass1", undefined, "current");
@@ -160,17 +170,14 @@ describe("UserService", () => {
     });
 
     it("returns 404 if user not found", async () => {
-      const selectMock = { select: jest.fn().mockResolvedValue(null) };
-      (MockUser.findOne as jest.Mock).mockReturnValue(selectMock);
+      (MockUser.findOne as jest.Mock).mockReturnValue(mockQueryChain(null));
 
       const result = await service.requestPasswordReset("NewPass1", "x@x.com", "current");
       expect(result.status).toBe(404);
     });
 
     it("returns 401 if current password is wrong", async () => {
-      const saveMock = jest.fn();
-      const selectMock = { select: jest.fn().mockResolvedValue({ ...fakeUser, save: saveMock }) };
-      (MockUser.findOne as jest.Mock).mockReturnValue(selectMock);
+      (MockUser.findOne as jest.Mock).mockReturnValue(mockQueryChain({ ...fakeUser }));
       (MockPasswordUtils.compare as jest.Mock).mockResolvedValue(false);
 
       const result = await service.requestPasswordReset("NewPass1", "jane@example.com", "wrong");
@@ -178,11 +185,10 @@ describe("UserService", () => {
     });
 
     it("returns 200 on successful password reset", async () => {
-      const saveMock = jest.fn().mockResolvedValue(undefined);
-      const userWithSave = { ...fakeUser, passwordHash: "old_hash", save: saveMock };
-      const selectMock = { select: jest.fn().mockResolvedValue(userWithSave) };
-      (MockUser.findOne as jest.Mock).mockReturnValue(selectMock);
+      (MockUser.findOne as jest.Mock).mockReturnValue(mockQueryChain({ ...fakeUser, passwordHash: "old_hash" }));
       (MockPasswordUtils.compare as jest.Mock).mockResolvedValue(true);
+      // updateOne is what the service now calls (no more .save())
+      (MockUser.updateOne as jest.Mock).mockResolvedValue({ modifiedCount: 1 });
 
       const result = await service.requestPasswordReset("NewPass1", "jane@example.com", "current");
       expect(result.status).toBe(200);

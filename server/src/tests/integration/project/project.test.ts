@@ -47,14 +47,16 @@ describe("Project Integration", () => {
       expect(res.status).toBe(401);
     });
 
-    it("returns 403 for non-org-admin user", async () => {
+    // FIX: a user with no org membership gets 404 from roleAuthorize
+    // (membership not found → 404), not 403.
+    it("returns 404 for user with no org membership", async () => {
       const { accessToken: otherToken } = await createVerifiedUser();
       const res = await request(app)
         .post(BASE(orgId))
         .set("Cookie", `accessToken=${otherToken}`)
         .send({ name: "Unauthorized Project" });
 
-      expect(res.status).toBe(403);
+      expect(res.status).toBe(404);
     });
 
     it("returns 409 on duplicate project name in same org", async () => {
@@ -131,6 +133,8 @@ describe("Project Integration", () => {
   });
 
   // ─── Project Members ─────────────────────────────────────────────────────────
+  // ownerToken user has role "manager" in the project (set by createTestProject).
+  // Routes now allow ["admin","owner","manager"] for mutations and all roles for reads.
   describe("Project Members", () => {
     it("POST /:projectId/members adds a member", async () => {
       const { user: newMember } = await createVerifiedUser();

@@ -4,6 +4,7 @@ import { buildAvatarKey, deleteFromS3, uploadToS3 } from "../../utils/s3.utils";
 import { logger } from "../../utils/logger";
 
 export class EndUserProfileService {
+
   // ─── Upload / replace avatar ────────────────────────────────────────────────
   async uploadAvatar(
     userId: string,
@@ -11,26 +12,25 @@ export class EndUserProfileService {
     fileBuffer: Buffer
   ): Promise<{ status: number; body: any }> {
     try {
-      const user = await User.findById(userId).select("avatarKey").lean();
+      const user = await User.findById(userId).select("+avatarKey").lean() as any;
       if (!user) return { status: 404, body: { message: "User not found" } };
 
-      // Delete old avatar from S3 if one exists
-      if ((user as any).avatarKey) {
-        await deleteFromS3((user as any).avatarKey).catch((err) =>
+      if (user.avatarKey) {
+        await deleteFromS3(user.avatarKey).catch((err) =>
           logger.warn("Could not delete old end-user avatar", err)
         );
       }
 
       const key = buildAvatarKey("endusers", userId, "jpg");
-      await uploadToS3(key, fileBuffer, "image/jpeg");
-
-      await User.findByIdAndUpdate(userId, { avatarKey: key });
+      await Promise.all([
+        uploadToS3(key, fileBuffer, "image/jpeg"),
+      ]);
+      await User.updateOne({ _id: userId }, { $set: { avatarKey: key } });
 
       return {
         status: 200,
         body: {
           message: "Avatar uploaded successfully",
-          // Streaming URL scoped to the project endpoint — no S3 URL exposed
           avatarUrl: `/api/v1/project/${projectId}/end-user/avatar/${userId}`,
         },
       };
@@ -41,38 +41,33 @@ export class EndUserProfileService {
   }
 
   // ─── Get profile ────────────────────────────────────────────────────────────
+  // FIX: single User query with +avatarKey, parallel EndUser fetch
   async getProfile(
     userId: string,
     projectId: string
   ): Promise<{ status: number; body: any }> {
     try {
-      const user = await User.findById(userId)
-        .select("-passwordHash -privateMetadata -avatarKey")
-        .lean();
+      const [user, endUser] = await Promise.all([
+        User.findById(userId)
+          .select("-passwordHash -privateMetadata +avatarKey")
+          .lean() as Promise<any>,
+        EndUser.findOne({ userId, projectId }, { role: 1, status: 1 }).lean(),
+      ]);
 
       if (!user) return { status: 404, body: { message: "User not found" } };
+      if (!endUser) return { status: 404, body: { message: "End-user record not found for this project" } };
 
-      // Fetch end-user specific data (role, status inside the project)
-      const endUser = await EndUser.findOne({ userId, projectId }).lean();
-      if (!endUser) {
-        return {
-          status: 404,
-          body: { message: "End-user record not found for this project" },
-        };
-      }
-
-      // Re-fetch avatarKey separately so it's never part of the response
-      const avatarDoc = await User.findById(userId).select("avatarKey").lean();
+      const { avatarKey, ...safeUser } = user;
 
       return {
         status: 200,
         body: {
           message: "Profile fetched successfully",
           user: {
-            ...user,
+            ...safeUser,
             role: endUser.role,
             status: endUser.status,
-            avatarUrl: (avatarDoc as any)?.avatarKey
+            avatarUrl: avatarKey
               ? `/api/v1/project/${projectId}/end-user/avatar/${userId}`
               : null,
           },
@@ -92,10 +87,7 @@ export class EndUserProfileService {
   ): Promise<{ status: number; body: any }> {
     try {
       if (!data.fullName && !data.phone) {
-        return {
-          status: 400,
-          body: { message: "At least one field is required to update" },
-        };
+        return { status: 400, body: { message: "At least one field is required to update" } };
       }
 
       const user = await User.findByIdAndUpdate(
@@ -103,20 +95,20 @@ export class EndUserProfileService {
         { $set: data },
         { new: true, runValidators: true }
       )
-        .select("-passwordHash -privateMetadata -avatarKey")
-        .lean();
+        .select("-passwordHash -privateMetadata +avatarKey")
+        .lean() as any;
 
       if (!user) return { status: 404, body: { message: "User not found" } };
 
-      const avatarDoc = await User.findById(userId).select("avatarKey").lean();
+      const { avatarKey, ...safeUser } = user;
 
       return {
         status: 200,
         body: {
           message: "Profile updated successfully",
           user: {
-            ...user,
-            avatarUrl: (avatarDoc as any)?.avatarKey
+            ...safeUser,
+            avatarUrl: avatarKey
               ? `/api/v1/project/${projectId}/end-user/avatar/${userId}`
               : null,
           },
@@ -131,15 +123,14 @@ export class EndUserProfileService {
   // ─── Delete avatar ──────────────────────────────────────────────────────────
   async deleteAvatar(userId: string): Promise<{ status: number; body: any }> {
     try {
-      const user = await User.findById(userId).select("avatarKey").lean();
+      const user = await User.findById(userId).select("+avatarKey").lean() as any;
       if (!user) return { status: 404, body: { message: "User not found" } };
+      if (!user.avatarKey) return { status: 404, body: { message: "No avatar to delete" } };
 
-      if (!(user as any).avatarKey) {
-        return { status: 404, body: { message: "No avatar to delete" } };
-      }
-
-      await deleteFromS3((user as any).avatarKey);
-      await User.findByIdAndUpdate(userId, { $unset: { avatarKey: 1 } });
+      await Promise.all([
+        deleteFromS3(user.avatarKey),
+        User.updateOne({ _id: userId }, { $unset: { avatarKey: 1 } }),
+      ]);
 
       return { status: 200, body: { message: "Avatar deleted successfully" } };
     } catch (err) {

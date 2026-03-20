@@ -19,20 +19,13 @@ export class UserService {
   ): Promise<IServiceResponse<AuthResponse | { message: string; errors?: any }>> {
     const { fullName, email, password, phone, avatarUrl } = data;
 
-    // FIX: guard against missing password (returns 400 instead of crashing)
     if (!password) {
-      return {
-        status: 400,
-        body: { message: "Invalid password", errors: ["Password is required"] },
-      };
+      return { status: 400, body: { message: "Invalid password", errors: ["Password is required"] } };
     }
 
     const passwordValidation = PasswordUtils.validate(password);
     if (!passwordValidation.valid) {
-      return {
-        status: 400,
-        body: { message: "Invalid password", errors: passwordValidation.errors },
-      };
+      return { status: 400, body: { message: "Invalid password", errors: passwordValidation.errors } };
     }
 
     const passwordHash = await PasswordUtils.hash(password);
@@ -44,10 +37,10 @@ export class UserService {
         phone: phone ? phone.toString() : null,
         passwordHash,
         isVerified: false,
-        avatarUrl: avatarUrl ? avatarUrl : null,
+        avatarUrl: avatarUrl ?? null,
       });
 
-      const { accessToken, refreshToken } = this.generateTokens(user);
+      const { accessToken, refreshToken } = this.generateTokens(user as any);
       await Session.create({ userId: user._id, refreshToken });
 
       return {
@@ -80,9 +73,9 @@ export class UserService {
   ): Promise<IServiceResponse<AuthResponse | { message: string }>> {
     const { email, password } = data;
 
-    const user = await User.findOne({ email: email.toLowerCase().trim() }).select(
-      "+passwordHash"
-    ) as IUser | null;
+    const user = await User.findOne({ email: email.toLowerCase().trim() })
+      .select("+passwordHash +avatarKey")
+      .lean() as (IUser & { avatarKey?: string | null }) | null;
 
     if (!user) {
       return { status: 404, body: { message: "User not found" } };
@@ -93,7 +86,7 @@ export class UserService {
       return { status: 401, body: { message: "Invalid credentials" } };
     }
 
-    const { accessToken, refreshToken } = this.generateTokens(user);
+    const { accessToken, refreshToken } = this.generateTokens(user as any);
     await Session.create({ userId: user._id, refreshToken });
 
     return {
@@ -105,7 +98,7 @@ export class UserService {
           fullName: user.fullName,
           email: user.email,
           phone: user.phone?.toString() ?? undefined,
-          avatarUrl: (user as any).avatarKey
+          avatarUrl: user.avatarKey
             ? `/api/v1/auth/avatar/${user._id}`
             : user.avatarUrl ?? undefined,
         },
@@ -116,23 +109,20 @@ export class UserService {
   }
 
   // ─── Current User ──────────────────────────────────────────────────────────
+  // FIX: single query — select +avatarKey explicitly, no second round-trip
   async currentUser(
     req: AuthRequest
   ): Promise<IServiceResponse<{ message: string; user?: any }>> {
     try {
-      const userDoc = await User.findById(req.user?.userId)
-        .select("-passwordHash -privateMetadata")
-        .lean();
+      const user = await User.findById(req.user?.userId)
+        .select("-passwordHash -privateMetadata +avatarKey")
+        .lean() as any;
 
-      if (!userDoc) {
+      if (!user) {
         return { status: 404, body: { message: "User not found" } };
       }
 
-      const avatarDoc = await User.findById(req.user?.userId)
-        .select("avatarKey")
-        .lean();
-
-      const { avatarKey, ...safeUser } = userDoc as any;
+      const { avatarKey, ...safeUser } = user;
 
       return {
         status: 200,
@@ -140,9 +130,9 @@ export class UserService {
           message: "User fetched successfully",
           user: {
             ...safeUser,
-            avatarUrl: (avatarDoc as any)?.avatarKey
-              ? `/api/v1/auth/avatar/${userDoc._id}`
-              : (userDoc as any).avatarUrl ?? null,
+            avatarUrl: avatarKey
+              ? `/api/v1/auth/avatar/${user._id}`
+              : user.avatarUrl ?? null,
           },
         },
       };
@@ -153,9 +143,7 @@ export class UserService {
   }
 
   // ─── Refresh Token ─────────────────────────────────────────────────────────
-  async refreshToken(
-    req: AuthRequest
-  ): Promise<IServiceResponse<any>> {
+  async refreshToken(req: AuthRequest): Promise<IServiceResponse<any>> {
     try {
       const incomingRefreshToken = req.cookies?.refreshToken;
 
@@ -174,25 +162,22 @@ export class UserService {
         return { status: 401, body: { message: "Invalid or expired refresh token" } };
       }
 
-      // Validate session exists (prevents reuse of revoked tokens)
-      const session = await Session.findOne({
-        userId: payload.userId,
-        refreshToken: incomingRefreshToken,
-      });
+      // Atomic: find session and user in parallel
+      const [session, user] = await Promise.all([
+        Session.findOne({ userId: payload.userId, refreshToken: incomingRefreshToken }).lean(),
+        User.findById(payload.userId).lean(),
+      ]);
 
       if (!session) {
         return { status: 401, body: { message: "Session not found or already revoked" } };
       }
-
-      const user = await User.findById(payload.userId);
       if (!user) {
         return { status: 404, body: { message: "User not found" } };
       }
 
       // Rotate: delete old session, create new one
       await Session.deleteOne({ _id: session._id });
-
-      const { accessToken, refreshToken } = this.generateTokens(user);
+      const { accessToken, refreshToken } = this.generateTokens(user as any);
       await Session.create({ userId: user._id, refreshToken });
 
       return {
@@ -214,14 +199,9 @@ export class UserService {
   async logout(req: AuthRequest): Promise<IServiceResponse<{ message: string }>> {
     try {
       const incomingRefreshToken = req.cookies?.refreshToken;
-
       if (incomingRefreshToken) {
-        await Session.deleteOne({
-          userId: req.user?.userId,
-          refreshToken: incomingRefreshToken,
-        });
+        await Session.deleteOne({ userId: req.user?.userId, refreshToken: incomingRefreshToken });
       }
-
       return { status: 200, body: { message: "Logged out successfully" } };
     } catch (error) {
       console.error(error);
@@ -229,6 +209,7 @@ export class UserService {
     }
   }
 
+  // ─── Change Password ────────────────────────────────────────────────────────
   requestPasswordReset = async (
     newPassword: string,
     email: string | undefined,
@@ -238,11 +219,10 @@ export class UserService {
       if (!email) {
         return { status: 400, body: { message: "Email is required" } };
       }
-      const user = await User.findOne({ email }).select("+passwordHash") as IUser | null;
+      const user = await User.findOne({ email }).select("+passwordHash").lean() as IUser | null;
       if (!user) {
         return { status: 404, body: { message: "User not found" } };
       }
-      console.log(currentPassword, user.passwordHash);
 
       const isCurrentPasswordValid = await PasswordUtils.compare(currentPassword, user.passwordHash);
       if (!isCurrentPasswordValid) {
@@ -251,17 +231,13 @@ export class UserService {
 
       const passwordValidation = PasswordUtils.validate(newPassword);
       if (!passwordValidation.valid) {
-        return {
-          status: 400,
-          body: { message: "Invalid password", errors: passwordValidation.errors },
-        };
+        return { status: 400, body: { message: "Invalid password", errors: passwordValidation.errors } };
       }
 
       const passwordHash = await PasswordUtils.hash(newPassword);
-      user.passwordHash = passwordHash;
-      await user.save();
+      await User.updateOne({ _id: user._id }, { $set: { passwordHash } });
 
-      return { status: 200, body: { message: "Password reset instructions sent if email exists" } };
+      return { status: 200, body: { message: "Password changed successfully" } };
     } catch (error) {
       console.error(error);
       return { status: 500, body: { message: "Internal server error" } };

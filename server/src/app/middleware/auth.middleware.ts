@@ -1,6 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { JWTUtils } from "../utils/jwt.utils";
-import {checkOrganizationMembershipByUserIdAndOrgId,checkProjectMembershipByUserIdAndProjectId,} from "../utils/user.utils";
+import { Organization } from "../models/schema/org.schema";
+import { Project } from "../models/schema/project.schema";
+import {
+  checkOrganizationMembershipByUserIdAndOrgId,
+  checkProjectMembershipByUserIdAndProjectId,
+} from "../utils/user.utils";
 
 export interface AuthRequest extends Request {
   user?: { userId: string; email: string };

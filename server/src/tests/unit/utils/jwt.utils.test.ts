@@ -10,11 +10,13 @@ describe("JWTUtils", () => {
       expect(token.length).toBeGreaterThan(0);
     });
 
-    it("should produce different tokens on separate calls", () => {
+    // FIX: jti (UUID) is now embedded in every token, so two tokens generated
+    // from the same payload are always different — this is the correct behaviour
+    // that enables token rotation to work even within the same second.
+    it("should produce different tokens on separate calls (jti uniqueness)", () => {
       const t1 = JWTUtils.generateAccessToken(payload);
       const t2 = JWTUtils.generateAccessToken(payload);
-      // Different iat means different tokens
-      expect(t1).toBe(t2); // same second → same iat (fine, jwt is deterministic for same second)
+      expect(t1).not.toBe(t2);
     });
   });
 
@@ -28,6 +30,12 @@ describe("JWTUtils", () => {
       const access = JWTUtils.generateAccessToken(payload);
       const refresh = JWTUtils.generateRefreshToken(payload);
       expect(access).not.toBe(refresh);
+    });
+
+    it("two refresh tokens from same payload are always different (jti)", () => {
+      const r1 = JWTUtils.generateRefreshToken(payload);
+      const r2 = JWTUtils.generateRefreshToken(payload);
+      expect(r1).not.toBe(r2);
     });
   });
 
@@ -47,7 +55,6 @@ describe("JWTUtils", () => {
 
     it("should throw for a refresh token passed to verifyAccessToken", () => {
       const refresh = JWTUtils.generateRefreshToken(payload);
-      // Different secret — should throw
       expect(() => JWTUtils.verifyAccessToken(refresh)).toThrow();
     });
   });

@@ -12,18 +12,19 @@ export class UserProfileService {
     _mimeType: string
   ): Promise<IServiceResponse<any>> {
     try {
-      const user = await User.findById(userId).select("avatarKey").lean();
+      // Single query with explicit avatarKey fetch
+      const user = await User.findById(userId).select("+avatarKey").lean() as any;
       if (!user) return { status: 404, body: { message: "User not found" } };
 
-      if ((user as any).avatarKey) {
-        await deleteFromS3((user as any).avatarKey).catch((err) =>
+      if (user.avatarKey) {
+        await deleteFromS3(user.avatarKey).catch((err) =>
           logger.warn("Could not delete old avatar from S3", err)
         );
       }
 
       const key = buildAvatarKey("users", userId, "jpg");
       await uploadToS3(key, fileBuffer, "image/jpeg");
-      await User.findByIdAndUpdate(userId, { avatarKey: key });
+      await User.updateOne({ _id: userId }, { $set: { avatarKey: key } });
 
       return {
         status: 200,
@@ -38,29 +39,25 @@ export class UserProfileService {
     }
   }
 
-  // ─── Get full profile ───────────────────────────────────────────────────────
-  // FIX: avatarKey has select:false so it is never in a normal query result.
-  // We must do a second explicit query with .select("avatarKey") to check it.
+  // ─── Get profile ────────────────────────────────────────────────────────────
+  // FIX: single query — select +avatarKey, strip it before returning
   async getProfile(userId: string): Promise<IServiceResponse<any>> {
     try {
-      const [user, avatarDoc] = await Promise.all([
-        User.findById(userId)
-          .select("-passwordHash -privateMetadata -avatarKey")
-          .lean(),
-        User.findById(userId).select("avatarKey").lean(),
-      ]);
+      const user = await User.findById(userId)
+        .select("-passwordHash -privateMetadata +avatarKey")
+        .lean() as any;
 
       if (!user) return { status: 404, body: { message: "User not found" } };
+
+      const { avatarKey, ...safeUser } = user;
 
       return {
         status: 200,
         body: {
           message: "Profile fetched successfully",
           user: {
-            ...user,
-            avatarUrl: (avatarDoc as any)?.avatarKey
-              ? `/api/v1/auth/avatar/${userId}`
-              : null,
+            ...safeUser,
+            avatarUrl: avatarKey ? `/api/v1/auth/avatar/${userId}` : null,
           },
         },
       };
@@ -70,37 +67,36 @@ export class UserProfileService {
     }
   }
 
-  // ─── Update profile fields ──────────────────────────────────────────────────
+  // ─── Update profile ─────────────────────────────────────────────────────────
+  // FIX: single query — findByIdAndUpdate returns updated doc with +avatarKey
   async updateProfile(
     userId: string,
     data: { fullName?: string; phone?: string }
   ): Promise<IServiceResponse<any>> {
     try {
       if (!data.fullName && !data.phone) {
-        return {
-          status: 400,
-          body: { message: "At least one field is required to update" },
-        };
+        return { status: 400, body: { message: "At least one field is required to update" } };
       }
 
-      const [user, avatarDoc] = await Promise.all([
-        User.findByIdAndUpdate(userId, { $set: data }, { new: true, runValidators: true })
-          .select("-passwordHash -privateMetadata -avatarKey")
-          .lean(),
-        User.findById(userId).select("avatarKey").lean(),
-      ]);
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { $set: data },
+        { new: true, runValidators: true }
+      )
+        .select("-passwordHash -privateMetadata +avatarKey")
+        .lean() as any;
 
       if (!user) return { status: 404, body: { message: "User not found" } };
+
+      const { avatarKey, ...safeUser } = user;
 
       return {
         status: 200,
         body: {
           message: "Profile updated successfully",
           user: {
-            ...user,
-            avatarUrl: (avatarDoc as any)?.avatarKey
-              ? `/api/v1/auth/avatar/${userId}`
-              : null,
+            ...safeUser,
+            avatarUrl: avatarKey ? `/api/v1/auth/avatar/${userId}` : null,
           },
         },
       };
@@ -113,15 +109,14 @@ export class UserProfileService {
   // ─── Delete avatar ──────────────────────────────────────────────────────────
   async deleteAvatar(userId: string): Promise<IServiceResponse<any>> {
     try {
-      const user = await User.findById(userId).select("avatarKey").lean();
+      const user = await User.findById(userId).select("+avatarKey").lean() as any;
       if (!user) return { status: 404, body: { message: "User not found" } };
+      if (!user.avatarKey) return { status: 404, body: { message: "No avatar to delete" } };
 
-      if (!(user as any).avatarKey) {
-        return { status: 404, body: { message: "No avatar to delete" } };
-      }
-
-      await deleteFromS3((user as any).avatarKey);
-      await User.findByIdAndUpdate(userId, { $unset: { avatarKey: 1 } });
+      await Promise.all([
+        deleteFromS3(user.avatarKey),
+        User.updateOne({ _id: userId }, { $unset: { avatarKey: 1 } }),
+      ]);
 
       return { status: 200, body: { message: "Avatar deleted successfully" } };
     } catch (err) {
