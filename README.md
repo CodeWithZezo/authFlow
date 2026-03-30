@@ -1,42 +1,44 @@
-# AuthFlow — Multi-Tenant Auth-as-a-Service Platform
+# AuthFlow
 
-A self-hosted authentication and user management platform built with **Node.js**, **TypeScript**, **Express**, and **MongoDB**. AuthFlow lets you manage organizations, projects, and both internal team members and end-users — all with configurable authentication policies per project, similar to Clerk or Auth0 but fully self-hosted.
+**A self-hosted authentication platform built on Node.js, TypeScript, Express, and MongoDB.**
+
+AuthFlow gives you everything Clerk or Auth0 does — organizations, projects, multi-tenant user management, JWT rotation, RBAC, avatar uploads — except the data stays on your servers. No vendor lock-in, no per-seat pricing surprises, no black box.
 
 ---
 
-## Table of Contents
+## What's Inside
 
-- [Overview](#overview)
-- [Architecture](#architecture)
+- [Two Separate User Systems](#two-separate-user-systems)
+- [How Requests Flow](#how-requests-flow)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Core Concepts](#core-concepts)
 - [API Reference](#api-reference)
-- [Authentication Flow](#authentication-flow)
+- [Authentication & Token Strategy](#authentication--token-strategy)
 - [Role-Based Access Control](#role-based-access-control)
 - [Project Policies](#project-policies)
 - [Avatar & Profile System](#avatar--profile-system)
-- [Frontend Integration Guide](#frontend-integration-guide)
+- [Frontend Integration](#frontend-integration)
 - [Environment Variables](#environment-variables)
 - [Getting Started](#getting-started)
-- [Known Issues & Notes](#known-issues--notes)
 
 ---
 
-## Overview
+## Two Separate User Systems
 
-AuthFlow provides two separate user systems under one platform:
+This is probably the most important thing to understand before diving in. AuthFlow manages two completely distinct types of users:
 
-| User Type | Who They Are | How They Authenticate |
+| | Internal Users | End Users |
 |---|---|---|
-| **Internal Users** | Developers / admins who own organizations and projects | `/api/v1/auth` |
-| **End Users** | End-customers of your project's app | `/api/v1/project/:projectId/end-user` |
+| **Who they are** | Your dev team, admins, project owners | Your app's actual customers |
+| **Auth endpoint** | `/api/v1/auth` | `/api/v1/project/:projectId/end-user` |
+| **Governed by** | Platform-level roles | Per-project policies you define |
 
-This separation lets you build a product where your team manages organizations and projects through the admin API, while your app's customers authenticate through a project-scoped API governed by your custom policies.
+Your team manages everything through the admin API. Your customers authenticate through a project-scoped API that follows whatever rules you've configured for that project.
 
 ---
 
-## Architecture
+## How Requests Flow
 
 ```
 Client Request
@@ -45,22 +47,18 @@ Client Request
 server.ts  (Express + Helmet + CORS + Rate Limiting)
      │
      ▼
-/api/v1  (Central Router — modules/index.ts)
+/api/v1  (Central Router)
      │
-     ├── /auth                               → User Auth + Profile Module
-     ├── /organizations                      → Org Module
-     │       └── /:orgId/projects            → Project Module (nested)
-     ├── /projects/:projectId/policy         → Project Policy Module
-     ├── /projects/:projectId/password-policy → Password Policy Module
-     ├── /sessions                           → Session Module
-     └── /project/:projectId/end-user        → End-User Service + Profile
+     ├── /auth                               → Internal user auth + profile
+     ├── /organizations                      → Org management
+     │       └── /:orgId/projects            → Project management
+     ├── /projects/:projectId/policy         → Auth policy per project
+     ├── /projects/:projectId/password-policy
+     ├── /sessions                           → Session control
+     └── /project/:projectId/end-user        → End-user auth + profile
 ```
 
-Each module follows a clean **Controller → Service** pattern:
-
-- **Controller** — thin layer that reads `req`, calls service, sets cookies, returns response
-- **Service** — all business logic, returns `{ status, body }` (never throws)
-- **Middleware** — JWT authentication, RBAC role authorization, project context resolution, image upload + resize
+Every module follows a **Controller → Service** pattern. Controllers are thin — they read the request, call the service, set cookies, and return. All real logic lives in the service layer, which always returns a plain `{ status, body }` object instead of throwing. This makes error handling consistent and testing straightforward.
 
 ---
 
@@ -68,18 +66,18 @@ Each module follows a clean **Controller → Service** pattern:
 
 | Layer | Technology |
 |---|---|
-| Runtime | Node.js |
+| Runtime | Node.js 18+ |
 | Language | TypeScript |
 | Framework | Express.js |
-| Database | MongoDB (via Mongoose) |
-| Auth | JWT (access + refresh token rotation) |
+| Database | MongoDB (Mongoose) |
+| Auth | JWT — access + refresh token rotation |
 | Password Hashing | bcrypt |
-| File Upload | multer (memory storage) |
+| File Uploads | multer (memory storage) |
 | Image Processing | sharp (resize + JPEG conversion) |
 | Object Storage | AWS S3 (`@aws-sdk/client-s3`) |
 | Security | Helmet, CORS, express-rate-limit |
-| Cookies | cookie-parser (httpOnly cookies) |
-| Logging | Custom logger utility |
+| Cookies | cookie-parser (httpOnly) |
+| Logging | Custom structured logger |
 
 ---
 
@@ -88,19 +86,19 @@ Each module follows a clean **Controller → Service** pattern:
 ```
 src/
 ├── config/
-│   ├── auth.config.ts              # JWT secrets, expiry, bcrypt rounds, password defaults
-│   └── database.ts                 # MongoDB connection
+│   ├── auth.config.ts          # JWT secrets, expiry, bcrypt rounds
+│   └── database.ts             # MongoDB connection
 │
 ├── middleware/
-│   ├── auth.middleware.ts           # JWT verification + RBAC roleAuthorize
-│   ├── endUser.middleware.ts        # resolveProjectContext (loads project + policies)
-│   └── upload.middleware.ts         # multer (5 MB limit) + sharp resize → 400×400 JPEG
+│   ├── auth.middleware.ts       # JWT verification + RBAC roleAuthorize
+│   ├── endUser.middleware.ts    # resolveProjectContext (loads project + policies)
+│   └── upload.middleware.ts     # multer (5 MB limit) + sharp → 400×400 JPEG
 │
 ├── models/
-│   ├── enums.ts                     # Role, Status, AuthType, AuthMethod enums
-│   ├── models.types.ts              # TypeScript interfaces for all documents
+│   ├── enums.ts                 # Role, Status, AuthType, AuthMethod enums
+│   ├── models.types.ts          # TypeScript interfaces for all documents
 │   └── schema/
-│       ├── user.schema.ts           # avatarKey field added (select: false)
+│       ├── user.schema.ts
 │       ├── org.schema.ts
 │       ├── organizationMembership.schema.ts
 │       ├── project.schema.ts
@@ -111,42 +109,30 @@ src/
 │       └── endUser.schema.ts
 │
 ├── modules/
-│   ├── index.ts                     # Central router — mounts all sub-routers
-│   ├── user/
-│   │   ├── user.controller.ts       # Auth: signup, login, me, refresh, logout
-│   │   ├── user.route.ts            # Auth + profile + avatar routes
-│   │   ├── user.service.ts          # Auth business logic
-│   │   ├── userProfile.controller.ts # Profile CRUD + avatar upload + streaming
-│   │   └── userProfile.service.ts   # S3 upload, delete, streaming URL builder
-│   ├── org/                         # Org CRUD + member management
-│   ├── project/                     # Project CRUD + project member management
-│   ├── projectPolicy/               # Project-level auth policy CRUD
-│   ├── passwordPolicy/              # Password strength policy CRUD
-│   └── session/                     # List, revoke single, revoke all sessions
+│   ├── index.ts                 # Central router
+│   ├── user/                    # Internal user auth + profile
+│   ├── org/                     # Org CRUD + members
+│   ├── project/                 # Project CRUD + members
+│   ├── projectPolicy/
+│   ├── passwordPolicy/
+│   └── session/
 │
 ├── services/
-│   ├── api/                         # API key generation service
-│   └── endUsers/
-│       ├── endUser.controller.ts        # Auth: signup, login, logout
-│       ├── endUser.route.ts             # Auth + profile + avatar routes
-│       ├── endUser.service.ts           # Auth logic (returns streaming avatarUrl on login)
-│       ├── endUserProfile.controller.ts # Profile CRUD + avatar upload + streaming
-│       └── endUserProfile.service.ts   # S3 upload, delete, streaming URL builder
+│   └── endUsers/                # End-user auth + profile
 │
 ├── types/
-│   ├── auth.types.ts                # JWTPayload, AuthResponse, IServiceResponse
-│   └── express.types.ts             # AuthRequest interface
+│   ├── auth.types.ts            # JWTPayload, AuthResponse, IServiceResponse
+│   └── express.types.ts         # AuthRequest interface
 │
 └── utils/
-    ├── endUser.utils.ts             # getProjectWithPolicy (parallel DB fetch)
-    ├── errors.ts                    # AppError, ValidationError, NotFoundError, etc.
-    ├── jwt.utils.ts                 # JWTUtils: generate/verify access & refresh tokens
-    ├── logger.ts                    # Structured logger (info, error, warn, debug)
-    ├── password.utils.ts            # PasswordUtils: hash, compare, validate
-    ├── password.utils.EndUser.ts    # Password validation against a project's policy
-    ├── s3.utils.ts                  # uploadToS3, streamFromS3, deleteFromS3, buildAvatarKey
-    ├── uinifiedSignupValidator.ts   # Validates end-user signup against project policy
-    └── user.utils.ts                # RBAC helpers: membership lookups
+    ├── jwt.utils.ts             # Generate / verify tokens
+    ├── password.utils.ts        # Hash, compare, validate
+    ├── password.utils.EndUser.ts # Validate against project policy
+    ├── s3.utils.ts              # Upload, stream, delete from S3
+    ├── uinifiedSignupValidator.ts # End-user signup validation
+    ├── user.utils.ts            # RBAC helpers
+    ├── errors.ts                # AppError, ValidationError, NotFoundError...
+    └── logger.ts                # Structured logger
 ```
 
 ---
@@ -155,29 +141,32 @@ src/
 
 ### Organizations
 
-An **Organization** is the top-level container. When a user creates an organization, they are automatically assigned the `owner` role. Organizations are identified by a unique `slug`.
+The top-level container. When you create one, you're automatically assigned the `owner` role. Organizations are identified by a unique `slug` you pick at creation.
 
 ### Projects
 
-A **Project** belongs to one organization. Projects contain end-users and are governed by a **Project Policy** and a **Password Policy**. The user who creates a project is automatically assigned the `manager` role in that project.
+A Project lives inside an Organization and is where your end-users sign up and authenticate. Before any end-user can register, the project needs a **Password Policy** and a **Project Policy** in place. The person who creates the project automatically gets the `manager` role.
 
 ### Memberships
 
-There are two separate membership models:
+Two separate membership models keep things clean:
 
-- `OrganizationMembership` — links a user to an org with a role (`owner`, `admin`, `member`)
-- `ProjectMembership` — links a user to a project with a role (`manager`, `contributor`, `viewer`)
+- **`OrganizationMembership`** — links an internal user to an org with a role (`owner`, `admin`, `member`)
+- **`ProjectMembership`** — links an internal user to a project with a role (`manager`, `contributor`, `viewer`)
 
 ### Policies
 
-Before end-users can sign up to a project, you must configure:
+Policies define the rules end-users must follow when signing up. Setup order matters:
 
-1. **Password Policy** — minimum length, require numbers, uppercase, special characters
-2. **Project Policy** — authentication type, allowed auth methods, allowed roles/statuses, phone requirement. Requires a password policy to exist first.
+```
+1. Create a Password Policy  →  2. Create a Project Policy  →  3. End-users can now sign up
+```
+
+> **Note:** You can't delete a Password Policy while a Project Policy still references it. Delete the Project Policy first.
 
 ### End Users
 
-**End Users** are distinct from internal users. They sign up through a project-scoped endpoint and are stored as both a `User` document (identity) and an `EndUser` document (project membership with role/status). Their auth rules are enforced by the project's policy at signup time.
+End Users are entirely separate from internal users. They sign up through a project-scoped endpoint and are stored as both a `User` document (identity) and an `EndUser` document (project membership with role/status). All their auth rules are enforced by the project's policy at signup time.
 
 ---
 
@@ -185,19 +174,19 @@ Before end-users can sign up to a project, you must configure:
 
 ### Auth — `/api/v1/auth`
 
-| Method | Endpoint | Auth Required | Description |
+| Method | Endpoint | Auth? | Description |
 |---|---|---|---|
 | `POST` | `/signup` | No | Register a new internal user |
-| `POST` | `/login` | No | Login and receive tokens via cookies |
-| `GET` | `/me` | Yes | Get current authenticated user |
+| `POST` | `/login` | No | Login — tokens set in cookies |
+| `GET` | `/me` | Yes | Get the current authenticated user |
 | `POST` | `/refresh-token` | No | Rotate access + refresh token pair |
-| `POST` | `/logout` | Yes | Logout and delete current session |
+| `POST` | `/logout` | Yes | Logout current device |
 | `PATCH` | `/change-password` | Yes | Change password (requires current password) |
-| `GET` | `/profile` | Yes | Get full profile with streaming `avatarUrl` |
+| `GET` | `/profile` | Yes | Full profile with streaming `avatarUrl` |
 | `PATCH` | `/profile` | Yes | Update `fullName` or `phone` |
-| `PATCH` | `/avatar` | Yes | Upload profile image (`multipart/form-data`, field: `avatar`) |
+| `PATCH` | `/avatar` | Yes | Upload image (`multipart/form-data`, field: `avatar`) |
 | `DELETE` | `/avatar` | Yes | Remove avatar from S3 and database |
-| `GET` | `/avatar/:userId` | Yes | Stream avatar image bytes to the client |
+| `GET` | `/avatar/:userId` | Yes | Stream avatar bytes directly to client |
 
 ### Organizations — `/api/v1/organizations`
 
@@ -207,11 +196,11 @@ Before end-users can sign up to a project, you must configure:
 | `GET` | `/:orgId` | Authenticated | Get organization |
 | `PATCH` | `/:orgId` | `admin`, `owner` | Update organization |
 | `DELETE` | `/:orgId` | `owner` | Delete organization |
-| `GET` | `/:orgId/members` | `admin`, `owner`, `member` | List members |
-| `POST` | `/:orgId/members` | `admin`, `owner` | Add member |
-| `GET` | `/:orgId/members/:userId` | `admin`, `owner`, `member` | Get member |
+| `GET` | `/:orgId/members` | `member`+ | List all members |
+| `POST` | `/:orgId/members` | `admin`, `owner` | Add a member |
+| `GET` | `/:orgId/members/:userId` | `member`+ | Get a specific member |
 | `PATCH` | `/:orgId/members/:userId` | `admin`, `owner` | Update member role/status |
-| `DELETE` | `/:orgId/members/:userId` | `admin`, `owner` | Remove member |
+| `DELETE` | `/:orgId/members/:userId` | `admin`, `owner` | Remove a member |
 
 ### Projects — `/api/v1/organizations/:orgId/projects`
 
@@ -219,84 +208,87 @@ Before end-users can sign up to a project, you must configure:
 |---|---|---|---|
 | `POST` | `/` | `admin`, `owner` (org) | Create project |
 | `GET` | `/` | `admin`, `owner` (org) | List all projects in org |
-| `GET` | `/:projectId` | `admin`, `owner`, `member` (org) | Get project |
+| `GET` | `/:projectId` | `member`+ (org) | Get project |
 | `PATCH` | `/:projectId` | `admin`, `owner` (org) | Update project |
 | `DELETE` | `/:projectId` | `owner` (org) | Delete project |
 | `POST` | `/:projectId/members` | `admin`, `owner` (project) | Add project member |
-| `GET` | `/:projectId/members` | `member` (project) | List project members |
-| `GET` | `/:projectId/members/:userId` | `member` (project) | Get project member |
-| `PATCH` | `/:projectId/members/:userId` | `admin`, `owner` (project) | Update project member |
-| `DELETE` | `/:projectId/members/:userId` | `admin`, `owner` (project) | Remove project member |
+| `GET` | `/:projectId/members` | `member`+ (project) | List project members |
+| `GET` | `/:projectId/members/:userId` | `member`+ (project) | Get a specific member |
+| `PATCH` | `/:projectId/members/:userId` | `admin`, `owner` (project) | Update member |
+| `DELETE` | `/:projectId/members/:userId` | `admin`, `owner` (project) | Remove member |
 
 ### Project Policy — `/api/v1/projects/:projectId/policy`
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `POST` | `/` | `manager`, `contributor` | Create project policy |
-| `GET` | `/` | `manager`, `viewer`, `contributor` | Get project policy |
-| `PATCH` | `/` | `manager`, `contributor` | Update project policy |
-| `DELETE` | `/` | `manager`, `contributor` | Delete project policy |
+| `POST` | `/` | `manager`, `contributor` | Create policy |
+| `GET` | `/` | `manager`, `contributor`, `viewer` | Get policy |
+| `PATCH` | `/` | `manager`, `contributor` | Update policy |
+| `DELETE` | `/` | `manager`, `contributor` | Delete policy |
 
 ### Password Policy — `/api/v1/projects/:projectId/password-policy`
 
 | Method | Endpoint | Roles | Description |
 |---|---|---|---|
-| `POST` | `/` | `manager`, `contributor` | Create password policy |
-| `GET` | `/` | `manager`, `viewer`, `contributor` | Get password policy |
-| `PATCH` | `/` | `manager`, `contributor` | Update password policy |
-| `DELETE` | `/` | `manager`, `contributor` | Delete password policy |
-
-> **Note:** You cannot delete a password policy while a project policy still references it. Delete the project policy first.
+| `POST` | `/` | `manager`, `contributor` | Create policy |
+| `GET` | `/` | `manager`, `contributor`, `viewer` | Get policy |
+| `PATCH` | `/` | `manager`, `contributor` | Update policy |
+| `DELETE` | `/` | `manager`, `contributor` | Delete policy |
 
 ### Sessions — `/api/v1/sessions`
 
-| Method | Endpoint | Auth Required | Description |
-|---|---|---|---|
-| `GET` | `/` | Yes | List all active sessions (raw refresh tokens hidden) |
-| `DELETE` | `/` | Yes | Revoke all sessions (logout everywhere) |
-| `DELETE` | `/:sessionId` | Yes | Revoke a specific session |
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/` | List all active sessions (raw refresh tokens hidden) |
+| `DELETE` | `/` | Revoke all sessions — logout everywhere |
+| `DELETE` | `/:sessionId` | Revoke one specific session |
 
 ### End Users — `/api/v1/project/:projectId/end-user`
 
-| Method | Endpoint | Auth Required | Description |
+| Method | Endpoint | Auth? | Description |
 |---|---|---|---|
-| `POST` | `/signup` | No | End-user signup (validated against project policy) |
-| `POST` | `/login` | No | End-user login |
-| `GET` | `/logout` | Yes | End-user logout |
-| `GET` | `/profile` | Yes | Get profile with project role/status + streaming `avatarUrl` |
+| `POST` | `/signup` | No | Sign up (validated against project policy) |
+| `POST` | `/login` | No | Login |
+| `GET` | `/logout` | Yes | Logout |
+| `GET` | `/profile` | Yes | Profile with role, status, and streaming `avatarUrl` |
 | `PATCH` | `/profile` | Yes | Update `fullName` or `phone` |
-| `PATCH` | `/avatar` | Yes | Upload profile image (`multipart/form-data`, field: `avatar`) |
-| `DELETE` | `/avatar` | Yes | Remove avatar from S3 and database |
-| `GET` | `/avatar/:userId` | Yes | Stream avatar image bytes to the client |
+| `PATCH` | `/avatar` | Yes | Upload avatar |
+| `DELETE` | `/avatar` | Yes | Remove avatar |
+| `GET` | `/avatar/:userId` | Yes | Stream avatar bytes |
 
 ---
 
-## Authentication Flow
+## Authentication & Token Strategy
 
-### Token Strategy
+AuthFlow uses two tokens, both stored in `httpOnly` cookies. That means they're invisible to JavaScript — no XSS attack can steal them.
 
-- **Access Token** — short-lived (15 minutes), stored in `httpOnly` cookie named `accessToken`
-- **Refresh Token** — long-lived (7 days), stored in `httpOnly` cookie named `refreshToken`, also saved to the `Session` collection
+| Token | Lifetime | Cookie Name |
+|---|---|---|
+| Access Token | 15 minutes | `accessToken` |
+| Refresh Token | 7 days | `refreshToken` |
 
-Using `httpOnly` cookies means tokens are never exposed to JavaScript, protecting against XSS attacks.
+The refresh token is also saved to a `Session` document in MongoDB, which is what makes revocation work.
 
 ### Token Rotation
 
-When `POST /refresh-token` is called:
-1. The incoming refresh token is verified (JWT signature + expiry)
-2. The corresponding session is looked up in the database (prevents reuse of revoked tokens)
-3. The old session is deleted
-4. A new access token + refresh token pair is generated
-5. A new session record is created
-6. New tokens are set in cookies
+Every call to `POST /refresh-token` does this:
 
-This implements **refresh token rotation** — each refresh token can only be used once.
+1. Verifies the incoming refresh token (signature + expiry)
+2. Looks up the session in MongoDB — if it's been revoked, this fails
+3. Deletes the old session
+4. Issues a fresh access + refresh token pair
+5. Creates a new session record
+6. Sets both tokens in cookies
+
+Each refresh token is single-use. Replaying a stolen token won't work because the session it belonged to no longer exists.
 
 ### Session Revocation
 
-- `DELETE /sessions/:sessionId` — revokes one device
-- `DELETE /sessions` — revokes all devices (full logout everywhere)
-- `POST /auth/logout` — revokes only the current session (single-device logout)
+```
+POST /auth/logout           → revoke current device only
+DELETE /sessions/:sessionId → revoke one specific device
+DELETE /sessions            → revoke all devices (force logout everywhere)
+```
 
 ---
 
@@ -304,111 +296,88 @@ This implements **refresh token rotation** — each refresh token can only be us
 
 ### Organization Roles
 
-| Role | Permissions |
+| Role | What they can do |
 |---|---|
-| `owner` | Full control: create, read, update, delete org; manage all members |
-| `admin` | Read, update org; manage members (cannot delete org or remove last owner) |
-| `member` | Read org and member list only |
+| `owner` | Full control — create, read, update, delete org; manage all members |
+| `admin` | Read + update org; manage members (can't delete org or remove the last owner) |
+| `member` | Read-only access to org info and member list |
 
 ### Project Roles
 
-| Role | Permissions |
+| Role | What they can do |
 |---|---|
-| `manager` | Full project control: manage members, policies |
-| `contributor` | Can modify policies, contribute to project |
+| `manager` | Full project control — members, policies, everything |
+| `contributor` | Can modify policies and contribute to project config |
 | `viewer` | Read-only access to project and policies |
 
-### How RBAC Works
+### How It Works Under the Hood
 
 The `roleAuthorize(roles, type)` middleware:
 
-1. Reads the user from `req.user` (set by `authenticate` middleware)
-2. Extracts `orgId` or `projectId` from params/body/query
-3. Looks up the user's membership in that org or project
-4. Checks if the user's role is in the list of allowed roles
-5. Returns `403 Forbidden` if not authorized
+1. Reads `req.user` (set by the `authenticate` middleware before this runs)
+2. Pulls `orgId` or `projectId` from the request params/body/query
+3. Looks up the user's membership record
+4. Checks if their role is in the allowed list
+5. Returns `403 Forbidden` if it's not — no exceptions
 
 ---
 
 ## Project Policies
 
-Project Policies define how end-users can authenticate with your project.
-
-### Password Policy fields
+### Password Policy Fields
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `minLength` | number | 6 | Minimum password length (cannot be less than 4) |
-| `requireNumbers` | boolean | true | Password must contain a digit |
-| `requireUppercase` | boolean | true | Password must contain an uppercase letter |
-| `requireSpecialChars` | boolean | false | Password must contain a special character |
+| `minLength` | number | `6` | Minimum password length (floor is 4) |
+| `requireNumbers` | boolean | `true` | Must contain at least one digit |
+| `requireUppercase` | boolean | `true` | Must contain an uppercase letter |
+| `requireSpecialChars` | boolean | `false` | Must contain a special character |
 
-### Project Policy fields
+### Project Policy Fields
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `authRequired` | boolean | true | Whether authentication is required |
-| `authType` | `password` \| `oauth` \| `2fa` | `password` | Authentication type |
-| `authMethods` | `email` \| `phone` \| `google` \| `github`[] | [] | Allowed auth methods |
-| `phoneRequired` | boolean | false | Whether phone number is mandatory |
-| `roles` | string[] | [] | Allowed roles for end-users (empty = no restriction) |
-| `statuses` | string[] | [] | Allowed statuses for end-users (empty = no restriction) |
+| `authRequired` | boolean | `true` | Whether auth is enforced |
+| `authType` | enum | `password` | `password` \| `oauth` \| `2fa` |
+| `authMethods` | array | `[]` | `email` \| `phone` \| `google` \| `github` |
+| `phoneRequired` | boolean | `false` | Is phone number mandatory at signup? |
+| `roles` | string[] | `[]` | Allowed end-user roles (empty = no restriction) |
+| `statuses` | string[] | `[]` | Allowed end-user statuses (empty = no restriction) |
 | `passwordPolicyId` | ObjectId | required | Reference to the project's password policy |
-
-### Setup Order
-
-```
-1. Create a Password Policy  →  2. Create a Project Policy  →  3. End Users can sign up
-```
 
 ---
 
 ## Avatar & Profile System
 
-### How It Works
-
-Avatar uploads go through a three-stage pipeline before anything reaches S3, and images are always served by streaming through the backend — the S3 object URL is never exposed to the client.
+Avatar uploads go through a three-stage pipeline — and the raw S3 URL is never exposed to clients under any circumstances.
 
 ```
 Client uploads multipart/form-data (field: "avatar")
           │
-          ▼  Stage 1 — upload.middleware.ts (multer)
+          ▼  Stage 1 — multer
           │  • Validates MIME type: jpeg, png, webp, gif only
           │  • Rejects files larger than 5 MB
-          │  • Buffers the file in memory (never written to disk)
+          │  • Buffers entirely in memory — never hits disk
           │
-          ▼  Stage 2 — upload.middleware.ts (sharp)
+          ▼  Stage 2 — sharp
           │  • Resizes to 400 × 400 px (cover crop, centered)
-          │  • Converts any accepted format to JPEG (quality 85, progressive)
+          │  • Converts any format to JPEG (quality 85, progressive)
           │  • Strips EXIF metadata for privacy
           │
-          ▼  Stage 3 — userProfile.service / endUserProfile.service
-          │  • Deletes old avatar from S3 if one exists (no orphan objects)
+          ▼  Stage 3 — S3 upload
+          │  • Deletes old avatar first (no orphan objects)
           │  • Uploads processed buffer via PutObjectCommand
-          │  • Stores only the S3 key in MongoDB (avatarKey, select: false)
+          │  • Stores only the S3 key in MongoDB (select: false)
           │  • Returns a backend streaming URL to the client
           ▼
    Response: { avatarUrl: "/api/v1/auth/avatar/<userId>" }
 ```
 
-### Why the S3 URL Is Never Exposed
+### Why S3 URLs Are Never Exposed
 
-The `avatarKey` field on the `User` document (e.g. `avatars/users/abc123.jpg`) is marked `select: false` in the Mongoose schema, so it is excluded from every query unless explicitly selected. No controller or service ever returns this field in a response body.
+The `avatarKey` field on the `User` schema is marked `select: false`, so it's excluded from every Mongoose query unless explicitly requested. No controller or service ever returns it.
 
-The client always receives a backend streaming URL. When the client loads that URL, the server fetches the object from S3 using `GetObjectCommand` and pipes the response stream directly to the HTTP response:
-
-```
-Client:  GET /api/v1/auth/avatar/:userId
-              │
-              ▼  streamAvatar controller
-              │  1. Look up avatarKey from DB (explicit .select("avatarKey"))
-              │  2. Call streamFromS3(key) → GetObjectCommand
-              │  3. stream.pipe(res)
-              │     Content-Type: image/jpeg
-              │     Cache-Control: private, max-age=3600
-              ▼
-         Browser receives raw image bytes — S3 URL never seen
-```
+When the client hits the streaming endpoint, the server fetches the object from S3 using `GetObjectCommand` and pipes the response stream directly to the HTTP response. The browser gets image bytes — it never sees an S3 URL.
 
 ### S3 Key Structure
 
@@ -420,31 +389,9 @@ avatars/
     └── <userId>.jpg       ← end-users (your project's customers)
 ```
 
-Each user has at most one avatar. Uploading a new image automatically deletes the old key from S3 before writing the replacement.
+Each user gets one avatar slot. Uploading a new image automatically deletes the old key before writing the replacement.
 
-### Profile Endpoints — Internal Users
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/auth/profile` | Full profile. `avatarUrl` is the streaming endpoint, not an S3 URL. |
-| `PATCH` | `/api/v1/auth/profile` | Update `fullName` and/or `phone`. |
-| `PATCH` | `/api/v1/auth/avatar` | Upload image. Send `multipart/form-data` with field name `avatar`. Max 5 MB. |
-| `DELETE` | `/api/v1/auth/avatar` | Remove avatar from S3 and clear the DB field. |
-| `GET` | `/api/v1/auth/avatar/:userId` | Streams image bytes. Use directly in `<img src="...">`. |
-
-### Profile Endpoints — End Users
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/v1/project/:projectId/end-user/profile` | Profile with role/status and streaming `avatarUrl`. |
-| `PATCH` | `/api/v1/project/:projectId/end-user/profile` | Update `fullName` and/or `phone`. |
-| `PATCH` | `/api/v1/project/:projectId/end-user/avatar` | Upload image. Field name `avatar`. Max 5 MB. |
-| `DELETE` | `/api/v1/project/:projectId/end-user/avatar` | Remove avatar. |
-| `GET` | `/api/v1/project/:projectId/end-user/avatar/:userId` | Streams image bytes. |
-
-### Login and /me Response
-
-After login or calling `/me`, the `avatarUrl` in the response is always the backend streaming endpoint:
+### Login & `/me` Response Shape
 
 ```json
 {
@@ -462,37 +409,23 @@ If no avatar has been uploaded yet, `avatarUrl` is `null`.
 
 ---
 
-## Frontend Integration Guide
+## Frontend Integration
 
-### Cookies vs. Tokens
+### No Token Handling Required
 
-AuthFlow stores tokens in `httpOnly` cookies automatically. Your frontend does **not** need to manually handle or store tokens — the browser sends them with every request automatically.
-
-Make sure all API requests include credentials:
+AuthFlow sets tokens in `httpOnly` cookies automatically. Your frontend doesn't need to read, store, or attach tokens to anything — the browser handles it. Just make sure every request includes credentials:
 
 ```javascript
-// Using fetch
+// fetch
 fetch('/api/v1/auth/me', { credentials: 'include' });
 
-// Using axios
+// axios — set once globally
 axios.defaults.withCredentials = true;
 ```
 
-### CORS Setup
+### Handling Token Expiry
 
-The server must have `credentials: true` in CORS config, and the frontend origin must be whitelisted via the `CORS_ORIGIN` environment variable. The wildcard `*` origin does **not** work with `credentials: true`.
-
-### Internal User Flow (Admin Panel / Dashboard)
-
-```
-1. POST /api/v1/auth/signup         — register
-2. POST /api/v1/auth/login          — login (tokens set in cookies)
-3. GET  /api/v1/auth/me             — get current user
-4. POST /api/v1/auth/refresh-token  — rotate tokens when access token expires
-5. POST /api/v1/auth/logout         — logout current device
-```
-
-**Handling token expiry on the frontend:**
+Access tokens expire after 15 minutes. This wrapper automatically retries after a refresh:
 
 ```javascript
 async function apiFetch(url, options = {}) {
@@ -517,28 +450,20 @@ async function apiFetch(url, options = {}) {
 
 ### Displaying Avatars
 
-Because `avatarUrl` is a backend streaming endpoint (not a raw S3 URL), you can use it directly in an `<img>` tag. The browser's cookie jar automatically includes the auth cookie with the image request.
+`avatarUrl` is a backend endpoint, not a raw S3 URL — use it directly in an `<img>` tag. The browser's cookie jar attaches auth automatically.
 
 ```jsx
-// React example
 function Avatar({ user }) {
-  if (!user.avatarUrl) {
-    return <div className="avatar-placeholder">{user.fullName[0]}</div>;
-  }
+  if (!user.avatarUrl)
+    return <div className="placeholder">{user.fullName[0]}</div>;
+
   return (
-    <img
-      src={user.avatarUrl}
-      alt={user.fullName}
-      width={40}
-      height={40}
-    />
+    <img src={user.avatarUrl} alt={user.fullName} width={40} height={40} />
   );
 }
 ```
 
 ### Uploading an Avatar
-
-Send a `PATCH` request with `multipart/form-data`. The field name must be `avatar`.
 
 ```javascript
 async function uploadAvatar(file) {
@@ -548,40 +473,29 @@ async function uploadAvatar(file) {
   const res = await fetch('/api/v1/auth/avatar', {
     method: 'PATCH',
     credentials: 'include',
-    body: formData,
-    // Do NOT set Content-Type — the browser sets it with the boundary automatically
+    body: formData
+    // Don't set Content-Type — the browser sets it with the boundary automatically
   });
 
   const data = await res.json();
-  // data.avatarUrl = "/api/v1/auth/avatar/<userId>"
-  return data.avatarUrl;
+  return data.avatarUrl; // "/api/v1/auth/avatar/<userId>"
 }
 ```
 
-For end-users change the URL to `/api/v1/project/:projectId/end-user/avatar`.
+For end-users, change the URL to `/api/v1/project/:projectId/end-user/avatar`.
 
-**File requirements enforced server-side:**
+**Server-side file requirements:**
 
 | Rule | Value |
 |---|---|
-| Maximum file size | 5 MB |
+| Max file size | 5 MB |
 | Accepted types | JPEG, PNG, WebP, GIF |
 | Output format | JPEG, 400 × 400 px, quality 85 |
 | EXIF data | Stripped automatically |
 
-### End-User Flow (Your App's Customers)
-
-```
-1. POST /api/v1/project/:projectId/end-user/signup  — register
-2. POST /api/v1/project/:projectId/end-user/login   — login
-3. GET  /api/v1/project/:projectId/end-user/logout  — logout
-```
-
-**Example signup request:**
+### End-User Signup Example
 
 ```javascript
-const projectId = 'YOUR_PROJECT_ID';
-
 await fetch(`/api/v1/project/${projectId}/end-user/signup`, {
   method: 'POST',
   credentials: 'include',
@@ -590,38 +504,38 @@ await fetch(`/api/v1/project/${projectId}/end-user/signup`, {
     fullName: 'Jane Doe',
     email: 'jane@example.com',
     password: 'SecurePass1!',
-    authMethod: 'email',   // must match project policy's authMethods
-    role: 'user',          // must be in project policy's roles (if configured)
-    status: 'active'       // must be in project policy's statuses (if configured)
+    authMethod: 'email',  // must match the project policy's authMethods
+    role: 'user',         // must be in the project policy's roles (if configured)
+    status: 'active'      // must be in the project policy's statuses (if configured)
   })
 });
 ```
 
-### Managing Organizations and Projects (Admin Frontend)
+### Full Admin Setup Flow
 
 ```javascript
-// 1. Create an organization (user must be verified)
+// 1. Create an org
 const org = await apiFetch('/api/v1/organizations', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ name: 'Acme Corp', slug: 'acme-corp' })
 });
 
-// 2. Create a project under the org
+// 2. Create a project inside it
 const project = await apiFetch(`/api/v1/organizations/${org.id}/projects`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ name: 'My App', description: 'Production app' })
 });
 
-// 3. Create password policy for the project
+// 3. Create a password policy for the project
 await apiFetch(`/api/v1/projects/${project.id}/password-policy`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ minLength: 8, requireNumbers: true, requireUppercase: true })
 });
 
-// 4. Create project policy (requires password policy to exist first)
+// 4. Create the project policy (password policy must exist first)
 await apiFetch(`/api/v1/projects/${project.id}/policy`, {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
@@ -634,22 +548,24 @@ await apiFetch(`/api/v1/projects/${project.id}/policy`, {
     statuses: ['active']
   })
 });
+
+// End-user endpoints are now live at /api/v1/project/${project.id}/end-user
 ```
 
-### Response Shape
+### API Response Shape
 
-All endpoints return a consistent JSON shape:
+All endpoints return a consistent structure:
 
 ```json
 {
   "message": "Human-readable status message",
-  "user": { ... },
-  "org": { ... },
-  "project": { ... }
+  "user": {},
+  "org": {},
+  "project": {}
 }
 ```
 
-Error responses:
+Errors look like this:
 
 ```json
 {
@@ -672,10 +588,10 @@ NODE_ENV=development
 # MongoDB
 MONGODB_URI=mongodb://localhost:27017/authflow
 
-# CORS — set to your frontend URL in production
+# CORS — must be your exact frontend URL in production
 CORS_ORIGIN=http://localhost:3000
 
-# JWT — use long random secrets in production (32+ chars)
+# JWT — use long random secrets in production (32+ characters)
 JWT_ACCESS_SECRET=your-access-token-secret
 JWT_REFRESH_SECRET=your-refresh-token-secret
 
@@ -686,11 +602,11 @@ AWS_SECRET_ACCESS_KEY=your-iam-secret-key
 AWS_S3_BUCKET=your-bucket-name
 ```
 
-> **Security:** Never commit `.env` to version control. In production, prefer IAM roles or instance profiles over hardcoded AWS credentials.
+> In production, prefer IAM roles or instance profiles over hardcoded AWS credentials. Never commit `.env` to version control.
 
 ### Recommended S3 Bucket Policy
 
-The S3 bucket must be **private** (no public access). The IAM user or role running the server needs only:
+The bucket must be **private** (no public access). The IAM user running the server only needs these three actions:
 
 ```json
 {
@@ -712,54 +628,40 @@ The S3 bucket must be **private** (no public access). The IAM user or role runni
 ### Prerequisites
 
 - Node.js 18+
-- MongoDB running locally or a MongoDB Atlas URI
-- An AWS account with an S3 bucket and IAM credentials
+- MongoDB (local or Atlas)
+- AWS account with an S3 bucket and IAM credentials
 
 ### Installation
 
 ```bash
-# Clone the repository
+# Clone and enter the project
 git clone <repo-url>
 cd authflow
 
 # Install dependencies
 npm install
-
-# Install avatar system dependencies
 npm install @aws-sdk/client-s3 multer sharp
 npm install -D @types/multer
 
-# Copy environment file and fill in your values
+# Set up environment
 cp .env.example .env
+# Fill in your values in .env
 
 # Start in development mode
 npm run dev
 
-# Build for production
+# Build and start for production
 npm run build
 npm start
 ```
 
 ### First Steps After Starting
 
-1. **Sign up** as an internal user: `POST /api/v1/auth/signup`
-2. **Verify your email** — set `isVerified: true` in MongoDB manually (no email flow yet)
-3. **Create an organization**: `POST /api/v1/organizations`
-4. **Create a project**: `POST /api/v1/organizations/:orgId/projects`
-5. **Create a password policy**: `POST /api/v1/projects/:projectId/password-policy`
-6. **Create a project policy**: `POST /api/v1/projects/:projectId/policy`
+1. **Sign up** as an internal user → `POST /api/v1/auth/signup`
+2. **Verify your account** — there's no email flow yet, so set `isVerified: true` manually in MongoDB
+3. **Create an organization** → `POST /api/v1/organizations`
+4. **Create a project** → `POST /api/v1/organizations/:orgId/projects`
+5. **Create a password policy** → `POST /api/v1/projects/:projectId/password-policy`
+6. **Create a project policy** → `POST /api/v1/projects/:projectId/policy`
 7. End-user endpoints are now live at `/api/v1/project/:projectId/end-user`
-8. **Upload your avatar**: `PATCH /api/v1/auth/avatar` with `multipart/form-data`, field `avatar`
-
----
-
-<!-- ## Known Issues & Notes
-
-- **Typo in filename:** `src/utils/uinifiedSignupValidator.ts` — should be `unifiedSignupValidator.ts`
-- **Typo in config:** `saltRoundes` in `auth.config.ts` should be `saltRounds`
-- **Wrong collection in `user.utils.ts`:** `findProjectsByUserId` queries `Organization.find` instead of `Project.find`
-- **`service.service.ts` bug:** `Project.findById({ projectId })` passes an object instead of the ID string — should be `Project.findById(projectId)`
-- **Email verification:** The `isVerifiedUser` check runs when creating an org, but there is no email verification flow implemented. You must manually set `isVerified: true` in MongoDB to create organizations
-- **Space in import path:** `modules/index.ts` imports `"./end user/endUser.route"` with a space in the folder name — rename the folder to `endUsers` to match the services directory
-- **`endUser.middleware.ts` `RoleAuthorize`:** The function checks `projectPolicy.roles` (the list of roles allowed in the project) against the user's role, but never looks up the end-user's actual role from the `EndUser` document. This needs to query `EndUser.findOne({ userId, projectId })` and compare its `role` field
-- **Avatar streaming requires auth:** The `GET /avatar/:userId` endpoint requires a valid session cookie. If you need publicly accessible avatars (e.g. for a public profile page), remove `authenticate` from that specific route and change `Cache-Control` to `public` -->
+8. **Upload your avatar** → `PATCH /api/v1/auth/avatar` with `multipart/form-data`, field `avatar`
