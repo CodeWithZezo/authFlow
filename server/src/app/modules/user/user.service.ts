@@ -2,6 +2,7 @@ import { User } from "../../models/schema/user.schema";
 import { Session } from "../../models/schema/session.schema";
 import { JWTUtils } from "../../utils/jwt.utils";
 import { PasswordUtils } from "../../utils/password.utils";
+import { hashToken } from "../../utils/token.utils";
 import {
   ISignupRequest,
   ILoginRequest,
@@ -41,7 +42,7 @@ export class UserService {
       });
 
       const { accessToken, refreshToken } = this.generateTokens(user as any);
-      await Session.create({ userId: user._id, refreshToken });
+      await Session.create({ userId: user._id, refreshToken: hashToken(refreshToken) });
 
       return {
         status: 201,
@@ -87,7 +88,7 @@ export class UserService {
     }
 
     const { accessToken, refreshToken } = this.generateTokens(user as any);
-    await Session.create({ userId: user._id, refreshToken });
+    await Session.create({ userId: user._id, refreshToken: hashToken(refreshToken) });
 
     return {
       status: 200,
@@ -164,7 +165,7 @@ export class UserService {
 
       // Atomic: find session and user in parallel
       const [session, user] = await Promise.all([
-        Session.findOne({ userId: payload.userId, refreshToken: incomingRefreshToken }).lean(),
+        Session.findOne({ userId: payload.userId, refreshToken: hashToken(incomingRefreshToken) }).lean(),
         User.findById(payload.userId).lean(),
       ]);
 
@@ -178,7 +179,7 @@ export class UserService {
       // Rotate: delete old session, create new one
       await Session.deleteOne({ _id: session._id });
       const { accessToken, refreshToken } = this.generateTokens(user as any);
-      await Session.create({ userId: user._id, refreshToken });
+      await Session.create({ userId: user._id, refreshToken: hashToken(refreshToken) });
 
       return {
         status: 200,
@@ -200,7 +201,7 @@ export class UserService {
     try {
       const incomingRefreshToken = req.cookies?.refreshToken;
       if (incomingRefreshToken) {
-        await Session.deleteOne({ userId: req.user?.userId, refreshToken: incomingRefreshToken });
+        await Session.deleteOne({ userId: req.user?.userId, refreshToken: hashToken(incomingRefreshToken) });
       }
       return { status: 200, body: { message: "Logged out successfully" } };
     } catch (error) {

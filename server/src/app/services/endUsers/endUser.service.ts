@@ -3,6 +3,7 @@ import { User } from "../../models/schema/user.schema";
 import { Session } from "../../models/schema/session.schema";
 import { PasswordUtils } from "../../utils/password.utils";
 import { JWTUtils } from "../../utils/jwt.utils";
+import { hashToken } from "../../utils/token.utils";
 import { findUserByEmailInProject, validateSignupAgainstProjectPolicy } from "../../utils/uinifiedSignupValidator";
 
 export class EndUserService {
@@ -33,7 +34,7 @@ export class EndUserService {
     const user = await User.create({ fullName, email, passwordHash, phone });
     const endUser = await EndUser.create({ userId: user._id, projectId: project._id, role, status });
     const tokens = this.tokenResponse(user);
-    await Session.create({ userId: user._id, refreshToken: tokens.refreshToken });
+    await Session.create({ userId: user._id, refreshToken: hashToken(tokens.refreshToken) });
 
     return {
       status: 201,
@@ -74,7 +75,7 @@ export class EndUserService {
     // findUserByEmailInProject already returns the user — re-select avatarKey separately
     // (it is select:false so must be explicit)
     const [, avatarDoc] = await Promise.all([
-      Session.create({ userId: user._id, refreshToken: tokens.refreshToken }),
+      Session.create({ userId: user._id, refreshToken: hashToken(tokens.refreshToken) }),
       User.findById(user._id).select("+avatarKey").lean() as Promise<any>,
     ]);
 
