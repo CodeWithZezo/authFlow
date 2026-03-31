@@ -222,3 +222,11 @@ h1, h2, h3, h4, h5, h6 {
   --normal-text:  var(--color-text-primary) !important;
   font-family: var(--font-sans) !important;
 }
+
+/* ─── Search result highlights ──────────────────────────────────────────────── */
+mark {
+  background: rgba(108, 99, 255, 0.25);
+  color: var(--color-accent);
+  border-radius: 3px;
+  padding: 0 2px;
+}

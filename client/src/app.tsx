@@ -7,8 +7,12 @@ import { AuthLayout }     from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
 import { LoginPage }  from "@/routes/_auth/login";
 import { SignupPage } from "@/routes/_auth/signup";
-import Docs from "./pages/Docs";
 import  Home  from "./pages/Home";
+
+// Docs — lazy loaded
+const DocsPage = lazy(() =>
+  import("./pages/docs/DocsPage").then((m) => ({ default: m.DocsPage }))
+);
 
 // Layouts
 const AppLayout       = lazy(() => import("@/layouts/AppLayout").then(m      => ({ default: m.AppLayout })));
@@ -59,7 +63,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/docs" element={<Docs />} />
+        <Route path="/docs" element={<Navigate to="/docs/getting-started" replace />} />
+        <Route path="/docs/:section" element={<S><DocsPage /></S>} />
 
         {/* ── Auth (public) ── */}
         <Route element={<AuthLayout />}>
