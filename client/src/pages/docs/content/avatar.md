@@ -1,64 +1,71 @@
 # Avatar
 
-Avatars are stored in a private AWS S3 bucket. The S3 URL is **never exposed** — the backend streams image bytes directly to the client, protecting your bucket from public access.
+Both admin users and end-users can upload profile pictures. Avatars are stored in a private AWS S3 bucket — the raw S3 URL is never exposed. Instead, the backend streams image bytes through itself, which keeps your bucket locked down.
 
-This applies to both admin users (`/api/v1/auth/avatar`) and end-users (`/api/v1/project/:projectId/end-user/avatar`).
+---
 
-## How it works
+## How avatar storage works
+
+Here's the full pipeline when someone uploads a photo:
 
 ```
-Client uploads file
-       ↓
-multer validates type + size (max 5 MB)
-       ↓
-sharp resizes to 400×400 JPEG, quality 85, strips EXIF
-       ↓
-Old S3 object deleted (if exists)
-       ↓
-Buffer uploaded to S3 (private ACL)
-       ↓
-S3 key stored in MongoDB (select: false — never returned)
-       ↓
-Streaming URL returned to client
+User uploads file
+  └── multer validates: correct type? under 5 MB?
+        └── sharp resizes to 400×400 JPEG, quality 85, strips EXIF data
+              └── Old S3 object deleted (if there was a previous avatar)
+                    └── New image uploaded to S3 (private)
+                          └── S3 key saved to MongoDB (hidden field)
+                                └── Streaming URL returned to client
 ```
 
-The `avatarKey` field is marked `select: false` in Mongoose — it is excluded from all queries by default and never appears in any response.
+A couple of important details about the storage side:
+
+- The `avatarKey` field (the raw S3 object key) is marked `select: false` in the Mongoose schema. That means it's physically excluded from every database query by default and will never appear in any API response — ever.
+- The `avatarUrl` in responses is always a path to your own backend, like `/api/v1/auth/avatar/664abc...`. It's never a direct S3 URL.
+
+---
 
 ## PATCH /avatar
 
 Upload or replace an avatar. Send as `multipart/form-data`.
 
+**Admin user route:**
 ```http
 PATCH /api/v1/auth/avatar
-Content-Type: multipart/form-data
+```
+
+**End-user route:**
+```http
+PATCH /api/v1/project/:projectId/end-user/avatar
 ```
 
 | Constraint | Value |
 |------------|-------|
-| Field name | `avatar` (must be exact) |
-| Max size | 5 MB |
+| Form field name | `avatar` — must be exactly this |
+| Max file size | 5 MB |
 | Accepted types | `image/jpeg`, `image/png`, `image/webp`, `image/gif` |
-| Output | 400×400 JPEG, quality 85 |
+| Output format | 400×400 JPEG, quality 85 |
 
-> **Do NOT set `Content-Type` manually.** The browser sets it automatically with the correct multipart boundary when using `FormData`. Setting it manually breaks the upload.
+> **Do not set `Content-Type` manually.** When you use `FormData`, the browser automatically sets the correct `multipart/form-data` header with the proper boundary. If you manually set `Content-Type: multipart/form-data`, it won't include the boundary and the upload will silently fail.
 
-### Request example
+### Uploading from JavaScript
 
 ```javascript
 const formData = new FormData();
-formData.append('avatar', file);  // field name must be 'avatar'
+formData.append('avatar', file);  // 'avatar' must be exact
 
 const res = await fetch('/api/v1/auth/avatar', {
   method: 'PATCH',
   credentials: 'include',
   body: formData,
-  // No Content-Type header!
+  // Don't add headers here — let the browser handle it
 });
 
 const { avatarUrl } = await res.json();
+// avatarUrl → "/api/v1/auth/avatar/664abc123def456789012345"
 ```
 
-### Response — 200 OK
+### Success response
 
 ```json
 {
@@ -69,41 +76,49 @@ const { avatarUrl } = await res.json();
 
 ### Error responses
 
-| Status | Cause |
-|--------|-------|
-| `400` | No file attached — field name must be `avatar` |
-| `400` | Unsupported file type |
-| `400` | File exceeds 5 MB |
+| Status | What happened |
+|--------|--------------|
+| `400` | No file attached, or field name isn't `avatar` |
+| `400` | File type not allowed |
+| `400` | File is over 5 MB |
 | `401` | Not authenticated |
 | `500` | S3 upload failed or image processing error |
 
+---
+
 ## DELETE /avatar
 
-Remove the avatar. Deletes the S3 object and clears the field in MongoDB.
+Remove the avatar entirely. Deletes the file from S3 and clears the field in MongoDB.
 
+**Admin user:**
 ```http
 DELETE /api/v1/auth/avatar
 ```
 
-**200 OK**
-
-```json
-{ "message": "Avatar deleted successfully" }
+**End-user:**
+```http
+DELETE /api/v1/project/:projectId/end-user/avatar
 ```
 
-**404 Not Found** — user has no avatar to delete.
+Returns `200` on success. Returns `404` if the user has no avatar to delete.
+
+---
 
 ## GET /avatar/:userId
 
 Stream the avatar image bytes from S3 through the backend.
 
+**Admin user:**
 ```http
 GET /api/v1/auth/avatar/:userId
 ```
 
-Requires authentication. Returns raw `image/jpeg` bytes with caching headers.
+**End-user:**
+```http
+GET /api/v1/project/:projectId/end-user/avatar/:userId
+```
 
-### Response headers
+Returns raw `image/jpeg` bytes. The response headers include caching info:
 
 ```
 Content-Type: image/jpeg
@@ -111,11 +126,18 @@ Cache-Control: private, max-age=3600
 Content-Length: 12345
 ```
 
-### Using in React
+Because the streaming URL is same-origin, the browser automatically sends the `accessToken` cookie with image requests. You don't need any special auth setup.
+
+---
+
+## Using avatars in React
+
+### Displaying an avatar
 
 ```tsx
 function UserAvatar({ user }: { user: { fullName: string; avatarUrl: string | null } }) {
   if (!user.avatarUrl) {
+    // No avatar — show initials as a placeholder
     return (
       <div className="avatar-placeholder">
         {user.fullName[0].toUpperCase()}
@@ -123,7 +145,7 @@ function UserAvatar({ user }: { user: { fullName: string; avatarUrl: string | nu
     );
   }
 
-  // avatarUrl is same-origin — the browser sends the accessToken cookie automatically
+  // avatarUrl is same-origin, cookie is sent automatically
   return (
     <img
       src={user.avatarUrl}
@@ -135,21 +157,7 @@ function UserAvatar({ user }: { user: { fullName: string; avatarUrl: string | nu
 }
 ```
 
-Because the streaming URL is same-origin, the browser sends the `accessToken` cookie with the image request automatically. No manual auth headers needed.
-
-## End-user avatar URLs
-
-For end-users, the base path is different:
-
-```
-PATCH  /api/v1/project/:projectId/end-user/avatar
-DELETE /api/v1/project/:projectId/end-user/avatar
-GET    /api/v1/project/:projectId/end-user/avatar/:userId
-```
-
-The logic is identical — same constraints, same streaming approach.
-
-## File input component
+### File input for uploading
 
 ```tsx
 function AvatarUpload({ onUpload }: { onUpload: (url: string) => void }) {
@@ -164,6 +172,7 @@ function AvatarUpload({ onUpload }: { onUpload: (url: string) => void }) {
       method: 'PATCH',
       credentials: 'include',
       body: form,
+      // No Content-Type header — browser handles it
     });
 
     if (res.ok) {
@@ -175,3 +184,16 @@ function AvatarUpload({ onUpload }: { onUpload: (url: string) => void }) {
   return <input type="file" accept="image/*" onChange={handleChange} />;
 }
 ```
+
+---
+
+## Why this approach?
+
+You might wonder: why not just return the S3 URL directly? It's simpler, right?
+
+The problem is that S3 URLs for private buckets either require signed URLs (which expire) or expose your bucket to the public. By streaming through the backend, you get:
+
+- Your S3 bucket stays completely private — no direct access from browsers
+- The auth check happens on your server before any bytes are sent
+- You can add rate limiting, logging, or other middleware later
+- No signed URL expiry problems to deal with

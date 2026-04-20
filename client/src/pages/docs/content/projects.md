@@ -1,30 +1,41 @@
 # Projects
 
-Projects live inside organizations. Each project has its own members, roles, password policy, and project policy — which together control how end-users authenticate.
+Projects live inside organizations. Each project represents one of your apps — a mobile app, a web product, a game, whatever you're building. Your end-users authenticate through a specific project, not through the platform as a whole.
+
+Every project has its own:
+- **Members** (separate from org members)
+- **Password policy** (controls how strong end-user passwords must be)
+- **Project policy** (controls which auth methods and roles are allowed)
+
+---
+
+## Project roles vs. org roles
+
+Here's something that trips people up: projects have their *own* role system, completely separate from org roles.
+
+| Role | What they can do |
+|------|-----------------|
+| `manager` | Full project access — assigned automatically to whoever creates the project |
+| `contributor` | Can manage policies and end-users |
+| `viewer` | Read-only — can see the project and its data |
+
+There's one important exception: **org-level `owner` and `admin` can always access project endpoints**, even if they're not a project member. So if you're the org owner, you don't need to add yourself to every project.
+
+---
 
 ## Base URL
+
+All project endpoints are nested under their organization:
 
 ```
 /api/v1/organizations/:orgId/projects
 ```
 
-All project endpoints require authentication and at minimum an org-level membership.
+---
 
-## Project roles
+## Creating a project
 
-Project members have their own role hierarchy, separate from org roles:
-
-| Role | Permissions |
-|------|-------------|
-| `manager` | Full project access — assigned automatically to the project creator |
-| `contributor` | Can manage policies and end-users |
-| `viewer` | Read-only access |
-
-> Org-level `owner` and `admin` can always access project endpoints regardless of project membership.
-
-## POST /
-
-Create a new project inside an organization. Requires org-level `admin` or `owner`.
+Requires org-level `admin` or `owner`.
 
 ```http
 POST /api/v1/organizations/:orgId/projects
@@ -38,7 +49,7 @@ Content-Type: application/json
 }
 ```
 
-### Response — 201 Created
+You get back the new project:
 
 ```json
 {
@@ -54,35 +65,33 @@ Content-Type: application/json
 }
 ```
 
-The creator is automatically added as a `manager` member of the project.
+You're automatically added as a `manager` of the project. Save the `_id` — you'll use it constantly.
 
-## GET /
+---
 
-List all projects in an organization.
+## Listing and fetching projects
+
+**List all projects in an org:**
 
 ```http
 GET /api/v1/organizations/:orgId/projects
 ```
 
-Requires org-level `owner`, `admin`, or `member`.
+Returns an array. Requires any org-level membership.
 
-**200 OK** — returns array of project objects.
-
-## GET /:projectId
-
-Fetch a single project.
+**Fetch a single project:**
 
 ```http
 GET /api/v1/organizations/:orgId/projects/:projectId
 ```
 
-**200 OK** — returns project object.
+Returns a `404` if the project doesn't exist or if it belongs to a different org (this prevents guessing IDs across organizations).
 
-**404 Not Found** — project does not exist or belongs to a different org.
+---
 
-## PATCH /:projectId
+## Updating a project
 
-Update project name or description. Requires org-level `admin` or `owner`.
+Change the name or description. Requires org-level `admin` or `owner`.
 
 ```http
 PATCH /api/v1/organizations/:orgId/projects/:projectId
@@ -91,32 +100,29 @@ Content-Type: application/json
 
 ```json
 {
-  "name": "Mobile App v2",
-  "description": "Updated description"
+  "name": "Mobile App v2"
 }
 ```
 
-**200 OK** — returns updated project.
+---
 
-## DELETE /:projectId
+## Deleting a project
 
-Permanently delete a project. Requires org-level `owner` only.
+**This is permanent.** Requires org-level `owner` only.
 
 ```http
 DELETE /api/v1/organizations/:orgId/projects/:projectId
 ```
 
-> **Warning:** All policies, end-users, and sessions scoped to this project are deleted.
+Everything scoped to this project is deleted: policies, end-users, sessions. No recovery.
 
-**200 OK**
+---
 
-```json
-{ "message": "Project deleted successfully" }
-```
+## Managing project members
 
-## POST /:projectId/members
+### Add a member
 
-Add a member to a project. Requires project-level `manager`, or org-level `admin`/`owner`.
+The user must already have a dashboard account. Requires project `manager` or org-level `admin`/`owner`.
 
 ```http
 POST /api/v1/organizations/:orgId/projects/:projectId/members
@@ -130,31 +136,23 @@ Content-Type: application/json
 }
 ```
 
-**201 Created** — membership created.
-
-**400 Bad Request** — user already a project member.
-
-## GET /:projectId/members
-
-List all project members.
+### List all members
 
 ```http
 GET /api/v1/organizations/:orgId/projects/:projectId/members
 ```
 
-Requires any project role (`manager`, `contributor`, `viewer`).
+Returns membership objects with populated user info. Requires any project role.
 
-**200 OK** — returns array of membership objects with populated user info.
+### Get one member
 
-## GET /:projectId/members/:userId
+```http
+GET /api/v1/organizations/:orgId/projects/:projectId/members/:userId
+```
 
-Fetch a single project member.
+### Update a member's role
 
-**200 OK** — returns membership object.
-
-## PATCH /:projectId/members/:userId
-
-Update a member's project role. Requires `manager`.
+Requires project `manager`.
 
 ```http
 PATCH /api/v1/organizations/:orgId/projects/:projectId/members/:userId
@@ -165,29 +163,25 @@ Content-Type: application/json
 { "role": "viewer" }
 ```
 
-**200 OK** — returns updated membership.
-
-## DELETE /:projectId/members/:userId
-
-Remove a member from a project. Requires `manager`.
+### Remove a member
 
 ```http
 DELETE /api/v1/organizations/:orgId/projects/:projectId/members/:userId
 ```
 
-**200 OK**
+Requires project `manager`.
 
-```json
-{ "message": "Member removed successfully" }
-```
+---
 
-## Setup checklist
+## Before end-users can sign up — a checklist
 
-Before end-users can authenticate against a project, complete these steps in order:
+You can't just create a project and start accepting end-users right away. There are two policies you need to configure first. Here's the exact order:
 
-1. Create the project — `POST /api/v1/organizations/:orgId/projects`
-2. Create a password policy — `POST /api/v1/projects/:projectId/password-policy`
-3. Create a project policy — `POST /api/v1/projects/:projectId/policy`
-4. End-users can now signup at — `POST /api/v1/project/:projectId/end-user/signup`
+1. ✅ Create the project
+2. ✅ Create a **password policy** — `POST /api/v1/projects/:projectId/password-policy`
+3. ✅ Create a **project policy** — `POST /api/v1/projects/:projectId/policy`
+4. 🎉 End-users can now sign up at `POST /api/v1/project/:projectId/end-user/signup`
 
-See [Policies](/docs/policies) for full policy configuration details.
+If you skip step 2 or 3, the signup endpoint will return an error. The policies need to exist before any end-user registration attempt.
+
+Head over to [Policies](/docs/policies) for the full details on setting these up.
