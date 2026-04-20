@@ -1,0 +1,1 @@
+import{d as n,H as u,j as e}from"./index-ZoXbB1dG.js";function i({requiredRoles:s,children:o,fallback:l=null}){const t=n(a=>{var r;return(r=a.userMembership)==null?void 0:r.role});return u(t,s)?e.jsx(e.Fragment,{children:o}):e.jsx(e.Fragment,{children:l})}export{i as R};

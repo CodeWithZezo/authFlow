@@ -3,5 +3,5 @@ node_modules/
 
 # Ignore environment variables
 .env
-
-dist/
+#ignore dist
+/dist

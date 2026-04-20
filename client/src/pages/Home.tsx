@@ -1,121 +1,95 @@
 // ==================== src/pages/Home.tsx ====================
-// AuthFlow — marketing home page.
-// Design: dark, minimal, typographic. Syne display + DM Sans body.
-// Palette: #08080f bg · #6c63ff accent · clean prose content.
-
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 import {
-  Shield,
-  Lock,
-  Cookie,
-  RefreshCw,
-  Image,
-  ArrowRight,
-  ChevronRight,
-  Copy,
-  CheckCheck,
-  Globe,
-  Database,
-  Cloud,
-  Eye,
-  EyeOff,
-  Terminal,
-  Layers,
-  Settings2,
-  Key,
-  Zap,
-  Activity,
+  Layers, Shield, Building2, FolderKanban, Users,
+  KeyRound, MonitorSmartphone, Zap, Lock, ArrowRight,
+  Check, Code2, Terminal, ChevronRight,
+  Globe, Database, Server, GitBranch, Star,
 } from "lucide-react";
 
-// ─── Utility ──────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 function cn(...classes: (string | boolean | undefined)[]) {
   return classes.filter(Boolean).join(" ");
 }
 
-// ─── Copy Button ──────────────────────────────────────────────────────────────
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }}
-      className="flex items-center gap-1.5 rounded px-2 py-1 text-[10px] font-medium transition-colors hover:bg-white/5"
-      style={{ color: copied ? "#22c55e" : "var(--color-text-muted)" }}
-    >
-      {copied ? <CheckCheck size={10} /> : <Copy size={10} />}
-      {copied ? "Copied" : "Copy"}
-    </button>
-  );
-}
+// ─── Particle canvas background ───────────────────────────────────────────────
+function ParticleCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-// ─── Code Block ───────────────────────────────────────────────────────────────
-function CodeBlock({
-  code,
-  language = "bash",
-  title,
-  className,
-}: {
-  code: string;
-  language?: string;
-  title?: string;
-  className?: string;
-}) {
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let W = (canvas.width = window.innerWidth);
+    let H = (canvas.height = window.innerHeight);
+
+    type P = { x: number; y: number; vx: number; vy: number; r: number; a: number };
+    const particles: P[] = Array.from({ length: 55 }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: (Math.random() - 0.5) * 0.28,
+      r: Math.random() * 1.4 + 0.4,
+      a: Math.random() * 0.3 + 0.05,
+    }));
+
+    let raf: number;
+    const draw = () => {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = W;
+        if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        if (p.y > H) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(108, 99, 255, ${p.a})`;
+        ctx.fill();
+
+        for (let j = i + 1; j < particles.length; j++) {
+          const q = particles[j];
+          const dx = p.x - q.x;
+          const dy = p.y - q.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 110) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(q.x, q.y);
+            ctx.strokeStyle = `rgba(108, 99, 255, ${0.07 * (1 - dist / 110)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      raf = requestAnimationFrame(draw);
+    };
+
+    draw();
+    const onResize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+    window.addEventListener("resize", onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
+  }, []);
+
   return (
-    <div
-      className={cn("overflow-hidden rounded-xl border", className)}
-      style={{ borderColor: "var(--color-border)", background: "#050508" }}
-    >
-      <div
-        className="flex items-center justify-between border-b px-4 py-2.5"
-        style={{ borderColor: "var(--color-border)", background: "rgba(255,255,255,0.02)" }}
-      >
-        <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            {["#ef4444", "#f59e0b", "#22c55e"].map((c) => (
-              <div key={c} className="h-2 w-2 rounded-full opacity-60" style={{ background: c }} />
-            ))}
-          </div>
-          {title && (
-            <span className="ml-1 font-mono text-[10px]" style={{ color: "var(--color-text-muted)" }}>
-              {title}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <span
-            className="rounded px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-widest"
-            style={{ background: "rgba(255,255,255,0.04)", color: "var(--color-text-muted)" }}
-          >
-            {language}
-          </span>
-          <CopyButton text={code} />
-        </div>
-      </div>
-      <pre
-        className="overflow-x-auto p-4 text-xs leading-relaxed"
-        style={{ fontFamily: "var(--font-mono, 'JetBrains Mono', monospace)", color: "#a8a8c0" }}
-      >
-        <code>{code}</code>
-      </pre>
-    </div>
+    <canvas
+      ref={canvasRef}
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      style={{ opacity: 0.55 }}
+    />
   );
 }
 
 // ─── Animated counter ─────────────────────────────────────────────────────────
-function AnimatedStat({
-  value,
-  suffix = "",
-  label,
-}: {
-  value: number;
-  suffix?: string;
-  label: string;
-}) {
-  const [displayed, setDisplayed] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLSpanElement>(null);
   const started = useRef(false);
 
   useEffect(() => {
@@ -123,993 +97,752 @@ function AnimatedStat({
       ([entry]) => {
         if (entry.isIntersecting && !started.current) {
           started.current = true;
-          let start = 0;
-          const duration = 1200;
-          const step = 16;
-          const increment = value / (duration / step);
-          const timer = setInterval(() => {
-            start += increment;
-            if (start >= value) {
-              setDisplayed(value);
-              clearInterval(timer);
-            } else {
-              setDisplayed(Math.floor(start));
-            }
-          }, step);
+          const start = performance.now();
+          const tick = (now: number) => {
+            const t = Math.min((now - start) / 1400, 1);
+            const ease = 1 - Math.pow(1 - t, 3);
+            setCount(Math.floor(ease * target));
+            if (t < 1) requestAnimationFrame(tick);
+            else setCount(target);
+          };
+          requestAnimationFrame(tick);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.5 }
     );
     if (ref.current) observer.observe(ref.current);
     return () => observer.disconnect();
-  }, [value]);
+  }, [target]);
 
-  return (
-    <div ref={ref} className="text-center">
-      <div
-        className="font-display text-4xl font-black tracking-tight md:text-5xl"
-        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-display, 'Syne', sans-serif)" }}
-      >
-        {displayed}
-        <span style={{ color: "var(--color-accent, #6c63ff)" }}>{suffix}</span>
-      </div>
-      <div className="mt-2 text-sm" style={{ color: "var(--color-text-muted)" }}>
-        {label}
-      </div>
-    </div>
-  );
+  return <span ref={ref}>{count}{suffix}</span>;
 }
 
-// ─── Sticky Navbar ────────────────────────────────────────────────────────────
+// ─── Navbar ───────────────────────────────────────────────────────────────────
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 24);
-    window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
+    const fn = () => setScrolled(window.scrollY > 24);
+    window.addEventListener("scroll", fn);
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
   return (
     <header
-      className="sticky top-0 z-50 transition-all duration-500"
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={{
-        background: scrolled ? "rgba(8,8,15,0.90)" : "transparent",
-        backdropFilter: scrolled ? "blur(24px) saturate(150%)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.06)" : "1px solid transparent",
+        borderBottom: scrolled ? "1px solid var(--color-border)" : "1px solid transparent",
+        background: scrolled ? "rgba(9,9,15,0.88)" : "transparent",
+        backdropFilter: scrolled ? "blur(20px)" : "none",
       }}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        {/* Logo */}
-        <div className="flex items-center gap-2.5">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+        <div className="flex items-center gap-3">
           <div
-            className="flex h-7 w-7 items-center justify-center rounded-lg"
-            style={{ background: "var(--color-accent, #6c63ff)" }}
+            className="flex h-9 w-9 items-center justify-center rounded-xl"
+            style={{ background: "var(--color-accent)", boxShadow: "0 0 20px rgba(108,99,255,0.45)" }}
           >
-            <Shield size={13} className="text-white" />
+            <Layers size={17} className="text-white" />
           </div>
-          <span
-            className="font-display text-base font-black tracking-tight"
-            style={{
-              color: "var(--color-text-primary)",
-              fontFamily: "var(--font-display, 'Syne', sans-serif)",
-            }}
-          >
-            AuthFlow
+          <span className="font-display text-xl font-bold tracking-tight" style={{ color: "var(--color-text-primary)" }}>
+            Nexus
           </span>
         </div>
 
-        {/* Nav links */}
-        <nav className="hidden items-center gap-7 md:flex">
-          {[
-            { label: "Features", href: "#features" },
-            { label: "Security", href: "#security" },
-            { label: "Quickstart", href: "#quickstart" },
-            { label: "API Docs", href: "/docs" },
-          ].map(({ label, href }) => (
+        <nav className="hidden md:flex items-center gap-0.5">
+          {[["Docs", "/docs"], ["Features", "#features"], ["Architecture", "#architecture"], ["Compare", "#compare"]].map(([label, href]) => (
             <a
               key={label}
               href={href}
-              className="text-sm transition-colors duration-200 hover:text-white"
-              style={{ color: "var(--color-text-muted)" }}
+              className="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:bg-white/5"
+              style={{ color: "var(--color-text-secondary)" }}
             >
               {label}
             </a>
           ))}
         </nav>
 
-        {/* CTA */}
         <div className="flex items-center gap-3">
-          <a
-            href="/login"
-            className="hidden text-sm font-medium transition-colors duration-200 hover:text-white md:block"
+          <Link
+            to="/login"
+            className="hidden sm:block text-sm font-medium transition-colors hover:text-white px-4 py-2"
             style={{ color: "var(--color-text-secondary)" }}
           >
             Sign in
-          </a>
-          <a
-            href="/signup"
-            className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-bold text-white transition-all duration-200 hover:opacity-85"
-            style={{ background: "var(--color-accent, #6c63ff)" }}
+          </Link>
+          <Link
+            to="/signup"
+            className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+            style={{ background: "var(--color-accent)", boxShadow: "0 0 22px rgba(108,99,255,0.35)" }}
           >
             Get started
-            <ArrowRight size={12} />
-          </a>
+            <ArrowRight size={14} />
+          </Link>
         </div>
       </div>
     </header>
   );
 }
 
-// ─── Hero terminal ────────────────────────────────────────────────────────────
-function HeroTerminal() {
-  const lines = [
-    { delay: 0,    text: "$ curl -X POST /api/v1/project/:id/end-user/signup",   color: "#6c63ff" },
-    { delay: 500,  text: "> { email: 'alice@corp.com', password: 'Secure1!' }",   color: "#a8a8c0" },
-    { delay: 900,  text: "< HTTP/1.1 201 Created",                                color: "#22c55e" },
-    { delay: 1200, text: "< { user: { _id: 'u_x7k…', status: 'active' } }",      color: "#a8a8c0" },
-    { delay: 1500, text: "< Set-Cookie: accessToken=eyJ… (httpOnly, 15m)",        color: "#f59e0b" },
-    { delay: 1800, text: "< Set-Cookie: refreshToken=eyJ… (httpOnly, 7d)",        color: "#f59e0b" },
-    { delay: 2100, text: "✓  User registered. Session established.",               color: "#22c55e" },
-  ];
+// ─── Code token helpers ───────────────────────────────────────────────────────
+const T = {
+  kw: (s: string) => <span style={{ color: "#c084fc" }}>{s}</span>,
+  str: (s: string) => <span style={{ color: "#86efac" }}>{s}</span>,
+  fn: (s: string) => <span style={{ color: "#60a5fa" }}>{s}</span>,
+  op: (s: string) => <span style={{ color: "#8888aa" }}>{s}</span>,
+  cm: (s: string) => <span style={{ color: "#44445a" }}>{s}</span>,
+  var: (s: string) => <span style={{ color: "#f2f2ff" }}>{s}</span>,
+};
 
-  const [visible, setVisible] = useState<number[]>([]);
-
-  useEffect(() => {
-    lines.forEach(({ delay }, i) => {
-      setTimeout(() => setVisible((prev) => [...prev, i]), delay + 300);
-    });
-  }, []);
-
+// ─── Hero ─────────────────────────────────────────────────────────────────────
+function Hero() {
   return (
-    <div
-      className="overflow-hidden rounded-2xl border"
-      style={{ borderColor: "rgba(255,255,255,0.07)", background: "#050508" }}
-    >
-      {/* Terminal chrome */}
-      <div
-        className="flex items-center gap-2 border-b px-4 py-3"
-        style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}
-      >
-        <div className="flex gap-1.5">
-          {["#ef4444", "#f59e0b", "#22c55e"].map((c) => (
-            <div key={c} className="h-2 w-2 rounded-full opacity-60" style={{ background: c }} />
-          ))}
+    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-16">
+      <ParticleCanvas />
+
+      {/* Gradient orbs */}
+      <div aria-hidden className="pointer-events-none absolute -top-48 left-1/2 -translate-x-1/2 h-[700px] w-[700px] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(108,99,255,0.18) 0%, transparent 60%)" }} />
+      <div aria-hidden className="pointer-events-none absolute top-1/3 -left-48 h-[450px] w-[450px] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(108,99,255,0.10) 0%, transparent 60%)" }} />
+      <div aria-hidden className="pointer-events-none absolute top-1/4 -right-48 h-[500px] w-[500px] rounded-full"
+        style={{ background: "radial-gradient(circle, rgba(56,189,248,0.08) 0%, transparent 60%)" }} />
+
+      {/* Dot grid */}
+      <div aria-hidden className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: "radial-gradient(circle, rgba(108,99,255,0.12) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+          maskImage: "radial-gradient(ellipse 80% 60% at 50% 40%, black 0%, transparent 100%)",
+        }}
+      />
+
+      {/* Content */}
+      <div className="relative z-10 mx-auto max-w-5xl px-6 text-center">
+
+        {/* Pill badge */}
+        <div
+          className="inline-flex items-center gap-2.5 rounded-full border px-4 py-1.5 text-xs font-semibold mb-9 animate-slide-up"
+          style={{ borderColor: "rgba(108,99,255,0.28)", background: "rgba(108,99,255,0.07)", color: "var(--color-accent)", animationFillMode: "both" }}
+        >
+          <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "var(--color-accent)" }} />
+          Open-source · Self-hosted · MIT licensed
         </div>
-        <div className="ml-3 flex items-center gap-1.5">
-          <Terminal size={10} style={{ color: "var(--color-text-muted)" }} />
-          <span className="font-mono text-[10px]" style={{ color: "var(--color-text-muted)" }}>
-            authflow — terminal
+
+        {/* Headline */}
+        <h1
+          className="font-display font-bold tracking-tight mb-6 animate-slide-up"
+          style={{
+            fontSize: "clamp(2.6rem, 6.5vw, 5.2rem)",
+            lineHeight: 1.04,
+            letterSpacing: "-0.03em",
+            animationDelay: "80ms",
+            animationFillMode: "both",
+          }}
+        >
+          <span style={{ color: "var(--color-text-primary)" }}>Authentication</span>
+          <br />
+          <span style={{
+            background: "linear-gradient(135deg, #6c63ff 0%, #38bdf8 50%, #a78bfa 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}>
+            you actually own.
           </span>
+        </h1>
+
+        {/* Subheadline */}
+        <p
+          className="mx-auto max-w-2xl text-lg leading-relaxed mb-10 animate-slide-up"
+          style={{ color: "var(--color-text-secondary)", animationDelay: "160ms", animationFillMode: "both" }}
+        >
+          Everything Clerk or Auth0 gives you — organizations, multi-tenant projects, JWT
+          rotation, RBAC, S3 avatars — except your data never leaves your servers.
+          No per-seat pricing. No vendor lock-in.
+        </p>
+
+        {/* CTAs */}
+        <div
+          className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up"
+          style={{ animationDelay: "240ms", animationFillMode: "both" }}
+        >
+          <Link
+            to="/signup"
+            className="group flex items-center gap-2.5 rounded-xl px-8 py-3.5 text-base font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(108,99,255,0.45)] active:scale-[0.98]"
+            style={{ background: "var(--color-accent)", boxShadow: "0 0 26px rgba(108,99,255,0.32)" }}
+          >
+            Start for free
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+          </Link>
+          <Link
+            to="/docs"
+            className="flex items-center gap-2.5 rounded-xl border px-8 py-3.5 text-base font-medium transition-all duration-200 hover:bg-white/5"
+            style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+          >
+            <Code2 size={16} />
+            Read the docs
+          </Link>
+        </div>
+
+        <p
+          className="mt-7 text-xs animate-fade-in"
+          style={{ color: "var(--color-text-muted)", animationDelay: "420ms", animationFillMode: "both" }}
+        >
+          Deploy to any Node.js host · MongoDB + JWT · AWS S3 for avatars
+        </p>
+      </div>
+
+      {/* Terminal preview */}
+      <div
+        className="relative z-10 mx-auto mt-16 w-full max-w-3xl px-6 animate-slide-up"
+        style={{ animationDelay: "340ms", animationFillMode: "both" }}
+      >
+        <div
+          className="overflow-hidden rounded-2xl border"
+          style={{
+            borderColor: "var(--color-border)",
+            background: "var(--color-surface)",
+            boxShadow: "0 40px 90px rgba(0,0,0,0.55), 0 0 70px rgba(108,99,255,0.07)",
+          }}
+        >
+          {/* Window chrome */}
+          <div
+            className="flex items-center gap-2 border-b px-5 py-3.5"
+            style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}
+          >
+            <span className="h-3 w-3 rounded-full bg-red-500/75" />
+            <span className="h-3 w-3 rounded-full bg-yellow-500/75" />
+            <span className="h-3 w-3 rounded-full bg-green-500/75" />
+            <div className="ml-3 flex items-center gap-1.5 rounded-lg border px-3 py-1"
+              style={{ borderColor: "var(--color-border)", background: "var(--color-surface-3)" }}>
+              <Terminal size={11} style={{ color: "var(--color-text-muted)" }} />
+              <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>Quick setup</span>
+            </div>
+          </div>
+
+          {/* Code */}
+          <div className="overflow-x-auto p-7">
+            <pre className="text-sm leading-8" style={{ fontFamily: "var(--font-mono)" }}>
+              <div>{T.cm("// 1. Create your organization")}</div>
+              <div>
+                {T.kw("const")} {T.var("org")} {T.op("=")} {T.kw("await")} {T.fn("apiFetch")}
+                {T.op("(")}
+                {T.str("'/api/v1/organizations'")}
+                {T.op(",")} {T.op("{ method: 'POST', body: JSON.stringify({ name: 'Acme', slug: 'acme' }) }")}
+                {T.op(")")}
+              </div>
+              <br />
+              <div>{T.cm("// 2. Create a project inside it")}</div>
+              <div>
+                {T.kw("const")} {T.var("project")} {T.op("=")} {T.kw("await")} {T.fn("apiFetch")}
+                {T.op("(`/api/v1/organizations/${")}
+                {T.var("org")}
+                {T.op(".id}/projects`,")} {T.op("{ method: 'POST' })")}
+              </div>
+              <br />
+              <div>{T.cm("// 3. Set a password policy, then a project policy")}</div>
+              <div>
+                {T.kw("await")} {T.fn("apiFetch")}
+                {T.op("(`/api/v1/projects/${")}
+                {T.var("project")}
+                {T.op(".id}/password-policy`,")} {T.op("{ method: 'POST' })")}
+              </div>
+              <br />
+              <div>{T.cm("// 4. End-user endpoints are now live  🎉")}</div>
+              <div>
+                {T.kw("await")} {T.fn("fetch")}
+                {T.op("(`/api/v1/project/${")}
+                {T.var("project")}
+                {T.op(".id}/end-user/signup`,")} {T.op("{ credentials: 'include' })")}
+              </div>
+            </pre>
+          </div>
         </div>
       </div>
 
-      {/* Lines */}
-      <div className="space-y-1.5 p-5" style={{ minHeight: 200 }}>
-        {lines.map(({ text, color }, i) => (
-          <div
-            key={i}
-            className="font-mono text-xs transition-all duration-500"
-            style={{
-              color,
-              opacity: visible.includes(i) ? 1 : 0,
-              transform: visible.includes(i) ? "translateY(0)" : "translateY(6px)",
-            }}
-          >
-            {text}
-          </div>
-        ))}
-        {visible.length === lines.length && (
-          <span className="font-mono text-xs animate-pulse" style={{ color: "#6c63ff" }}>
-            ▋
-          </span>
-        )}
+      {/* Scroll hint */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <div
+          className="flex h-8 w-5 items-start justify-center rounded-full border p-1"
+          style={{ borderColor: "var(--color-border)" }}
+        >
+          <span
+            className="h-2 w-0.5 rounded-full animate-bounce"
+            style={{ background: "var(--color-text-muted)" }}
+          />
+        </div>
       </div>
-    </div>
+    </section>
   );
 }
 
-// ─── Feature card ─────────────────────────────────────────────────────────────
-function FeatureCard({
-  icon: Icon,
-  title,
-  description,
-  accent = "var(--color-accent)",
-  badge,
-}: {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-  accent?: string;
-  badge?: string;
-}) {
+// ─── Stats bar ────────────────────────────────────────────────────────────────
+function StatsBar() {
+  const stats = [
+    { label: "API endpoints",    value: 40,  suffix: "+" },
+    { label: "Single-use refresh",  value: 100, suffix: "%" },
+    { label: "Distinct user systems", value: 2, suffix: "" },
+    { label: "Open source forever",  value: 100, suffix: "%" },
+  ];
+
+  return (
+    <section
+      className="border-y"
+      style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+    >
+      <div className="mx-auto max-w-7xl px-6 py-12">
+        <div className="grid grid-cols-2 gap-y-10 gap-x-6 sm:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center space-y-1">
+              <p className="font-display text-4xl font-bold tabular-nums" style={{ color: "var(--color-accent)" }}>
+                <Counter target={s.value} suffix={s.suffix} />
+              </p>
+              <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Features ─────────────────────────────────────────────────────────────────
+const FEATURES = [
+  { icon: Building2,       title: "Organizations",         desc: "Top-level multi-tenant workspaces. Owner → Admin → Member hierarchy built in. Unique slug per org.",                                              accent: "#6c63ff", tag: "Multi-tenant" },
+  { icon: FolderKanban,    title: "Project Scoping",        desc: "Projects live inside orgs and control end-user authentication. Each gets its own policies, members, and independent configuration.",              accent: "#22c55e", tag: "RBAC" },
+  { icon: Shield,          title: "Auth Policies",          desc: "Per-project rules: auth type (password/OAuth/2FA), allowed methods, phone requirements, custom end-user roles and statuses.",                    accent: "#38bdf8", tag: "Configurable" },
+  { icon: KeyRound,        title: "JWT Rotation",           desc: "15-minute access tokens + 7-day refresh tokens in httpOnly cookies. Every refresh is single-use — stolen replay tokens just won't work.",      accent: "#f59e0b", tag: "Secure" },
+  { icon: MonitorSmartphone, title: "Session Control",      desc: "Real-time session visibility. Revoke one device or force-logout everywhere. Each session is persisted in MongoDB for auditability.",            accent: "#ec4899", tag: "Revocable" },
+  { icon: Users,           title: "Dual User Systems",      desc: "Internal users (your dev team) and end-users (your customers) are completely separate — independent auth flows, stores, and endpoints.",        accent: "#a78bfa", tag: "Isolated" },
+  { icon: Globe,           title: "Avatar Pipeline",        desc: "multer → sharp (400×400 JPEG, EXIF stripped) → S3. Raw S3 URLs are never exposed. Served through a secure cookie-authenticated stream.",       accent: "#34d399", tag: "S3-backed" },
+  { icon: Lock,            title: "Password Policies",      desc: "Per-project enforcement at signup: min length, require uppercase, numbers, special characters. Validated server-side every time.",               accent: "#fb923c", tag: "Enforced" },
+  { icon: Zap,             title: "Zero Token Handling",    desc: "Your frontend never reads or stores tokens. The browser cookie jar handles everything. Just set credentials: 'include' on every request.",      accent: "#facc15", tag: "Cookie-first" },
+];
+
+function FeatureCard({ feature }: { feature: typeof FEATURES[0] }) {
+  const Icon = feature.icon;
   return (
     <div
-      className="group rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-px"
-      style={{
-        borderColor: "rgba(255,255,255,0.07)",
-        background: "rgba(255,255,255,0.015)",
+      className="group relative overflow-hidden rounded-2xl border p-6 transition-all duration-300 cursor-default"
+      style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "0 12px 40px rgba(0,0,0,0.4)";
+        (e.currentTarget as HTMLElement).style.borderColor = `${feature.accent}30`;
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+        (e.currentTarget as HTMLElement).style.boxShadow = "none";
+        (e.currentTarget as HTMLElement).style.borderColor = "var(--color-border)";
       }}
     >
-      <div className="mb-4 flex items-start justify-between">
+      {/* Hover ambient */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-2xl"
+        style={{ background: `radial-gradient(circle at 30% -20%, ${feature.accent}0c 0%, transparent 60%)` }}
+      />
+
+      <div className="flex items-start justify-between mb-4">
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-xl"
-          style={{
-            background: `color-mix(in oklch, ${accent} 10%, transparent)`,
-            border: `1px solid color-mix(in oklch, ${accent} 18%, transparent)`,
-          }}
+          className="flex h-11 w-11 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-110"
+          style={{ background: `${feature.accent}18` }}
         >
-          <Icon size={16} style={{ color: accent }} />
+          <Icon size={19} style={{ color: feature.accent }} />
         </div>
-        {badge && (
-          <span
-            className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
-            style={{
-              color: accent,
-              background: `color-mix(in oklch, ${accent} 8%, transparent)`,
-            }}
-          >
-            {badge}
-          </span>
-        )}
+        <span
+          className="rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide"
+          style={{ background: `${feature.accent}12`, color: feature.accent }}
+        >
+          {feature.tag}
+        </span>
       </div>
-      <h3
-        className="mb-2 font-display text-sm font-bold"
-        style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-display, 'Syne', sans-serif)" }}
-      >
-        {title}
+
+      <h3 className="font-display text-sm font-bold mb-2" style={{ color: "var(--color-text-primary)" }}>
+        {feature.title}
       </h3>
       <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-        {description}
+        {feature.desc}
       </p>
     </div>
   );
 }
 
-// ─── Step ─────────────────────────────────────────────────────────────────────
-function Step({
-  number,
-  title,
-  description,
-  code,
-  accent,
-}: {
-  number: number;
-  title: string;
-  description: string;
-  code?: string;
-  accent: string;
-}) {
+function Features() {
   return (
-    <div
-      className="relative overflow-hidden rounded-2xl border"
-      style={{ borderColor: "rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.015)" }}
-    >
-      {/* Accent bar */}
-      <div
-        className="absolute left-0 top-0 h-full w-px"
-        style={{ background: `linear-gradient(to bottom, ${accent}, transparent)` }}
-      />
-      <div className="p-5 pl-6">
-        <div className="mb-3 flex items-center gap-3">
-          <div
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold"
-            style={{
-              background: `color-mix(in oklch, ${accent} 12%, transparent)`,
-              color: accent,
-              border: `1px solid color-mix(in oklch, ${accent} 22%, transparent)`,
-            }}
-          >
-            {number}
-          </div>
-          <h3
-            className="font-display text-sm font-bold"
-            style={{ color: "var(--color-text-primary)", fontFamily: "var(--font-display, 'Syne', sans-serif)" }}
-          >
-            {title}
-          </h3>
-        </div>
-        <p className="mb-4 text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-          {description}
-        </p>
-        {code && <CodeBlock code={code} language="http" />}
-      </div>
-    </div>
-  );
-}
-
-// ─── Section label ────────────────────────────────────────────────────────────
-function SectionPill({
-  children,
-  accent = "var(--color-accent)",
-}: {
-  children: React.ReactNode;
-  accent?: string;
-}) {
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider"
-      style={{
-        color: accent,
-        background: `color-mix(in oklch, ${accent} 8%, transparent)`,
-        borderColor: `color-mix(in oklch, ${accent} 16%, transparent)`,
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-function Home() {
-  return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: "var(--color-bg, #08080f)",
-        fontFamily: "var(--font-sans, 'DM Sans', sans-serif)",
-        color: "var(--color-text-primary, #f0f0f8)",
-      }}
-    >
-      <Navbar />
-
-      {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden px-6 pb-24 pt-20 md:px-10 md:pb-32 md:pt-28">
-        {/* Ambient glows */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div
-            className="absolute -left-48 -top-48 h-[700px] w-[700px] rounded-full opacity-[0.055] blur-[140px]"
-            style={{ background: "#6c63ff" }}
-          />
-          <div
-            className="absolute -right-48 top-10 h-[500px] w-[500px] rounded-full opacity-[0.03] blur-[110px]"
-            style={{ background: "#38bdf8" }}
-          />
-          {/* Subtle grid */}
-          <div
-            className="absolute inset-0 opacity-[0.018]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
-              backgroundSize: "64px 64px",
-            }}
-          />
-        </div>
-
-        <div className="relative mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 items-center gap-14 lg:grid-cols-2">
-            {/* Copy */}
-            <div>
-              <div className="mb-6">
-                <SectionPill accent="#22c55e">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
-                  v1.0 — Production Ready
-                </SectionPill>
-              </div>
-
-              <h1
-                className="mb-6 text-4xl font-black leading-[1.06] tracking-tight md:text-5xl lg:text-[3.5rem]"
-                style={{
-                  fontFamily: "var(--font-display, 'Syne', sans-serif)",
-                  color: "var(--color-text-primary)",
-                }}
-              >
-                Complete auth
-                <br />
-                infrastructure.
-                <br />
-                <span style={{ color: "var(--color-accent, #6c63ff)" }}>
-                  Zero configuration.
-                </span>
-              </h1>
-
-              <p
-                className="mb-8 max-w-md text-base leading-relaxed"
-                style={{ color: "var(--color-text-secondary, #9898b0)" }}
-              >
-                AuthFlow gives your projects a fully managed end-user authentication layer —
-                signup, login, avatar uploads, session management, and token rotation — secured
-                with httpOnly cookies from day one. Ship your product, not your auth stack.
-              </p>
-
-              <div className="flex flex-wrap items-center gap-3">
-                <a
-                  href="/signup"
-                  className="flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:opacity-85 hover:shadow-[0_0_32px_rgba(108,99,255,0.28)]"
-                  style={{ background: "var(--color-accent, #6c63ff)" }}
-                >
-                  Start for free
-                  <ArrowRight size={14} />
-                </a>
-                <a
-                  href="/docs"
-                  className="flex items-center gap-2 rounded-xl border px-6 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/[0.04]"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "var(--color-text-secondary)",
-                  }}
-                >
-                  <Terminal size={13} />
-                  API Reference
-                </a>
-              </div>
-
-              {/* Trust pills */}
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                {[
-                  { icon: Lock, label: "httpOnly cookies" },
-                  { icon: Shield, label: "S3 URLs never exposed" },
-                  { icon: RefreshCw, label: "Single-use token rotation" },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-1.5">
-                    <Icon size={11} style={{ color: "var(--color-accent, #6c63ff)" }} />
-                    <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-                      {label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Terminal */}
-            <div>
-              <HeroTerminal />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Stats ─────────────────────────────────────────────────────────── */}
-      <section
-        className="border-y px-6 py-16 md:px-10"
-        style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.015)" }}
-      >
-        <div className="mx-auto grid max-w-4xl grid-cols-2 gap-10 md:grid-cols-4">
-          <AnimatedStat value={9}  suffix=" endpoints" label="Full auth surface" />
-          <AnimatedStat value={15} suffix=" min"       label="Access token TTL" />
-          <AnimatedStat value={7}  suffix=" days"      label="Refresh token TTL" />
-          <AnimatedStat value={5}  suffix=" MB"        label="Max avatar size" />
-        </div>
-      </section>
-
-      {/* ── Architecture ──────────────────────────────────────────────────── */}
-      <section className="px-6 py-24 md:px-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-14 text-center">
-            <div className="mb-4 flex justify-center">
-              <SectionPill>Architecture</SectionPill>
-            </div>
-            <h2
-              className="mb-4 font-display text-3xl font-black md:text-4xl"
-              style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)", color: "var(--color-text-primary)" }}
-            >
-              Designed for multi-tenant production
-            </h2>
-            <p
-              className="mx-auto max-w-lg text-sm leading-relaxed"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              Every resource is scoped to a project. Policies control who can register, what
-              roles exist, and how passwords must be structured — giving you full authority
-              over each application's auth behavior.
-            </p>
-          </div>
-
-          {/* Architecture flow */}
-          <div
-            className="mb-14 rounded-2xl border p-8"
-            style={{ borderColor: "rgba(255,255,255,0.07)", background: "rgba(255,255,255,0.015)" }}
-          >
-            <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
-              {[
-                { label: "Your System", icon: Globe, color: "#38bdf8" },
-                { label: "AuthFlow API", icon: Shield, color: "#6c63ff", highlight: true },
-                { label: "MongoDB", icon: Database, color: "#22c55e" },
-                { label: "AWS S3", icon: Cloud, color: "#f59e0b" },
-              ].map(({ label, icon: Icon, color, highlight }, i, arr) => (
-                <div key={label} className="flex items-center gap-5">
-                  <div className="flex flex-col items-center gap-2">
-                    <div
-                      className="flex h-12 w-12 items-center justify-center rounded-xl border transition-transform duration-200 hover:scale-105"
-                      style={{
-                        borderColor: highlight ? color : `color-mix(in oklch, ${color} 22%, transparent)`,
-                        background: `color-mix(in oklch, ${color} 8%, transparent)`,
-                        boxShadow: highlight ? `0 0 24px color-mix(in oklch, ${color} 18%, transparent)` : "none",
-                      }}
-                    >
-                      <Icon size={20} style={{ color }} />
-                    </div>
-                    <span
-                      className="text-center text-[11px] font-semibold"
-                      style={{ color: highlight ? "var(--color-text-primary)" : "var(--color-text-muted)" }}
-                    >
-                      {label}
-                    </span>
-                  </div>
-                  {i < arr.length - 1 && (
-                    <div className="mb-5 flex items-center gap-1" style={{ color: "var(--color-text-muted)" }}>
-                      <div className="h-px w-8 sm:w-14" style={{ background: "rgba(255,255,255,0.07)" }} />
-                      <ArrowRight size={11} />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div
-              className="mt-8 grid grid-cols-1 gap-5 border-t pt-7 sm:grid-cols-3"
-              style={{ borderColor: "rgba(255,255,255,0.06)" }}
-            >
-              {[
-                { label: "Credential flow", desc: "Browser → API via httpOnly cookie. Tokens are never JavaScript-accessible.", accent: "#38bdf8" },
-                { label: "Avatar pipeline", desc: "Browser → API → sharp (400×400) → private S3. The S3 key never leaves the server.", accent: "#f59e0b" },
-                { label: "Token lifecycle", desc: "15-minute access tokens. 7-day single-use refresh tokens with automatic rotation.", accent: "#22c55e" },
-              ].map(({ label, desc, accent }) => (
-                <div key={label}>
-                  <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: accent }}>
-                    {label}
-                  </p>
-                  <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                    {desc}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Feature grid */}
-          <div id="features" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <FeatureCard
-              icon={Layers}
-              title="Multi-tenant by design"
-              description="Every user, session, policy, and avatar is scoped to a projectId. Run dozens of independent applications from a single backend without any data bleed."
-              accent="#6c63ff"
-              badge="Core"
-            />
-            <FeatureCard
-              icon={Settings2}
-              title="Policy-driven access control"
-              description="Configure allowed auth methods, user roles, account statuses, and password requirements per project. Signup validates against the active policy before creating any record."
-              accent="#f59e0b"
-            />
-            <FeatureCard
-              icon={Cookie}
-              title="httpOnly cookie auth"
-              description="Access and refresh tokens are stored exclusively in httpOnly, SameSite-strict cookies. JavaScript cannot read them — XSS cannot steal what it cannot reach."
-              accent="#38bdf8"
-            />
-            <FeatureCard
-              icon={RefreshCw}
-              title="Single-use token rotation"
-              description="Every refresh token is invalidated upon use and replaced with a fresh one. Attempting to reuse a consumed token triggers an immediate 401 — no second chances."
-              accent="#22c55e"
-            />
-            <FeatureCard
-              icon={Image}
-              title="Secure avatar streaming"
-              description="Avatars are resized to 400×400, EXIF-stripped, and stored in a private S3 bucket. The API streams bytes on request — the S3 URL is never sent to the client."
-              accent="#f472b6"
-              badge="S3"
-            />
-            <FeatureCard
-              icon={Lock}
-              title="Opaque suspension errors"
-              description="Suspended users receive the same 404 response as non-existent ones. Callers cannot determine whether a given email is registered, eliminating a common enumeration vector."
-              accent="#ef4444"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ── Quickstart ────────────────────────────────────────────────────── */}
-      <section
-        id="quickstart"
-        className="border-t px-6 py-24 md:px-10"
-        style={{ borderColor: "rgba(255,255,255,0.06)" }}
-      >
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-14 text-center">
-            <div className="mb-4 flex justify-center">
-              <SectionPill accent="#22c55e">
-                <Terminal size={10} />
-                Quickstart
-              </SectionPill>
-            </div>
-            <h2
-              className="mb-4 font-display text-3xl font-black md:text-4xl"
-              style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)", color: "var(--color-text-primary)" }}
-            >
-              Up and running in four steps
-            </h2>
-            <p className="mx-auto max-w-md text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-              Admin setup is a one-time operation. Once your project and policy are configured,
-              end-users can register and authenticate immediately.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Step
-              number={1}
-              title="Create an Organization"
-              description="Organizations are top-level containers that group your projects and team members. The registering admin must have a verified account before proceeding."
-              code={`POST /api/v1/organizations\nContent-Type: application/json\n\n{ "name": "Acme Corp" }`}
-              accent="#6c63ff"
-            />
-            <Step
-              number={2}
-              title="Create a Project"
-              description="Projects are fully isolated auth environments. Each maintains its own user records, session store, policies, and avatar storage — completely separate from every other project."
-              code={`POST /api/v1/organizations/:orgId/projects\nContent-Type: application/json\n\n{ "name": "Mobile App" }`}
-              accent="#38bdf8"
-            />
-            <Step
-              number={3}
-              title="Configure Policies"
-              description="Set a password policy to define strength requirements, and a project policy to specify allowed auth methods, assignable roles, and valid account statuses."
-              code={`POST /api/v1/projects/:id/password-policy\nPOST /api/v1/projects/:id/policy`}
-              accent="#a78bfa"
-            />
-            <Step
-              number={4}
-              title="Begin accepting users"
-              description="Your end-user signup endpoint is live. Ensure your frontend includes credentials: 'include' on every request — this is the only integration requirement."
-              code={`POST /api/v1/project/:id/end-user/signup\n\n{ "email": "user@example.com",\n  "password": "Secure1!",\n  "authMethod": "email" }`}
-              accent="#22c55e"
-            />
-          </div>
-
-          <div className="mt-8 text-center">
-            <a
-              href="/docs"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors duration-200 hover:opacity-80"
-              style={{ color: "var(--color-accent, #6c63ff)" }}
-            >
-              View full API reference
-              <ChevronRight size={13} />
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Endpoint table ────────────────────────────────────────────────── */}
-      <section
-        className="border-t px-6 py-20 md:px-10"
-        style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.012)" }}
-      >
-        <div className="mx-auto max-w-6xl">
-          <h2
-            className="mb-8 font-display text-2xl font-black"
-            style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)", color: "var(--color-text-primary)" }}
-          >
-            All 9 endpoints at a glance
-          </h2>
-          <div
-            className="overflow-hidden rounded-2xl border"
-            style={{ borderColor: "rgba(255,255,255,0.07)" }}
-          >
-            {[
-              { method: "POST",   path: "/signup",         auth: false, desc: "Register a new end-user against the active project policy" },
-              { method: "POST",   path: "/login",          auth: false, desc: "Authenticate and receive httpOnly session cookies" },
-              { method: "GET",    path: "/logout",         auth: true,  desc: "Revoke the current session and clear auth cookies" },
-              { method: "GET",    path: "/profile",        auth: true,  desc: "Return the authenticated user's profile (sensitive fields excluded)" },
-              { method: "PATCH",  path: "/profile",        auth: true,  desc: "Update fullName or phone number" },
-              { method: "PATCH",  path: "/avatar",         auth: true,  desc: "Upload, process, and store a new avatar (5 MB max · 400×400 JPEG)" },
-              { method: "DELETE", path: "/avatar",         auth: true,  desc: "Remove avatar from S3 and clear the reference in MongoDB" },
-              { method: "GET",    path: "/avatar/:userId", auth: true,  desc: "Stream avatar bytes — S3 URL is never exposed to the caller" },
-              { method: "POST",   path: "/refresh-token",  auth: false, desc: "Exchange a refresh token for a new access token (single-use rotation)" },
-            ].map(({ method, path, auth, desc }) => {
-              const palette: Record<string, { text: string; bg: string }> = {
-                GET:    { text: "#38bdf8", bg: "rgba(56,189,248,0.08)"  },
-                POST:   { text: "#22c55e", bg: "rgba(34,197,94,0.08)"   },
-                PATCH:  { text: "#f59e0b", bg: "rgba(245,158,11,0.08)"  },
-                DELETE: { text: "#ef4444", bg: "rgba(239,68,68,0.08)"   },
-              };
-              const c = palette[method];
-              return (
-                <div
-                  key={`${method}-${path}`}
-                  className="flex flex-wrap items-center gap-3 border-b px-5 py-3.5 last:border-b-0 hover:bg-white/[0.015] transition-colors"
-                  style={{ borderColor: "rgba(255,255,255,0.05)" }}
-                >
-                  <span
-                    className="w-16 flex-shrink-0 rounded px-2 py-0.5 text-center font-mono text-[10px] font-bold uppercase"
-                    style={{ color: c.text, background: c.bg }}
-                  >
-                    {method}
-                  </span>
-                  <code
-                    className="w-48 flex-shrink-0 font-mono text-xs font-semibold"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
-                    {path}
-                  </code>
-                  <span
-                    className="flex items-center gap-1 text-[10px]"
-                    style={{ color: auth ? "#f59e0b" : "#22c55e" }}
-                  >
-                    <Lock size={8} />
-                    {auth ? "Auth required" : "Public"}
-                  </span>
-                  <span className="flex-1 text-xs" style={{ color: "var(--color-text-muted)" }}>
-                    {desc}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Security ──────────────────────────────────────────────────────── */}
-      <section
-        id="security"
-        className="border-t px-6 py-24 md:px-10"
-        style={{ borderColor: "rgba(255,255,255,0.06)" }}
-      >
-        <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 gap-14 lg:grid-cols-2">
-            {/* Left */}
-            <div>
-              <div className="mb-5">
-                <SectionPill accent="#22c55e">
-                  <Shield size={9} />
-                  Security
-                </SectionPill>
-              </div>
-              <h2
-                className="mb-5 font-display text-3xl font-black leading-tight md:text-4xl"
-                style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)", color: "var(--color-text-primary)" }}
-              >
-                Security is the
-                <br />
-                default, not an option.
-              </h2>
-              <p
-                className="mb-8 text-sm leading-relaxed"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
-                Every architectural decision in AuthFlow follows a threat model. Cookie flags,
-                S3 bucket policies, bcrypt rounds, and token rotation strategies are not
-                configurable afterthoughts — they are the foundation the API is built on.
-              </p>
-
-              {/* Fields never returned */}
-              <div className="space-y-2">
-                <p className="mb-3 text-[10px] font-bold uppercase tracking-wider" style={{ color: "#ef4444" }}>
-                  Fields never returned in any response
-                </p>
-                {[
-                  "passwordHash",
-                  "avatarKey (S3 internal object key)",
-                  "privateMetadata",
-                ].map((field) => (
-                  <div
-                    key={field}
-                    className="flex items-center gap-3 rounded-lg border px-4 py-3"
-                    style={{
-                      borderColor: "rgba(239,68,68,0.12)",
-                      background: "rgba(239,68,68,0.04)",
-                    }}
-                  >
-                    <EyeOff size={12} style={{ color: "#ef4444" }} />
-                    <code className="font-mono text-xs font-semibold" style={{ color: "#ef4444" }}>
-                      {field}
-                    </code>
-                    <span className="ml-auto text-[10px]" style={{ color: "var(--color-text-muted)" }}>
-                      excluded
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Right — security cards */}
-            <div className="space-y-3">
-              {[
-                {
-                  icon: Cookie,
-                  title: "httpOnly on all session cookies",
-                  body: "Access and refresh tokens are stored in httpOnly, SameSite-strict cookies. JavaScript running in the browser — including injected XSS payloads — cannot read them.",
-                  accent: "#38bdf8",
-                },
-                {
-                  icon: Key,
-                  title: "bcrypt with 10 salt rounds",
-                  body: "Passwords are hashed with bcrypt, a deliberately slow algorithm. Even with database access, brute-forcing the hash is computationally prohibitive.",
-                  accent: "#a78bfa",
-                },
-                {
-                  icon: RefreshCw,
-                  title: "Single-use refresh token rotation",
-                  body: "Refresh tokens are consumed on use and replaced with a new one. Reusing a consumed token returns an immediate 401 — reuse detection is built into the core auth loop.",
-                  accent: "#22c55e",
-                },
-                {
-                  icon: Eye,
-                  title: "S3 key excluded at schema level",
-                  body: "The internal S3 object key uses Mongoose's select: false, ensuring it is excluded from every query response by default — it cannot accidentally appear in any API response.",
-                  accent: "#f59e0b",
-                },
-              ].map(({ icon: Icon, title, body, accent }) => (
-                <div
-                  key={title}
-                  className="flex gap-4 rounded-xl border p-4"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.07)",
-                    background: "rgba(255,255,255,0.015)",
-                  }}
-                >
-                  <div
-                    className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
-                    style={{
-                      background: `color-mix(in oklch, ${accent} 10%, transparent)`,
-                      border: `1px solid color-mix(in oklch, ${accent} 18%, transparent)`,
-                    }}
-                  >
-                    <Icon size={15} style={{ color: accent }} />
-                  </div>
-                  <div>
-                    <p className="mb-1 text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
-                      {title}
-                    </p>
-                    <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-                      {body}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Integration ───────────────────────────────────────────────────── */}
-      <section
-        className="border-t px-6 py-20 md:px-10"
-        style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.012)" }}
-      >
-        <div className="mx-auto max-w-3xl">
-          <div className="mb-10 text-center">
-            <div className="mb-4 flex justify-center">
-              <SectionPill accent="#a78bfa">
-                <Zap size={9} />
-                Integration
-              </SectionPill>
-            </div>
-            <h2
-              className="mb-3 font-display text-3xl font-black md:text-4xl"
-              style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)", color: "var(--color-text-primary)" }}
-            >
-              One line. Every request.
-            </h2>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-              Cookie handling is automatic. The only integration requirement is a single
-              option on your HTTP client — everything else is handled by the API.
-            </p>
-          </div>
-
-          <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <CodeBlock
-              title="fetch (native)"
-              language="javascript"
-              code={`const res = await fetch(url, {\n  credentials: 'include', // ← all you need\n  method: 'POST',\n  headers: { 'Content-Type': 'application/json' },\n  body: JSON.stringify({ email, password }),\n});`}
-            />
-            <CodeBlock
-              title="axios"
-              language="javascript"
-              code={`// Set once, applies globally\naxios.defaults.withCredentials = true;\n\n// Every subsequent request just works\nconst { data } = await axios.post(\n  \`/api/v1/project/\${projectId}/end-user/login\`,\n  { email, password }\n);`}
-            />
-          </div>
-
-          {/* CORS note */}
-          <div
-            className="flex items-start gap-3 rounded-xl border p-4"
-            style={{ background: "rgba(245,158,11,0.04)", borderColor: "rgba(245,158,11,0.12)" }}
-          >
-            <Activity size={13} className="mt-px flex-shrink-0" style={{ color: "#f59e0b" }} />
-            <p className="text-xs leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-              <strong style={{ color: "#f59e0b" }}>CORS note: </strong>
-              The{" "}
-              <code className="font-mono" style={{ color: "var(--color-text-primary)" }}>
-                CORS_ORIGIN
-              </code>{" "}
-              environment variable must be set to your exact frontend origin. A wildcard{" "}
-              <code className="font-mono">*</code> will not work with credentialed requests —
-              the browser will block them.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ───────────────────────────────────────────────────────────── */}
-      <section
-        className="relative overflow-hidden border-t px-6 py-28 md:px-10"
-        style={{ borderColor: "rgba(255,255,255,0.06)" }}
-      >
-        {/* Glow */}
-        <div className="pointer-events-none absolute inset-0">
-          <div
-            className="absolute inset-x-0 top-0 mx-auto h-px max-w-xs"
-            style={{ background: "linear-gradient(90deg, transparent, #6c63ff, transparent)" }}
-          />
-          <div
-            className="absolute left-1/2 top-0 h-60 w-60 -translate-x-1/2 rounded-full opacity-[0.06] blur-[80px]"
-            style={{ background: "#6c63ff" }}
-          />
-        </div>
-        <div className="relative mx-auto max-w-xl text-center">
-          <h2
-            className="mb-5 font-display text-4xl font-black tracking-tight md:text-5xl"
-            style={{ fontFamily: "var(--font-display, 'Syne', sans-serif)", color: "var(--color-text-primary)" }}
-          >
-            Ready to ship?
-          </h2>
-          <p className="mb-8 text-base leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>
-            AuthFlow handles authentication end-to-end so you can focus on what makes
-            your product worth building in the first place.
+    <section id="features" className="py-32">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-16 text-center max-w-2xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--color-accent)" }}>
+            Feature set
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <a
-              href="/signup"
-              className="flex items-center gap-2 rounded-xl px-7 py-3 text-sm font-bold text-white transition-all duration-200 hover:opacity-85 hover:shadow-[0_0_40px_rgba(108,99,255,0.3)]"
-              style={{ background: "var(--color-accent, #6c63ff)" }}
-            >
-              Get started for free
-              <ArrowRight size={14} />
-            </a>
-            <a
-              href="/docs"
-              className="flex items-center gap-2 rounded-xl border px-7 py-3 text-sm font-bold transition-all duration-200 hover:bg-white/[0.04]"
-              style={{ borderColor: "rgba(255,255,255,0.1)", color: "var(--color-text-secondary)" }}
-            >
-              <Terminal size={13} />
-              Read the docs
-            </a>
-          </div>
+          <h2 className="font-display text-4xl font-bold tracking-tight mb-4" style={{ color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>
+            Everything you'd expect.
+            <br />Nothing you'd regret.
+          </h2>
+          <p className="text-base" style={{ color: "var(--color-text-secondary)" }}>
+            Built for teams who need complete control over their auth stack — without per-seat fees or black-box vendor APIs.
+          </p>
         </div>
-      </section>
 
-      {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer
-        className="border-t px-6 py-8"
-        style={{ borderColor: "rgba(255,255,255,0.06)" }}
-      >
-        <div
-          className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs md:flex-row"
-          style={{ color: "var(--color-text-muted)" }}
-        >
-          <div className="flex items-center gap-2">
-            <div
-              className="flex h-6 w-6 items-center justify-center rounded-md"
-              style={{ background: "var(--color-accent, #6c63ff)" }}
-            >
-              <Shield size={11} className="text-white" />
-            </div>
-            <span
-              className="font-display text-sm font-black"
-              style={{ color: "var(--color-text-secondary)", fontFamily: "var(--font-display, 'Syne', sans-serif)" }}
-            >
-              AuthFlow
-            </span>
-            <span className="opacity-30">·</span>
-            <span>End-User API v1.0</span>
-          </div>
-          <nav className="flex items-center gap-6">
-            {["Docs", "Security", "Privacy", "GitHub"].map((l) => (
-              <a
-                key={l}
-                href="#"
-                className="transition-colors duration-200 hover:text-white"
-              >
-                {l}
-              </a>
-            ))}
-          </nav>
-          <span>Express · TypeScript · MongoDB · AWS S3</span>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f) => <FeatureCard key={f.title} feature={f} />)}
         </div>
-      </footer>
-    </div>
+      </div>
+    </section>
   );
 }
 
-export default Home;
+// ─── Architecture ─────────────────────────────────────────────────────────────
+function Architecture() {
+  const steps = [
+    { step: "01", icon: Building2,   title: "Create an Organization", desc: "Your top-level workspace. Pick a unique slug. You automatically become the owner.", accent: "#6c63ff" },
+    { step: "02", icon: FolderKanban, title: "Add a Project",          desc: "Projects live inside orgs. This is the scope for all end-user authentication.", accent: "#38bdf8" },
+    { step: "03", icon: Lock,         title: "Define Policies",        desc: "Password Policy first, then Project Policy. Set auth methods, roles, statuses.", accent: "#f59e0b" },
+    { step: "04", icon: Users,        title: "Users go live",          desc: "Your customers can now register and log in through the project-scoped API.", accent: "#22c55e" },
+  ];
+
+  const flow = [
+    { label: "Client",          icon: Globe },
+    { label: "Express",         icon: Server },
+    { label: "authenticate()",  icon: Lock },
+    { label: "roleAuthorize()", icon: Shield },
+    { label: "Controller",      icon: Code2 },
+    { label: "Service",         icon: GitBranch },
+    { label: "MongoDB",         icon: Database },
+  ];
+
+  return (
+    <section
+      id="architecture"
+      className="py-32"
+      style={{ background: "var(--color-surface)" }}
+    >
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-16 text-center max-w-2xl mx-auto">
+          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--color-accent)" }}>
+            How it works
+          </p>
+          <h2 className="font-display text-4xl font-bold tracking-tight mb-4" style={{ color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>
+            Up and running in four steps
+          </h2>
+          <p className="text-base" style={{ color: "var(--color-text-secondary)" }}>
+            From zero to a fully working multi-tenant auth system. No magic, no surprises.
+          </p>
+        </div>
+
+        {/* Steps */}
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-14">
+          {steps.map((s, i) => {
+            const Icon = s.icon;
+            return (
+              <div key={s.step} className="relative">
+                {i < steps.length - 1 && (
+                  <div
+                    className="absolute top-9 left-[calc(100%-8px)] hidden lg:block h-px z-0"
+                    style={{ width: "calc(100% - 16px)", background: `linear-gradient(90deg, ${s.accent}50, ${steps[i + 1].accent}20)` }}
+                  />
+                )}
+                <div
+                  className="relative z-10 rounded-2xl border p-6 h-full"
+                  style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}
+                >
+                  <div className="flex items-center gap-3 mb-5">
+                    <div
+                      className="flex h-12 w-12 items-center justify-center rounded-xl flex-shrink-0"
+                      style={{ background: `${s.accent}18`, border: `1px solid ${s.accent}28` }}
+                    >
+                      <Icon size={19} style={{ color: s.accent }} />
+                    </div>
+                    <span className="font-display text-xs font-bold tracking-widest" style={{ color: s.accent }}>{s.step}</span>
+                  </div>
+                  <h3 className="font-display text-sm font-bold mb-2" style={{ color: "var(--color-text-primary)" }}>{s.title}</h3>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--color-text-secondary)" }}>{s.desc}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Request flow */}
+        <div>
+          <p className="text-center text-xs font-bold uppercase tracking-widest mb-6" style={{ color: "var(--color-text-muted)" }}>
+            Request pipeline
+          </p>
+          <div
+            className="rounded-2xl border p-6 overflow-x-auto"
+            style={{ borderColor: "var(--color-border)", background: "var(--color-surface-3)" }}
+          >
+            <div className="flex items-center gap-1.5 w-fit mx-auto">
+              {flow.map((node, i) => {
+                const Icon = node.icon;
+                return (
+                  <div key={node.label} className="flex items-center gap-1.5">
+                    <div
+                      className="flex flex-col items-center gap-2 rounded-xl border px-4 py-3 min-w-[100px]"
+                      style={{ borderColor: "var(--color-border-2)", background: "var(--color-surface-2)" }}
+                    >
+                      <Icon size={14} style={{ color: "var(--color-accent)" }} />
+                      <span className="text-xs font-medium text-center whitespace-nowrap" style={{ color: "var(--color-text-secondary)" }}>
+                        {node.label}
+                      </span>
+                    </div>
+                    {i < flow.length - 1 && (
+                      <ChevronRight size={14} style={{ color: "var(--color-text-muted)", flexShrink: 0 }} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Tech stack ───────────────────────────────────────────────────────────────
+function TechStack() {
+  const tech = [
+    { name: "Node.js 18+",   color: "#68a063" },
+    { name: "TypeScript",    color: "#3178c6" },
+    { name: "Express.js",    color: "#f2f2ff" },
+    { name: "MongoDB",       color: "#22c55e" },
+    { name: "JWT",           color: "#f59e0b" },
+    { name: "AWS S3",        color: "#ff9900" },
+    { name: "bcrypt",        color: "#ec4899" },
+    { name: "sharp",         color: "#66cc00" },
+    { name: "React",         color: "#38bdf8" },
+    { name: "Tailwind v4",   color: "#38bdf8" },
+    { name: "Zustand",       color: "#f97316" },
+    { name: "Helmet + CORS", color: "#a78bfa" },
+  ];
+
+  return (
+    <section
+      className="py-16 border-y"
+      style={{ borderColor: "var(--color-border)", background: "var(--color-bg)" }}
+    >
+      <div className="mx-auto max-w-7xl px-6">
+        <p className="text-center text-xs font-bold uppercase tracking-widest mb-8" style={{ color: "var(--color-text-muted)" }}>
+          Proven open-source technology
+        </p>
+        <div className="flex flex-wrap justify-center gap-2.5">
+          {tech.map((t) => (
+            <div
+              key={t.name}
+              className="flex items-center gap-2 rounded-full border px-4 py-1.5 transition-colors"
+              style={{ borderColor: `${t.color}20`, background: `${t.color}08` }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: t.color }} />
+              <span className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>{t.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Comparison ───────────────────────────────────────────────────────────────
+const COMPARE_ROWS = [
+  { feature: "Self-hosted",               nexus: true,  clerk: false, auth0: false },
+  { feature: "No per-seat pricing",       nexus: true,  clerk: false, auth0: false },
+  { feature: "Data on your servers",      nexus: true,  clerk: false, auth0: false },
+  { feature: "JWT rotation",              nexus: true,  clerk: true,  auth0: true  },
+  { feature: "Organizations",             nexus: true,  clerk: true,  auth0: true  },
+  { feature: "Custom password policies",  nexus: true,  clerk: false, auth0: true  },
+  { feature: "Project-scoped auth",       nexus: true,  clerk: false, auth0: false },
+  { feature: "Avatar pipeline",           nexus: true,  clerk: true,  auth0: false },
+  { feature: "Session revocation",        nexus: true,  clerk: true,  auth0: true  },
+  { feature: "Open source",              nexus: true,  clerk: false, auth0: false },
+];
+
+function Comparison() {
+  return (
+    <section id="compare" className="py-32">
+      <div className="mx-auto max-w-3xl px-6">
+        <div className="mb-16 text-center">
+          <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: "var(--color-accent)" }}>
+            Comparison
+          </p>
+          <h2 className="font-display text-4xl font-bold tracking-tight mb-4" style={{ color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>
+            Why self-host?
+          </h2>
+          <p className="text-base" style={{ color: "var(--color-text-secondary)" }}>
+            You get the complete feature set — without the ongoing SaaS bill.
+          </p>
+        </div>
+
+        <div
+          className="overflow-hidden rounded-2xl border"
+          style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+        >
+          {/* Header */}
+          <div
+            className="grid grid-cols-4 border-b px-6 py-4"
+            style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}
+          >
+            <div />
+            {["Nexus", "Clerk", "Auth0"].map((name, i) => (
+              <div key={name} className="text-center">
+                <span
+                  className="font-display text-sm font-bold"
+                  style={{ color: i === 0 ? "var(--color-accent)" : "var(--color-text-muted)" }}
+                >
+                  {name}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Rows */}
+          {COMPARE_ROWS.map((row, i) => (
+            <div
+              key={row.feature}
+              className="grid grid-cols-4 px-6 py-3.5 items-center"
+              style={{
+                borderBottom: i < COMPARE_ROWS.length - 1 ? "1px solid var(--color-border)" : "none",
+                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+              }}
+            >
+              <span className="text-sm" style={{ color: "var(--color-text-secondary)" }}>{row.feature}</span>
+              {[row.nexus, row.clerk, row.auth0].map((val, j) => (
+                <div key={j} className="flex justify-center">
+                  {val
+                    ? <Check size={16} style={{ color: j === 0 ? "var(--color-accent)" : "var(--color-success)" }} />
+                    : <span className="h-0.5 w-4 rounded-full inline-block" style={{ background: "var(--color-border-2)" }} />
+                  }
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── CTA ──────────────────────────────────────────────────────────────────────
+function CTA() {
+  return (
+    <section className="py-32" style={{ background: "var(--color-surface)" }}>
+      <div className="mx-auto max-w-4xl px-6">
+        <div
+          className="relative overflow-hidden rounded-3xl border p-16 text-center"
+          style={{ borderColor: "rgba(108,99,255,0.22)", background: "var(--color-surface-2)" }}
+        >
+          {/* Orb */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full"
+            style={{ background: "radial-gradient(circle, rgba(108,99,255,0.12) 0%, transparent 65%)" }}
+          />
+          {/* Dot grid */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden"
+            style={{
+              backgroundImage: "radial-gradient(circle, rgba(108,99,255,0.10) 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+              maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 0%, transparent 100%)",
+            }}
+          />
+
+          <div className="relative z-10 space-y-7">
+            <div
+              className="inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold"
+              style={{ borderColor: "rgba(108,99,255,0.28)", background: "rgba(108,99,255,0.07)", color: "var(--color-accent)" }}
+            >
+              <Star size={11} />
+              Free forever · MIT licensed
+            </div>
+
+            <h2 className="font-display text-4xl font-bold tracking-tight" style={{ color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}>
+              Own your auth stack.
+              <br />Own your users' data.
+            </h2>
+
+            <p className="mx-auto max-w-lg text-base" style={{ color: "var(--color-text-secondary)" }}>
+              No credit card. No vendor agreements. No surprises. Deploy to any
+              Node.js host and ship your first authenticated user in minutes.
+            </p>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+              <Link
+                to="/signup"
+                className="group flex items-center gap-2.5 rounded-xl px-8 py-3.5 text-base font-semibold text-white transition-all duration-200 hover:scale-[1.03] hover:shadow-[0_0_40px_rgba(108,99,255,0.45)]"
+                style={{ background: "var(--color-accent)", boxShadow: "0 0 28px rgba(108,99,255,0.3)" }}
+              >
+                Create your account
+                <ArrowRight size={16} className="transition-transform group-hover:translate-x-0.5" />
+              </Link>
+              <Link
+                to="/docs"
+                className="flex items-center gap-2 text-sm font-medium transition-colors"
+                style={{ color: "var(--color-text-muted)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-primary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
+              >
+                <Code2 size={15} />
+                Explore the docs
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Footer ───────────────────────────────────────────────────────────────────
+function Footer() {
+  return (
+    <footer className="border-t py-12" style={{ borderColor: "var(--color-border)", background: "var(--color-bg)" }}>
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: "var(--color-accent)" }}>
+              <Layers size={15} className="text-white" />
+            </div>
+            <span className="font-display text-base font-bold tracking-tight" style={{ color: "var(--color-text-primary)" }}>Nexus</span>
+          </div>
+
+          <div className="flex items-center gap-6">
+            {[["Docs", "/docs"], ["Sign in", "/login"], ["Sign up", "/signup"]].map(([label, href]) => (
+              <Link
+                key={label}
+                to={href}
+                className="text-sm transition-colors"
+                style={{ color: "var(--color-text-muted)" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-muted)")}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+            MIT License · {new Date().getFullYear()}
+          </p>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+export default function Home() {
+  return (
+    <div className="min-h-screen" style={{ background: "var(--color-bg)", color: "var(--color-text-primary)" }}>
+      <Navbar />
+      <Hero />
+      <StatsBar />
+      <Features />
+      <Architecture />
+      <TechStack />
+      <Comparison />
+      <CTA />
+      <Footer />
+    </div>
+  );
+}
