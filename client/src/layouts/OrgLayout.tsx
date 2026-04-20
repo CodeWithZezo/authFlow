@@ -26,14 +26,12 @@ export function OrgLayout() {
     setUserMembership, status,
   } = useOrgStore();
 
-  // Fetch org + members on mount / orgId change
   useEffect(() => {
     if (!orgId) return;
     fetchOrg(orgId);
     fetchMembers(orgId);
   }, [orgId]);
 
-  // Derive current user's membership from members list
   useEffect(() => {
     if (!user || members.length === 0) return;
     const mine = members.find((m) => {
@@ -70,26 +68,25 @@ export function OrgLayout() {
     ? ORG_ROLES_ADMIN.includes(userMembership.role)
     : false;
 
-  // Active tab from pathname
   const activeTab = TABS.find((t) =>
     location.pathname.includes(`/orgs/${orgId}/${t.path}`)
   )?.path;
 
   return (
-    <div className="space-y-6 animate-slide-up">
+    <div className="space-y-4 sm:space-y-6 animate-slide-up">
 
       {/* ── Org header ─────────────────────────────────────────────────── */}
-      <div className="card p-6">
-        <div className="flex items-start gap-5">
+      <div className="card p-4 sm:p-6">
+        <div className="flex items-start gap-3 sm:gap-5">
 
           {/* Avatar */}
-          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-accent)] to-violet-600 text-white text-xl font-bold shadow-[var(--shadow-glow)]">
+          <div className="flex h-11 w-11 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-accent)] to-violet-600 text-white text-lg sm:text-xl font-bold shadow-[var(--shadow-glow)]">
             {getInitials(activeOrg.name)}
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="font-display text-2xl font-bold tracking-tight truncate">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight truncate">
                 {activeOrg.name}
               </h1>
               {userMembership && <RoleBadge role={userMembership.role} />}
@@ -104,14 +101,13 @@ export function OrgLayout() {
             className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors flex-shrink-0"
           >
             <ArrowLeft size={13} />
-            Dashboard
+            <span className="hidden sm:inline">Dashboard</span>
           </Link>
         </div>
 
-        {/* Tab bar */}
-        <div className="mt-5 flex gap-1 border-t border-[var(--color-border)] pt-4">
+        {/* Tab bar — horizontally scrollable on mobile */}
+        <div className="mt-4 sm:mt-5 flex gap-1 border-t border-[var(--color-border)] pt-3 sm:pt-4 overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-none">
           {TABS.map((tab) => {
-            // Hide Settings tab for non-admins
             if (tab.path === "settings" && !isAdmin) return null;
             const active = activeTab === tab.path;
 
@@ -120,8 +116,8 @@ export function OrgLayout() {
                 key={tab.path}
                 to={`/orgs/${orgId}/${tab.path}`}
                 className={cn(
-                  "flex items-center gap-2 rounded-[var(--radius)] px-3 py-2",
-                  "text-sm font-medium transition-all duration-150",
+                  "flex items-center gap-1.5 sm:gap-2 rounded-[var(--radius)] px-2.5 sm:px-3 py-2",
+                  "text-sm font-medium transition-all duration-150 whitespace-nowrap flex-shrink-0",
                   active
                     ? "bg-[var(--color-accent-dim)] text-[var(--color-text-primary)] border border-[var(--color-accent)]/20"
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]"

@@ -8,8 +8,7 @@ import {
 import { toast } from "sonner";
 
 import { useSessionStore } from "@/store/session.store";
-import { useAuthStore }    from "@/store/auth.store";
-import { timeAgo, formatDateTime, cn } from "@/lib/utils";
+import { timeAgo, cn } from "@/lib/utils";
 import { Button }   from "@/components/ui/button";
 import { Spinner }  from "@/components/shared/index";
 import type { Session } from "@/types";
@@ -96,7 +95,6 @@ function SessionCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function SessionsPage() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const { sessions, fetchSessions, revokeSession, revokeAll, status } = useSessionStore();
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [showRevokeAll, setShowRevokeAll] = useState(false);

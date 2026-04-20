@@ -1,6 +1,7 @@
 // ==================== src/layouts/AuthLayout.tsx ====================
 import { Outlet } from "react-router";
 import { Layers } from "lucide-react";
+import { MockBanner } from "@/components/shared/MockBanner";
 
 export function AuthLayout() {
   return (
@@ -47,7 +48,6 @@ export function AuthLayout() {
 
         {/* Center content */}
         <div className="relative space-y-8">
-          {/* Feature list */}
           {[
             { label: "Multi-tenant organizations", desc: "Invite your team and manage roles" },
             { label: "Project workspaces",         desc: "Scope access at the project level"  },
@@ -78,17 +78,22 @@ export function AuthLayout() {
       </div>
 
       {/* ── Right: Form area ───────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
+      <div className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-12 min-h-screen">
 
-        {/* Mobile logo */}
-        <div className="mb-10 flex items-center gap-2 lg:hidden">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--color-accent)]">
-            <Layers size={16} className="text-white" />
-          </div>
-          <span className="font-display text-lg font-bold">Nexus</span>
+        {/* Mock data banner */}
+        <div className="w-full max-w-[440px] mb-4">
+          <MockBanner />
         </div>
 
-        <div className="w-full max-w-[400px] animate-slide-up">
+        {/* Mobile logo */}
+        <div className="mb-8 flex items-center gap-2 lg:hidden">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
+            <Layers size={17} className="text-white" />
+          </div>
+          <span className="font-display text-xl font-bold">Nexus</span>
+        </div>
+
+        <div className="w-full max-w-[440px] animate-slide-up">
           <Outlet />
         </div>
       </div>

@@ -10,10 +10,10 @@ import {
 import { toast } from "sonner";
 
 import { usePolicyStore } from "@/store/policy.store";
+import type { PasswordPolicy } from "@/types";
 import {
   createPasswordPolicySchema,
   type CreatePasswordPolicyFormValues,
-  type UpdatePasswordPolicyFormValues,
 } from "@/lib/validators";
 import { formatDateTime } from "@/lib/utils";
 import { Button }     from "@/components/ui/button";
@@ -239,7 +239,7 @@ function EditPasswordPolicyForm() {
 }
 
 // ─── Strength preview ─────────────────────────────────────────────────────────
-function StrengthPreview({ policy }: { policy: NonNullable<ReturnType<typeof usePolicyStore>["passwordPolicy"]> }) {
+function StrengthPreview({ policy }: { policy: PasswordPolicy }) {
   const rules = [
     { icon: Hash,   label: `Min ${policy.minLength} characters`,      active: true },
     { icon: Hash,   label: "Requires numbers",       active: policy.requireNumbers      },

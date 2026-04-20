@@ -282,7 +282,7 @@ function MemberRow({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function OrgMembersPage() {
-  const { members, status } = useOrgStore();
+  const { members } = useOrgStore();
   const { user }            = useAuthStore();
   const [showAdd, setShowAdd]   = useState(false);
   const [search, setSearch]     = useState("");

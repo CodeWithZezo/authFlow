@@ -152,3 +152,20 @@ export type CreatePasswordPolicyFormValues = z.infer<typeof createPasswordPolicy
 export type UpdatePasswordPolicyFormValues = z.infer<typeof updatePasswordPolicySchema>;
 export type CreateProjectPolicyFormValues  = z.infer<typeof createProjectPolicySchema>;
 export type UpdateProjectPolicyFormValues  = z.infer<typeof updateProjectPolicySchema>;
+
+// ─── Profile ──────────────────────────────────────────────────────────────────
+export const updateProfileSchema = z.object({
+  fullName: z
+    .string()
+    .min(2, "Full name must be at least 2 characters")
+    .max(100, "Full name must be less than 100 characters")
+    .optional()
+    .or(z.literal("")),
+  phone: z
+    .string()
+    .regex(/^\+?[0-9\s\-().]{7,20}$/, "Invalid phone number")
+    .optional()
+    .or(z.literal("")),
+}).refine((d) => d.fullName || d.phone, { message: "At least one field is required" });
+
+export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;

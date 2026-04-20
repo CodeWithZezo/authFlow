@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Building2, Users, FolderKanban, Calendar,
+  Users, FolderKanban, Calendar,
   Edit2, Trash2, Check, X,
 } from "lucide-react";
 import { toast } from "sonner";

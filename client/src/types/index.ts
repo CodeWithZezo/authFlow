@@ -37,6 +37,12 @@ export interface AuthUser {
   email: string;
   phone?: string | null;
   isVerified?: boolean;
+  avatarUrl?: string | null;
+}
+
+export interface UpdateProfilePayload {
+  fullName?: string;
+  phone?: string;
 }
 
 export interface SignupPayload {

@@ -7,6 +7,7 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, Check, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/store";
+import { useMockStore } from "@/store/mock.store";
 import { signupSchema, type SignupFormValues } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,6 +67,7 @@ function PasswordStrength({ password }: { password: string }) {
 export function SignupPage() {
   const navigate = useNavigate();
   const { signup, status, isAuthenticated, clearError } = useAuthStore();
+  const { isMockMode } = useMockStore();
   const [showPwd, setShowPwd]     = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -90,9 +92,14 @@ export function SignupPage() {
   const onSubmit = async (values: SignupFormValues) => {
     clearError("signup");
     const { confirmPassword: _c, ...payload } = values;
+    const wasMock = isMockMode;
     const ok = await signup({ ...payload, phone: payload.phone || undefined });
     if (ok) {
-      toast.success("Account created! Welcome aboard.");
+      if (!wasMock && useMockStore.getState().isMockMode) {
+        toast.warning("Server unreachable — running in demo mode with mock data.", { duration: 6000 });
+      } else {
+        toast.success("Account created! Welcome aboard.");
+      }
       navigate("/dashboard", { replace: true });
     }
   };

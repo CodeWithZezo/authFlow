@@ -1,10 +1,9 @@
 // ==================== src/routes/_app/orgs/projects/index.tsx ====================
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router";
-import { Plus, FolderKanban, Users, Calendar, Search, ArrowRight } from "lucide-react";
+import { Plus, FolderKanban, Calendar, Search, ArrowRight } from "lucide-react";
 
 import { useProjectStore } from "@/store/project.store";
-import { useOrgStore }     from "@/store/org.store";
 import { cn, formatDate, getInitials, truncate } from "@/lib/utils";
 import { type Project, Status, ORG_ROLES_ADMIN } from "@/types";
 import { Button }        from "@/components/ui/button";

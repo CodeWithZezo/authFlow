@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Users, Calendar, Clock, Shield, KeyRound,
   Edit2, Check, X, Trash2, ArrowRight,
+  Copy, RefreshCw, Terminal,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -108,6 +109,94 @@ function DeleteProjectDialog({ onClose }: { onClose: () => void }) {
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── API Key card ─────────────────────────────────────────────────────────────
+function ApiKeyCard({ projectId }: { projectId: string }) {
+  const { getApiKey, status } = useProjectStore();
+  const [apiUrl, setApiUrl]   = useState<string | null>(null);
+  const [copied, setCopied]   = useState(false);
+
+  const handleReveal = async () => {
+    if (apiUrl) return; // already loaded
+    const url = await getApiKey(projectId);
+    if (url) setApiUrl(url);
+    else     toast.error(status.getApiKey.error ?? "Failed to load API endpoint");
+  };
+
+  const handleCopy = async () => {
+    if (!apiUrl) return;
+    await navigator.clipboard.writeText(apiUrl);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="card p-6 space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-400/10">
+          <Terminal size={16} className="text-amber-400" />
+        </div>
+        <div>
+          <p className="font-display text-sm font-bold">End-User API Endpoint</p>
+          <p className="text-xs text-[var(--color-text-muted)]">
+            Use this base URL to authenticate your app's end users
+          </p>
+        </div>
+      </div>
+
+      {/* URL display / reveal */}
+      {apiUrl ? (
+        <div className="space-y-2">
+          <div className={cn(
+            "flex items-center gap-2 rounded-[var(--radius)] border border-[var(--color-border)]",
+            "bg-[var(--color-surface-2)] px-3 py-2.5"
+          )}>
+            <code className="flex-1 truncate font-mono text-xs text-[var(--color-text-secondary)]">
+              {apiUrl}
+            </code>
+            <button
+              onClick={handleCopy}
+              title="Copy URL"
+              className={cn(
+                "flex h-6 w-6 flex-shrink-0 items-center justify-center rounded transition-colors",
+                copied
+                  ? "text-green-400"
+                  : "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-3)]"
+              )}
+            >
+              {copied ? <Check size={13} /> : <Copy size={13} />}
+            </button>
+          </div>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-[var(--color-text-muted)]">
+              Append <code className="font-mono text-[var(--color-accent)]">/signup</code> or{" "}
+              <code className="font-mono text-[var(--color-accent)]">/login</code> to this URL
+            </p>
+            <button
+              onClick={() => setApiUrl(null)}
+              className="text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors flex items-center gap-1"
+            >
+              <RefreshCw size={11} /> Refresh
+            </button>
+          </div>
+        </div>
+      ) : (
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={handleReveal}
+          loading={status.getApiKey.loading}
+          className="w-full"
+        >
+          <Terminal size={13} />
+          Reveal API Endpoint
+        </Button>
+      )}
     </div>
   );
 }
@@ -221,6 +310,9 @@ export function ProjectOverviewPage() {
           </a>
         ))}
       </div>
+
+      {/* API Endpoint */}
+      <ApiKeyCard projectId={projectId!} />
 
       {/* Danger zone — manager only */}
       {isAdmin && (

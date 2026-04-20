@@ -230,3 +230,47 @@ mark {
   border-radius: 3px;
   padding: 0 2px;
 }
+
+/* ─── Mobile-first utilities ───────────────────────────────────────────────── */
+
+/* Hide scrollbar but keep scroll functionality */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Safe area inset for notched phones */
+@supports (padding: max(0px)) {
+  .safe-bottom {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Touch-friendly tap target minimum */
+@media (max-width: 640px) {
+  .nav-item {
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  /* Slightly larger inputs on mobile for easier interaction */
+  .input-base {
+    padding: 11px 12px;
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+}
+
+/* Prevent iOS input zoom */
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}

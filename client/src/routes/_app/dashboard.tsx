@@ -1,5 +1,4 @@
 // ==================== src/routes/_app/dashboard.tsx ====================
-import { useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   Building2, FolderKanban, Users, Plus,
@@ -8,10 +7,11 @@ import {
 
 import { useAuthStore } from "@/store/auth.store";
 import { useOrgStore }  from "@/store/org.store";
+import type { Org } from "@/types";
 import { Button }       from "@/components/ui/button";
 import { StatsCard }    from "@/components/shared/StatsCard";
 import { RoleBadge }    from "@/components/shared/index";
-import { cn, formatDate, getInitials, truncate } from "@/lib/utils";
+import { cn, formatDate, getInitials } from "@/lib/utils";
 
 // ─── Quick-action card ────────────────────────────────────────────────────────
 function QuickAction({
@@ -47,7 +47,7 @@ function QuickAction({
 }
 
 // ─── Org card ─────────────────────────────────────────────────────────────────
-function OrgCard({ org }: { org: ReturnType<typeof useOrgStore>["orgs"][0] }) {
+function OrgCard({ org }: { org: Org }) {
   const navigate = useNavigate();
   const { setActiveOrg } = useOrgStore();
 

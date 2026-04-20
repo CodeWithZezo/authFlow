@@ -8,7 +8,6 @@ import {
   Shield,
   Lock,
   User,
-  Image,
   LogOut,
   ChevronRight,
   Check,

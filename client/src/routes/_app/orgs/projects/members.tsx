@@ -14,7 +14,6 @@ import { useAuthStore }    from "@/store/auth.store";
 import { addProjectMemberSchema, type AddProjectMemberFormValues } from "@/lib/validators";
 import {
   Role, Status, type ProjectMembership, type PopulatedUser,
-  PROJ_ROLES_ADMIN,
 } from "@/types";
 import { cn, getInitials, timeAgo } from "@/lib/utils";
 import { Button }      from "@/components/ui/button";
@@ -249,7 +248,7 @@ function MemberRow({ membership, currentUserId }: { membership: ProjectMembershi
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function ProjectMembersPage() {
-  const { members, status } = useProjectStore();
+  const { members } = useProjectStore();
   const { user }            = useAuthStore();
   const [showAdd, setShowAdd] = useState(false);
   const [search, setSearch]   = useState("");

@@ -1,11 +1,11 @@
 // ==================== src/components/shared/Sidebar.tsx ====================
 import { useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import {
   Layers, LayoutDashboard, Building2, FolderKanban,
-  Users, Settings, ChevronDown, Plus, LogOut,
+  Users, Settings, Plus, LogOut,
   Shield, KeyRound, MonitorSmartphone, ChevronsUpDown,
-  Check,
+  Check, X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn, getInitials } from "@/lib/utils";
@@ -15,19 +15,21 @@ import { RoleBadge }    from "@/components/shared/index";
 
 // ─── Nav item ─────────────────────────────────────────────────────────────────
 interface NavItemProps {
-  to:       string;
-  icon:     React.ElementType;
-  label:    string;
-  end?:     boolean;
+  to:    string;
+  icon:  React.ElementType;
+  label: string;
+  end?:  boolean;
+  onNavigate?: () => void;
 }
 
-function NavItem({ to, icon: Icon, label }: NavItemProps) {
+function NavItem({ to, icon: Icon, label, onNavigate }: NavItemProps) {
   const location = useLocation();
   const active   = location.pathname === to || location.pathname.startsWith(to + "/");
 
   return (
     <Link
       to={to}
+      onClick={onNavigate}
       className={cn(
         "nav-item group",
         active
@@ -47,7 +49,6 @@ function NavItem({ to, icon: Icon, label }: NavItemProps) {
   );
 }
 
-// ─── Section label ─────────────────────────────────────────────────────────────
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <p className="section-label px-3 mb-1 mt-5 first:mt-0">{children}</p>
@@ -55,7 +56,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 }
 
 // ─── Org switcher ─────────────────────────────────────────────────────────────
-function OrgSwitcher() {
+function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
   const navigate  = useNavigate();
   const { orgs, activeOrg, setActiveOrg } = useOrgStore();
   const [open, setOpen] = useState(false);
@@ -64,6 +65,7 @@ function OrgSwitcher() {
     setActiveOrg(org);
     navigate(`/orgs/${org._id}/overview`);
     setOpen(false);
+    onNavigate?.();
   };
 
   return (
@@ -78,7 +80,6 @@ function OrgSwitcher() {
           open && "border-[var(--color-accent)]/30"
         )}
       >
-        {/* Org avatar */}
         <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] text-white text-xs font-bold">
           {activeOrg ? getInitials(activeOrg.name) : "?"}
         </div>
@@ -97,7 +98,6 @@ function OrgSwitcher() {
         <ChevronsUpDown size={14} className="flex-shrink-0 text-[var(--color-text-muted)]" />
       </button>
 
-      {/* Dropdown */}
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
@@ -107,7 +107,6 @@ function OrgSwitcher() {
             "border border-[var(--color-border)] bg-[var(--color-surface-2)]",
             "shadow-[var(--shadow-lg)] animate-scale-in"
           )}>
-            {/* Org list */}
             {orgs.length > 0 && (
               <div className="p-1.5">
                 <p className="section-label px-2 py-1">Organizations</p>
@@ -136,11 +135,10 @@ function OrgSwitcher() {
               </div>
             )}
 
-            {/* Divider + create */}
             <div className="border-t border-[var(--color-border)] p-1.5">
               <Link
                 to="/orgs/new"
-                onClick={() => setOpen(false)}
+                onClick={() => { setOpen(false); onNavigate?.(); }}
                 className={cn(
                   "flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-2",
                   "text-sm text-[var(--color-text-secondary)]",
@@ -175,7 +173,6 @@ function UserSection() {
   return (
     <div className="border-t border-[var(--color-border)] p-3">
       <div className="flex items-center gap-3">
-        {/* Avatar */}
         <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-accent)] to-violet-600 text-white text-xs font-bold">
           {getInitials(user.fullName)}
         </div>
@@ -206,22 +203,37 @@ function UserSection() {
 }
 
 // ─── Main Sidebar ─────────────────────────────────────────────────────────────
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const { activeOrg, userMembership } = useOrgStore();
   const orgId = activeOrg?._id;
 
   return (
     <aside className={cn(
-      "flex h-screen w-60 flex-shrink-0 flex-col",
+      "flex h-full w-64 sm:w-60 flex-shrink-0 flex-col",
       "border-r border-[var(--color-border)] bg-[var(--color-surface)]"
     )}>
 
       {/* Logo */}
-      <div className="flex h-14 items-center gap-3 border-b border-[var(--color-border)] px-4">
-        <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
-          <Layers size={16} className="text-white" />
+      <div className="flex h-14 items-center justify-between border-b border-[var(--color-border)] px-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
+            <Layers size={16} className="text-white" />
+          </div>
+          <span className="font-display text-base font-bold tracking-tight">Nexus</span>
         </div>
-        <span className="font-display text-base font-bold tracking-tight">Nexus</span>
+        {/* Close button – mobile only */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-colors"
+          >
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {/* Scrollable nav area */}
@@ -229,29 +241,29 @@ export function Sidebar() {
 
         {/* Org switcher */}
         <div className="mb-4">
-          <OrgSwitcher />
+          <OrgSwitcher onNavigate={onClose} />
         </div>
 
         {/* General */}
         <SectionLabel>General</SectionLabel>
-        <NavItem to="/dashboard"    icon={LayoutDashboard} label="Dashboard" />
+        <NavItem to="/dashboard" icon={LayoutDashboard} label="Dashboard" onNavigate={onClose} />
 
         {/* Org-scoped nav */}
         {orgId && (
           <>
             <SectionLabel>Organization</SectionLabel>
-            <NavItem to={`/orgs/${orgId}/overview`} icon={Building2}      label="Overview"  />
-            <NavItem to={`/orgs/${orgId}/members`}  icon={Users}          label="Members"   />
-            <NavItem to={`/orgs/${orgId}/projects`} icon={FolderKanban}   label="Projects"  />
-            <NavItem to={`/orgs/${orgId}/settings`} icon={Settings}       label="Settings"  />
+            <NavItem to={`/orgs/${orgId}/overview`} icon={Building2}    label="Overview"  onNavigate={onClose} />
+            <NavItem to={`/orgs/${orgId}/members`}  icon={Users}        label="Members"   onNavigate={onClose} />
+            <NavItem to={`/orgs/${orgId}/projects`} icon={FolderKanban} label="Projects"  onNavigate={onClose} />
+            <NavItem to={`/orgs/${orgId}/settings`} icon={Settings}     label="Settings"  onNavigate={onClose} />
           </>
         )}
 
         {/* Account */}
         <SectionLabel>Account</SectionLabel>
-        <NavItem to="/account/profile"  icon={Users}           label="Profile"   />
-        <NavItem to="/account/sessions" icon={MonitorSmartphone} label="Sessions" />
-        <NavItem to="/account/security" icon={KeyRound}        label="Security"  />
+        <NavItem to="/account/profile"  icon={Users}            label="Profile"   onNavigate={onClose} />
+        <NavItem to="/account/sessions" icon={MonitorSmartphone} label="Sessions" onNavigate={onClose} />
+        <NavItem to="/account/security" icon={KeyRound}         label="Security"  onNavigate={onClose} />
 
         {/* Membership badge */}
         {userMembership && (

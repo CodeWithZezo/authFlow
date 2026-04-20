@@ -101,8 +101,6 @@ function PolicyForm({
     setDirty(true);
   };
 
-  const { projectId } = useParams<{ projectId: string }>();
-
   if (!hasPasswordPolicy) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">

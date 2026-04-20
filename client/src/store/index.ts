@@ -4,6 +4,7 @@ export { useOrgStore }     from "./org.store";
 export { useProjectStore } from "./project.store";
 export { usePolicyStore }  from "./policy.store";
 export { useSessionStore } from "./session.store";
+export { useMockStore }    from "./mock.store";
 
 import { useAuthStore }    from "./auth.store";
 import { useOrgStore }     from "./org.store";

@@ -12,16 +12,43 @@ const TABS = [
 export function AccountLayout() {
   return (
     <div className="animate-slide-up">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold tracking-tight">Account</h1>
+      <div className="mb-5 sm:mb-6">
+        <h1 className="font-display text-xl sm:text-2xl font-bold tracking-tight">Account</h1>
         <p className="mt-1 text-sm text-[var(--color-text-secondary)]">
           Manage your profile, sessions, and security settings.
         </p>
       </div>
 
-      <div className="flex gap-8">
-        {/* ── Sidebar nav ──────────────────────────────────────────────── */}
-        <nav className="flex w-48 flex-shrink-0 flex-col gap-1">
+      {/* Mobile: horizontal tab bar | Desktop: vertical sidebar */}
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
+
+        {/* ── Mobile tab bar ────────────────────────────────────────────── */}
+        <nav className="flex sm:hidden gap-1 border-b border-[var(--color-border)] pb-1 -mx-4 px-4 overflow-x-auto scrollbar-none">
+          {TABS.map(({ label, path, icon: Icon }) => (
+            <NavLink
+              key={path}
+              to={path}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-[var(--radius)] text-sm font-medium whitespace-nowrap transition-all flex-shrink-0",
+                  isActive
+                    ? "bg-[var(--color-accent-dim)] text-[var(--color-text-primary)] border border-[var(--color-accent)]/20"
+                    : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]"
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={14} className={isActive ? "text-[var(--color-accent)]" : ""} />
+                  {label}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* ── Desktop sidebar nav ───────────────────────────────────────── */}
+        <nav className="hidden sm:flex w-44 flex-shrink-0 flex-col gap-1">
           {TABS.map(({ label, path, icon: Icon }) => (
             <NavLink
               key={path}

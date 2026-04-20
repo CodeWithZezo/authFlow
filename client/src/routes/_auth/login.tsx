@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/store";
+import { useMockStore } from "@/store/mock.store";
 import { loginSchema, type LoginFormValues } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,9 +20,9 @@ export function LoginPage() {
   const from      = (location.state as { from?: { pathname: string } })?.from?.pathname ?? "/dashboard";
 
   const { login, status, isAuthenticated, clearError } = useAuthStore();
+  const { isMockMode } = useMockStore();
   const [showPwd, setShowPwd] = useState(false);
 
-  // Redirect if already authed
   useEffect(() => {
     if (isAuthenticated) navigate(from, { replace: true });
   }, [isAuthenticated]);
@@ -37,19 +38,24 @@ export function LoginPage() {
 
   const onSubmit = async (values: LoginFormValues) => {
     clearError("login");
+    const wasMock = isMockMode;
     const ok = await login(values);
     if (ok) {
-      toast.success("Welcome back!");
+      if (!wasMock && useMockStore.getState().isMockMode) {
+        toast.warning("Server unreachable — running in demo mode with mock data.", { duration: 6000 });
+      } else {
+        toast.success("Welcome back!");
+      }
       navigate(from, { replace: true });
     }
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
 
       {/* Header */}
       <div className="space-y-1">
-        <h2 className="font-display text-3xl font-bold tracking-tight">
+        <h2 className="font-display text-2xl sm:text-3xl font-bold tracking-tight">
           Welcome back
         </h2>
         <p className="text-sm text-[var(--color-text-secondary)]">
@@ -66,7 +72,7 @@ export function LoginPage() {
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" noValidate>
 
         {/* Email */}
         <div className="space-y-1.5">
@@ -118,8 +124,9 @@ export function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPwd((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors p-1"
               tabIndex={-1}
+              aria-label={showPwd ? "Hide password" : "Show password"}
             >
               {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
@@ -163,11 +170,11 @@ export function LoginPage() {
             type="button"
             onClick={() => toast.info(`${name} OAuth coming soon`)}
             className={cn(
-              "flex h-10 items-center justify-center gap-2.5 rounded-[var(--radius)]",
+              "flex h-11 items-center justify-center gap-2.5 rounded-[var(--radius)]",
               "border border-[var(--color-border)] bg-[var(--color-surface-2)]",
               "text-sm font-medium text-[var(--color-text-secondary)]",
               "hover:border-[var(--color-border-2)] hover:text-[var(--color-text-primary)]",
-              "transition-all duration-150"
+              "active:scale-[0.98] transition-all duration-150"
             )}
           >
             <span className="flex h-4 w-4 items-center justify-center font-bold text-xs">
