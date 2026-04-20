@@ -3,7 +3,7 @@
 // Renders the enduser-api-docs.json content using the AuthCore design system.
 // Matches: Syne + DM Sans, #09090f bg, #6c63ff accent, same component patterns as Home.tsx
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Shield,
   Lock,
@@ -172,7 +172,8 @@ function CodeBlock({
         className="overflow-x-auto p-4 text-xs leading-relaxed"
         style={{
           fontFamily: "var(--font-mono)",
-          color: "var(--color-text-secondary)",
+          color: "#c9d1d9",
+          background: "#0a0a12",
         }}
       >
         <code>{code}</code>
@@ -553,8 +554,25 @@ function ResponseBlock({
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
- function Docs() {
+export default function Docs() {
   const [activeExample, setActiveExample] = useState("1_signup");
+  const [activeSection, setActiveSection] = useState("overview");
+
+  useEffect(() => {
+    const ids = NAV_SECTIONS.map((s) => s.id);
+    const observers: IntersectionObserver[] = [];
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveSection(id); },
+        { rootMargin: "-10% 0px -75% 0px" }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
 
   const exampleKeys = [
     "1_signup",
@@ -723,17 +741,36 @@ const { user } = await res.json();
 
         {/* Nav */}
         <nav className="flex-1 space-y-0.5">
-          {NAV_SECTIONS.map(({ id, label, icon: Icon }) => (
-            <a
-              key={id}
-              href={`#${id}`}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-colors hover:bg-[var(--color-surface-2)]"
-              style={{ color: "var(--color-text-secondary)" }}
-            >
-              <Icon size={13} style={{ color: "var(--color-text-muted)" }} />
-              {label}
-            </a>
-          ))}
+          {NAV_SECTIONS.map(({ id, label, icon: Icon }) => {
+            const isActive = activeSection === id;
+            return (
+              <button
+                key={id}
+                onClick={() => {
+                  const el = document.getElementById(id);
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  setActiveSection(id);
+                }}
+                className="w-full flex items-center gap-2 rounded-lg px-3 py-2 text-[12.5px] font-medium transition-all duration-150 text-left"
+                style={{
+                  color: isActive ? "var(--color-accent)" : "var(--color-text-secondary)",
+                  background: isActive ? "var(--color-accent-dim)" : "transparent",
+                  borderLeft: isActive
+                    ? "2px solid var(--color-accent)"
+                    : "2px solid transparent",
+                }}
+              >
+                <Icon
+                  size={13}
+                  style={{
+                    color: isActive ? "var(--color-accent)" : "#6a6a88",
+                    flexShrink: 0,
+                  }}
+                />
+                {label}
+              </button>
+            );
+          })}
         </nav>
       </aside>
 
@@ -2632,4 +2669,3 @@ const { avatarUrl } = await res.json();`}
     </div>
   );
 }
-export default Docs;

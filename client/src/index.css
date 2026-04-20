@@ -7,54 +7,56 @@
 @theme {
   /* Fonts */
   --font-display: "Syne", sans-serif;
-  --font-sans:    "DM Sans", sans-serif;
-  --font-mono:    "JetBrains Mono", "Fira Code", monospace;
+  --font-sans: "DM Sans", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
   /* Brand palette — dark-first */
-  --color-bg:          #09090f;
-  --color-surface:     #111118;
-  --color-surface-2:   #17171f;
-  --color-surface-3:   #1e1e28;
-  --color-border:      #2a2a38;
-  --color-border-2:    #36364a;
+  --color-bg: #09090f;
+  --color-surface: #111118;
+  --color-surface-2: #17171f;
+  --color-surface-3: #1e1e28;
+  --color-border: #2a2a38;
+  --color-border-2: #36364a;
 
   /* Text */
-  --color-text-primary:   #f2f2ff;
-  --color-text-secondary: #8888aa;
-  --color-text-muted:     #44445a;
-
+  --color-text-primary: #f2f2ff;
+  --color-text-secondary: #b0b0cc; /* was #8888aa */
+  --color-text-muted: #6a6a88; /* was #44445a */
+  
   /* Accent — electric indigo */
-  --color-accent:       #6c63ff;
+  --color-accent: #6c63ff;
   --color-accent-hover: #5a52e0;
-  --color-accent-dim:   #6c63ff1a;
+  --color-accent-dim: #6c63ff1a;
 
   /* Semantic */
-  --color-success:  #22c55e;
-  --color-warning:  #f59e0b;
-  --color-danger:   #ef4444;
-  --color-info:     #38bdf8;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #38bdf8;
 
   /* Status badge colors */
-  --color-active:    #22c55e;
-  --color-inactive:  #6b7280;
-  --color-pending:   #f59e0b;
+  --color-active: #22c55e;
+  --color-inactive: #6b7280;
+  --color-pending: #f59e0b;
   --color-suspended: #ef4444;
 
   /* Radius */
   --radius-sm: 6px;
-  --radius:    10px;
+  --radius: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
 
   /* Shadows */
-  --shadow-sm:  0 1px 3px #00000040;
-  --shadow:     0 4px 16px #00000060;
-  --shadow-lg:  0 12px 40px #00000080;
+  --shadow-sm: 0 1px 3px #00000040;
+  --shadow: 0 4px 16px #00000060;
+  --shadow-lg: 0 12px 40px #00000080;
   --shadow-glow: 0 0 40px #6c63ff22;
 }
 
 /* ─── Base reset ────────────────────────────────────────────────────────────── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -74,13 +76,28 @@ body {
 }
 
 /* ─── Scrollbar ─────────────────────────────────────────────────────────────── */
-::-webkit-scrollbar        { width: 5px; height: 5px; }
-::-webkit-scrollbar-track  { background: var(--color-surface); }
-::-webkit-scrollbar-thumb  { background: var(--color-border-2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
 
 /* ─── Typography ────────────────────────────────────────────────────────────── */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-display);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -102,28 +119,55 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─── Animations ────────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes slideRight {
-  from { opacity: 0; transform: translateX(-12px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.96); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 #6c63ff33; }
-  50%       { box-shadow: 0 0 0 8px #6c63ff00; }
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 #6c63ff33;
+  }
+  50% {
+    box-shadow: 0 0 0 8px #6c63ff00;
+  }
 }
 
 /* ─── Utility classes (Tailwind v4 style via @utility) ─────────────────────── */
@@ -212,14 +256,16 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 14px;
   color: var(--color-text-primary);
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 /* ─── Sonner toast override ──────────────────────────────────────────────────── */
 [data-sonner-toaster] {
-  --normal-bg:    var(--color-surface-2) !important;
+  --normal-bg: var(--color-surface-2) !important;
   --normal-border: var(--color-border) !important;
-  --normal-text:  var(--color-text-primary) !important;
+  --normal-text: var(--color-text-primary) !important;
   font-family: var(--font-sans) !important;
 }
 

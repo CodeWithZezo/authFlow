@@ -124,6 +124,7 @@ export function Sidebar({ sections, activeSlug, onSelect }: SidebarProps) {
             <button
               onClick={() => { setQuery(""); searchRef.current?.focus(); }}
               className="flex-shrink-0 rounded p-0.5 transition-colors hover:bg-[var(--color-surface-3)]"
+              style={{ cursor: "pointer" }}
               aria-label="Clear search"
             >
               <X size={11} style={{ color: "var(--color-text-muted)" }} />
@@ -244,7 +245,7 @@ function NavItem({ section, isActive, isFocused, showDescription, onSelect }: Na
     <button
       data-slug={section.slug}
       onClick={onSelect}
-      className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-all hover:bg-[var(--color-surface-2)]"
+      className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-all"
       style={{
         background: isActive
           ? "var(--color-accent-dim)"
@@ -255,6 +256,24 @@ function NavItem({ section, isActive, isFocused, showDescription, onSelect }: Na
           ? "1px solid rgba(108,99,255,0.2)"
           : "1px solid transparent",
         outline: "none",
+        cursor: "pointer",
+      }}
+      onMouseEnter={(e) => {
+        if (!isActive) {
+          (e.currentTarget as HTMLButtonElement).style.background =
+            "var(--color-surface-2)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (isActive) {
+          (e.currentTarget as HTMLButtonElement).style.background =
+            "var(--color-accent-dim)";
+        } else if (isFocused) {
+          (e.currentTarget as HTMLButtonElement).style.background =
+            "var(--color-surface-2)";
+        } else {
+          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+        }
       }}
       aria-current={isActive ? "page" : undefined}
     >
