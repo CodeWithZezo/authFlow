@@ -42,7 +42,7 @@ export function AuthLayout() {
             className="font-display text-xl font-bold tracking-tight"
             style={{ color: "var(--color-text-primary)" }}
           >
-            Nexus
+            AuthFlow
           </span>
         </div>
 
@@ -90,7 +90,7 @@ export function AuthLayout() {
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
             <Layers size={17} className="text-white" />
           </div>
-          <span className="font-display text-xl font-bold">Nexus</span>
+          <span className="font-display text-xl font-bold">AuthFlow</span>
         </div>
 
         <div className="w-full max-w-[440px] animate-slide-up">

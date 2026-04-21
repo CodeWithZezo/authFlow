@@ -22,7 +22,7 @@ export function Footer() {
               className="font-display text-sm md:text-base font-bold tracking-tight"
               style={{ color: "var(--color-text-primary)" }}
             >
-              Nexus
+              AuthFlow
             </span>
           </div>
 

@@ -2,11 +2,105 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Nexus — Multi-tenant SaaS management platform" />
-    <title>Nexus</title>
+
+    <!-- ═══════════════════════════════════════════════
+         PRIMARY META
+    ═══════════════════════════════════════════════ -->
+    <title>Nexus — Self-Hosted Multi-Tenant Authentication Platform</title>
+    <meta
+      name="description"
+      content="Nexus is an open-source, self-hosted authentication platform. Organizations, JWT rotation, RBAC, S3 avatars, session control — everything Clerk or Auth0 gives you, except your data never leaves your servers."
+    />
+    <meta
+      name="keywords"
+      content="self-hosted auth, authentication platform, multi-tenant auth, JWT rotation, RBAC, open source auth, Auth0 alternative, Clerk alternative, Node.js authentication"
+    />
+    <meta name="author" content="Nexus" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://nexus.dev/" />
+
+    <!-- ═══════════════════════════════════════════════
+         OPEN GRAPH (Facebook, LinkedIn, WhatsApp)
+    ═══════════════════════════════════════════════ -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Nexus" />
+    <meta property="og:url" content="https://nexus.dev/" />
+    <meta
+      property="og:title"
+      content="Nexus — Self-Hosted Multi-Tenant Authentication Platform"
+    />
+    <meta
+      property="og:description"
+      content="Open-source authentication you actually own. Organizations, JWT rotation, RBAC, S3 avatars — no per-seat pricing, no vendor lock-in, your data stays on your servers."
+    />
+    <meta property="og:image" content="https://nexus.dev/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Nexus — Self-hosted authentication platform" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- ═══════════════════════════════════════════════
+         TWITTER / X CARD
+    ═══════════════════════════════════════════════ -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@nexus_dev" />
+    <meta name="twitter:creator" content="@nexus_dev" />
+    <meta
+      name="twitter:title"
+      content="Nexus — Self-Hosted Multi-Tenant Authentication Platform"
+    />
+    <meta
+      name="twitter:description"
+      content="Open-source authentication you actually own. No per-seat pricing. No vendor lock-in. Deploy to any Node.js host."
+    />
+    <meta name="twitter:image" content="https://nexus.dev/og-image.png" />
+    <meta name="twitter:image:alt" content="Nexus — Self-hosted authentication platform" />
+
+    <!-- ═══════════════════════════════════════════════
+         FAVICON & APP ICONS
+    ═══════════════════════════════════════════════ -->
+    <link rel="icon" type="image/svg+xml" href="/public/layers.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/public/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/public/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/apple-touch-icon.png" />
+    <link rel="manifest" href="/public/site.webmanifest" />
+    <meta name="theme-color" content="#6c63ff" />
+    <meta name="msapplication-TileColor" content="#09090f" />
+
+    <!-- ═══════════════════════════════════════════════
+         STRUCTURED DATA — JSON-LD
+    ═══════════════════════════════════════════════ -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Nexus",
+        "url": "https://nexus.dev",
+        "description": "Open-source, self-hosted multi-tenant authentication platform with organizations, JWT rotation, RBAC, and S3 avatar pipelines.",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Node.js",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "license": "https://opensource.org/licenses/MIT",
+        "screenshot": "https://nexus.dev/og-image.png",
+        "featureList": [
+          "Multi-tenant Organizations",
+          "Project-scoped Authentication",
+          "JWT Rotation with httpOnly Cookies",
+          "Role-Based Access Control (RBAC)",
+          "Session Revocation",
+          "S3 Avatar Pipeline",
+          "Custom Password Policies",
+          "Dual User Systems"
+        ]
+      }
+    </script>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

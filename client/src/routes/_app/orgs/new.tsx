@@ -101,7 +101,7 @@ export function CreateOrgPage() {
               <label className="section-label">
                 Slug <span className="text-[var(--color-accent)]">*</span>
               </label>
-              <span className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
+              <span onClick={() => toast.info(`Auto generate coming soon`)} className="flex items-center gap-1 text-xs text-[var(--color-text-muted)]">
                 <Sparkles size={11} />
                 Auto-generated
               </span>

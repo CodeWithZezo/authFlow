@@ -223,7 +223,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
             <Layers size={16} className="text-white" />
           </div>
-          <span className="font-display text-base font-bold tracking-tight">Nexus</span>
+          <span className="font-display text-base font-bold tracking-tight">AuthFlow</span>
         </div>
         {/* Close button – mobile only */}
         {onClose && (

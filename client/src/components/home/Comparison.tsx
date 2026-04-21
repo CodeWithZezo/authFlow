@@ -2,16 +2,16 @@
 import { Check } from "lucide-react";
 
 const COMPARE_ROWS = [
-  { feature: "Self-hosted",              nexus: true,  clerk: false, auth0: false },
-  { feature: "No per-seat pricing",      nexus: true,  clerk: false, auth0: false },
-  { feature: "Data on your servers",     nexus: true,  clerk: false, auth0: false },
-  { feature: "JWT rotation",             nexus: true,  clerk: true,  auth0: true  },
-  { feature: "Organizations",            nexus: true,  clerk: true,  auth0: true  },
-  { feature: "Custom password policies", nexus: true,  clerk: false, auth0: true  },
-  { feature: "Project-scoped auth",      nexus: true,  clerk: false, auth0: false },
-  { feature: "Avatar pipeline",          nexus: true,  clerk: true,  auth0: false },
-  { feature: "Session revocation",       nexus: true,  clerk: true,  auth0: true  },
-  { feature: "Open source",             nexus: true,  clerk: false, auth0: false },
+  { feature: "Self-hosted",              AuthFlow: true,  clerk: false, auth0: false },
+  { feature: "No per-seat pricing",      AuthFlow: true,  clerk: false, auth0: false },
+  { feature: "Data on your servers",     AuthFlow: true,  clerk: false, auth0: false },
+  { feature: "JWT rotation",             AuthFlow: true,  clerk: true,  auth0: true  },
+  { feature: "Organizations",            AuthFlow: true,  clerk: true,  auth0: true  },
+  { feature: "Custom password policies", AuthFlow: true,  clerk: false, auth0: true  },
+  { feature: "Project-scoped auth",      AuthFlow: true,  clerk: false, auth0: false },
+  { feature: "Avatar pipeline",          AuthFlow: true,  clerk: true,  auth0: false },
+  { feature: "Session revocation",       AuthFlow: true,  clerk: true,  auth0: true  },
+  { feature: "Open source",             AuthFlow: true,  clerk: false, auth0: false },
 ];
 
 export function Comparison() {
@@ -46,7 +46,7 @@ export function Comparison() {
             style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}
           >
             <div />
-            {["Nexus", "Clerk", "Auth0"].map((name, i) => (
+            {["AuthFlow", "Clerk", "Auth0"].map((name, i) => (
               <div key={name} className="text-center">
                 <span
                   className="font-display text-xs md:text-sm font-bold"
@@ -75,7 +75,7 @@ export function Comparison() {
               >
                 {row.feature}
               </span>
-              {[row.nexus, row.clerk, row.auth0].map((val, j) => (
+              {[row.AuthFlow, row.clerk, row.auth0].map((val, j) => (
                 <div key={j} className="flex justify-center">
                   {val ? (
                     <Check

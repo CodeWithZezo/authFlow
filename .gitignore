@@ -4,4 +4,4 @@ node_modules/
 # Ignore environment variables
 .env
 #ignore dist
-/dist
+dist/

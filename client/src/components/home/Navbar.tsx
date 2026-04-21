@@ -61,7 +61,7 @@ export function Navbar() {
             className="font-display text-lg md:text-xl font-bold tracking-tight"
             style={{ color: "var(--color-text-primary)" }}
           >
-            Nexus
+            AuthFlow
           </span>
         </div>
 
