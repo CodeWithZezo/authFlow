@@ -128,7 +128,8 @@ export function Topbar({ onMenuToggle, menuOpen }: TopbarProps) {
           "border border-[var(--color-border)] bg-[var(--color-surface-2)]",
           "px-3 py-1.5 text-xs text-[var(--color-text-muted)]",
           "hover:border-[var(--color-border-2)] hover:text-[var(--color-text-secondary)]",
-          "transition-all duration-150 cursor-text w-36 md:w-44"
+          "transition-all duration-150 cursor-text w-36 md:w-44",
+          "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
         )}>
           <Search size={13} />
           <span className="flex-1 text-left">Search...</span>
@@ -142,7 +143,8 @@ export function Topbar({ onMenuToggle, menuOpen }: TopbarProps) {
         <button className={cn(
           "sm:hidden flex h-9 w-9 items-center justify-center rounded-lg",
           "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]",
-          "hover:bg-[var(--color-surface-2)] transition-all duration-150"
+          "hover:bg-[var(--color-surface-2)] transition-all duration-150",
+          "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
         )}>
           <Search size={16} />
         </button>
@@ -151,20 +153,21 @@ export function Topbar({ onMenuToggle, menuOpen }: TopbarProps) {
         <button className={cn(
           "relative flex h-9 w-9 items-center justify-center rounded-lg",
           "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]",
-          "hover:bg-[var(--color-surface-2)] transition-all duration-150"
+          "hover:bg-[var(--color-surface-2)] transition-all duration-150",
+          "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
         )}>
           <Bell size={16} />
-          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
+          <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-[var(--color-accent)] animate-[pulse-glow_2s_ease-in-out_infinite]" />
         </button>
 
         {/* User avatar */}
         {user && (
-          <Link to="/account/profile">
+          <Link to="/account/profile" className="focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2 rounded-full">
             <div className={cn(
               "flex h-8 w-8 items-center justify-center rounded-full",
               "bg-gradient-to-br from-[var(--color-accent)] to-violet-600",
               "text-white text-xs font-bold",
-              "ring-2 ring-transparent hover:ring-[var(--color-accent)]/30 transition-all"
+              "ring-2 ring-transparent hover:ring-accent/40 transition-all duration-200"
             )}>
               {getInitials(user.fullName)}
             </div>

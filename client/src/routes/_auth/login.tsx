@@ -72,11 +72,11 @@ export function LoginPage() {
       )}
 
       {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6" noValidate>
 
         {/* Email */}
         <div className="space-y-1.5">
-          <label className="section-label">Email address</label>
+          <label className="text-xs font-medium text-text-secondary tracking-normal normal-case">Email address</label>
           <div className="relative">
             <Mail
               size={15}
@@ -100,7 +100,7 @@ export function LoginPage() {
         {/* Password */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <label className="section-label">Password</label>
+            <label className="text-xs font-medium text-text-secondary tracking-normal normal-case">Password</label>
             <Link
               to="/forgot-password"
               className="text-xs text-[var(--color-accent)] hover:text-[var(--color-accent-hover)] transition-colors"
@@ -124,7 +124,7 @@ export function LoginPage() {
             <button
               type="button"
               onClick={() => setShowPwd((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors p-1"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors p-1 focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               tabIndex={-1}
               aria-label={showPwd ? "Hide password" : "Show password"}
             >
@@ -174,7 +174,8 @@ export function LoginPage() {
               "border border-[var(--color-border)] bg-[var(--color-surface-2)]",
               "text-sm font-medium text-[var(--color-text-secondary)]",
               "hover:border-[var(--color-border-2)] hover:text-[var(--color-text-primary)]",
-              "active:scale-[0.98] transition-all duration-150"
+              "active:scale-[0.98] transition-all duration-150",
+              "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
             )}
           >
             <span className="flex h-4 w-4 items-center justify-center font-bold text-xs">

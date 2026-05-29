@@ -28,9 +28,9 @@ export function StatsCard({ label, value, icon: Icon, accent = "var(--color-acce
 
   return (
     <div className={cn(
-      "card p-5 group cursor-default",
-      "hover:border-[var(--color-border-2)] transition-all duration-200",
-      "hover:shadow-[var(--shadow)]"
+      "card p-5 group cursor-default animate-slide-up",
+      "hover:border-border-2 transition-all duration-200",
+      "hover:shadow-(--shadow)"
     )}>
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">

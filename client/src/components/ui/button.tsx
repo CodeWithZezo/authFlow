@@ -13,6 +13,7 @@ const buttonVariants = cva(
     "focus-visible:outline-2 focus-visible:outline-[var(--color-accent)] focus-visible:outline-offset-2",
     "disabled:pointer-events-none disabled:opacity-40",
     "cursor-pointer select-none",
+    "active:scale-[0.98]",
   ],
   {
     variants: {
@@ -79,12 +80,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         className={cn(buttonVariants({ variant, size }), className)}
         {...props}
       >
-        {loading ? (
-          <>
-            <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-            {children}
-          </>
-        ) : children}
+        <span className="relative inline-flex items-center justify-center gap-2">
+          <span className={loading ? "opacity-0" : undefined}>{children}</span>
+          {loading && (
+            <span className="absolute inset-0 flex items-center justify-center">
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+            </span>
+          )}
+        </span>
       </Comp>
     );
   }

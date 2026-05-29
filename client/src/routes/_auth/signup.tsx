@@ -123,11 +123,11 @@ export function SignupPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6" noValidate>
 
         {/* Full name */}
         <div className="space-y-1.5">
-          <label className="section-label">Full name</label>
+          <label className="text-xs font-medium text-text-secondary tracking-normal normal-case">Full name</label>
           <div className="relative">
             <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
             <Input
@@ -144,7 +144,7 @@ export function SignupPage() {
 
         {/* Email */}
         <div className="space-y-1.5">
-          <label className="section-label">Email address</label>
+          <label className="text-xs font-medium text-text-secondary tracking-normal normal-case">Email address</label>
           <div className="relative">
             <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
             <Input
@@ -161,9 +161,9 @@ export function SignupPage() {
 
         {/* Phone (optional) */}
         <div className="space-y-1.5">
-          <label className="section-label">
+          <label className="text-xs font-medium text-text-secondary tracking-normal normal-case">
             Phone
-            <span className="ml-1 font-normal normal-case text-[var(--color-text-muted)]">(optional)</span>
+            <span className="ml-1 font-normal text-text-muted">(optional)</span>
           </label>
           <div className="relative">
             <Phone size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
@@ -181,7 +181,7 @@ export function SignupPage() {
 
         {/* Password */}
         <div className="space-y-1.5">
-          <label className="section-label">Password</label>
+          <label className="text-xs font-medium text-text-secondary tracking-normal normal-case">Password</label>
           <div className="relative">
             <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
             <Input
@@ -195,7 +195,7 @@ export function SignupPage() {
             <button
               type="button"
               onClick={() => setShowPwd((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               tabIndex={-1}
             >
               {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
@@ -207,7 +207,7 @@ export function SignupPage() {
 
         {/* Confirm password */}
         <div className="space-y-1.5">
-          <label className="section-label">Confirm password</label>
+          <label className="text-xs font-medium text-text-secondary tracking-normal normal-case">Confirm password</label>
           <div className="relative">
             <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
             <Input
@@ -221,7 +221,7 @@ export function SignupPage() {
             <button
               type="button"
               onClick={() => setShowConfirm((v) => !v)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
               tabIndex={-1}
             >
               {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}

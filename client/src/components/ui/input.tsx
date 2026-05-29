@@ -13,6 +13,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className={cn(
         "input-base",
         "placeholder:text-[var(--color-text-muted)]",
+        !error && "hover:border-border-2",
         "focus:border-[var(--color-accent)] focus:shadow-[0_0_0_3px_var(--color-accent-dim)]",
         error && "border-red-500/50 focus:border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.1)]",
         className

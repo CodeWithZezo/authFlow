@@ -55,7 +55,7 @@ export function AuthLayout() {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-start gap-4 animate-slide-up"
+              className="flex items-start gap-4 animate-slide-up hover:translate-x-0.5 transition-transform"
               style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}
             >
               <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-dim)] border border-[var(--color-accent)]/20">

@@ -31,12 +31,15 @@ function NavItem({ to, icon: Icon, label, onNavigate }: NavItemProps) {
       to={to}
       onClick={onNavigate}
       className={cn(
-        "nav-item group",
+        "nav-item group relative",
         active
           ? "nav-item-active"
           : "hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text-primary)]"
       )}
     >
+      {active && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent" />
+      )}
       <Icon
         size={16}
         className={cn(
@@ -76,7 +79,7 @@ function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
           "flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-2.5",
           "border border-[var(--color-border)] bg-[var(--color-surface-2)]",
           "hover:border-[var(--color-border-2)] hover:bg-[var(--color-surface-3)]",
-          "transition-all duration-150 cursor-pointer",
+          "active:scale-[0.99] transition-all duration-150 cursor-pointer",
           open && "border-[var(--color-accent)]/30"
         )}
       >
