@@ -5,6 +5,7 @@ import {
   useCallback,
   useMemo,
 } from "react";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 import {
   Search,
   X,
@@ -162,8 +163,12 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
   const [index, setIndex] = useState<IndexEntry[]>([]);
   const [indexReady, setIndexReady] = useState(false);
   const [focusedIdx, setFocusedIdx] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
+  const inputRef    = useRef<HTMLInputElement>(null);
+  const listRef     = useRef<HTMLDivElement>(null);
+  const modalRef    = useRef<HTMLDivElement>(null);
+  const prevFocusRef = useRef<HTMLElement | null>(null);
+
+  useFocusTrap(modalRef, open);
 
   // ── Build search index (load all MD files once) ────────────────────────────
   useEffect(() => {
@@ -198,12 +203,16 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
     });
   }, []);
 
-  // ── Focus input when modal opens ──────────────────────────────────────────
+  // ── Focus management: capture on open, restore on close ──────────────────
   useEffect(() => {
     if (open) {
+      prevFocusRef.current = document.activeElement as HTMLElement;
       setTimeout(() => inputRef.current?.focus(), 50);
       setQuery("");
       setFocusedIdx(0);
+    } else if (prevFocusRef.current) {
+      prevFocusRef.current.focus();
+      prevFocusRef.current = null;
     }
   }, [open]);
 
@@ -340,6 +349,10 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
 
       {/* Modal */}
       <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search documentation"
         className="fixed left-1/2 top-[12vh] z-50 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-2xl border shadow-2xl"
         style={{
           borderColor: "var(--color-border-2)",

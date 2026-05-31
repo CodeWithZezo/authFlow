@@ -1,5 +1,5 @@
 // ==================== src/components/shared/Sidebar.tsx ====================
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import {
   Layers, LayoutDashboard, Building2, FolderKanban,
@@ -12,6 +12,7 @@ import { cn, getInitials } from "@/lib/utils";
 import { useAuthStore } from "@/store/auth.store";
 import { useOrgStore }  from "@/store/org.store";
 import { RoleBadge }    from "@/components/shared/index";
+import { useFocusTrap } from "@/hooks/useFocusTrap";
 
 // ─── Nav item ─────────────────────────────────────────────────────────────────
 interface NavItemProps {
@@ -212,10 +213,28 @@ interface SidebarProps {
 
 export function Sidebar({ onClose }: SidebarProps) {
   const { activeOrg, userMembership } = useOrgStore();
-  const orgId = activeOrg?._id;
+  const orgId   = activeOrg?._id;
+  const asideRef = useRef<HTMLElement>(null);
+
+  // Restore focus to the toggle button when the mobile drawer unmounts
+  useEffect(() => {
+    if (!onClose) return;
+    const prev = document.activeElement as HTMLElement | null;
+    return () => { prev?.focus(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Escape closes the mobile drawer
+  useEffect(() => {
+    if (!onClose) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  useFocusTrap(asideRef, !!onClose);
 
   return (
-    <aside className={cn(
+    <aside ref={asideRef} className={cn(
       "flex h-full w-64 sm:w-60 shrink-0 flex-col",
       "border-r border-[var(--color-border)] bg-[var(--color-surface)]"
     )}>
@@ -226,7 +245,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <div className="flex h-8 w-8 items-center justify-center bg-[var(--color-accent)]">
             <Layers size={16} className="text-white" />
           </div>
-          <span className="font-display text-base font-bold tracking-tight">AuthFlow</span>
+          <span className="font-display text-base font-bold tracking-tight text-text-primary">AuthFlow</span>
         </div>
         {/* Close button – mobile only */}
         {onClose && (

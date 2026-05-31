@@ -58,8 +58,8 @@ export function Navbar() {
             aria-hidden
           />
           <span
-            className="font-display text-lg md:text-xl font-bold tracking-tight"
-            style={{ color: "var(--color-text-primary)", letterSpacing: "-0.03em" }}
+            className="font-display text-lg md:text-xl font-bold tracking-tight text-text-primary"
+            style={{ letterSpacing: "-0.03em" }}
           >
             AuthFlow
           </span>
