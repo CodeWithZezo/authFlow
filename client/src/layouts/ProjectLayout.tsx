@@ -80,12 +80,12 @@ export function ProjectLayout() {
   )?.path;
 
   const statusColors: Record<string, string> = {
-    active:    "from-emerald-500 to-teal-600",
-    inactive:  "from-gray-500 to-gray-600",
-    pending:   "from-amber-500 to-orange-600",
-    suspended: "from-red-500 to-rose-600",
+    active:    "bg-emerald-600",
+    inactive:  "bg-gray-600",
+    pending:   "bg-amber-600",
+    suspended: "bg-red-600",
   };
-  const gradientClass = statusColors[activeProject.status] ?? "from-[var(--color-accent)] to-violet-600";
+  const colorClass = statusColors[activeProject.status] ?? "bg-accent";
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-slide-up">

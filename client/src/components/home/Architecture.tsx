@@ -11,28 +11,24 @@ const STEPS = [
     icon: Building2,
     title: "Create an Organization",
     desc: "Your top-level workspace. Pick a unique slug. You automatically become the owner.",
-    accent: "#6c63ff",
   },
   {
     step: "02",
     icon: FolderKanban,
     title: "Add a Project",
     desc: "Projects live inside orgs. This is the scope for all end-user authentication.",
-    accent: "#38bdf8",
   },
   {
     step: "03",
     icon: Lock,
     title: "Define Policies",
     desc: "Password Policy first, then Project Policy. Set auth methods, roles, statuses.",
-    accent: "#f59e0b",
   },
   {
     step: "04",
     icon: Users,
     title: "Users go live",
     desc: "Your customers can now register and log in through the project-scoped API.",
-    accent: "#22c55e",
   },
 ];
 
@@ -53,112 +49,116 @@ export function Architecture() {
       className="py-20 md:py-32"
       style={{ background: "var(--color-surface)" }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="mb-10 md:mb-16 text-center max-w-2xl mx-auto">
-          <p
-            className="text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4"
-            style={{ color: "var(--color-accent)" }}
-          >
-            How it works
-          </p>
+      <div className="mx-auto max-w-7xl px-6 sm:px-8">
+
+        <div className="mb-12 md:mb-16">
+          <p className="section-label mb-4">How it works</p>
           <h2
-            className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-3 md:mb-4"
-            style={{ color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}
+            className="font-display font-bold mb-4"
+            style={{
+              fontSize: "clamp(1.9rem, 4vw, 3rem)",
+              letterSpacing: "-0.04em",
+              lineHeight: 1.05,
+              color: "var(--color-text-primary)",
+            }}
           >
             Up and running in four steps
           </h2>
-          <p className="text-sm md:text-base" style={{ color: "var(--color-text-secondary)" }}>
+          <p
+            className="text-sm md:text-base"
+            style={{ color: "var(--color-text-secondary)", maxWidth: "48ch" }}
+          >
             From zero to a fully working multi-tenant auth system. No magic, no surprises.
           </p>
         </div>
 
-        {/* Steps grid — 1 col mobile, 2 col tablet, 4 col desktop */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-10 md:mb-14">
-          {STEPS.map((s, i) => {
+        {/* Steps grid */}
+        <div className="grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-4 mb-px" style={{ background: "var(--color-border)" }}>
+          {STEPS.map((s) => {
             const Icon = s.icon;
             return (
-              <div key={s.step} className="relative">
-                {/* Connector line — desktop only */}
-                {i < STEPS.length - 1 && (
+              <div
+                key={s.step}
+                className="p-6 md:p-7"
+                style={{ background: "var(--color-surface-2)", borderRadius: 0 }}
+              >
+                <div className="flex items-center gap-3 mb-5">
                   <div
-                    className="absolute top-9 left-[calc(100%-8px)] hidden lg:block h-px z-0"
+                    className="flex h-9 w-9 items-center justify-center shrink-0"
                     style={{
-                      width: "calc(100% - 16px)",
-                      background: `linear-gradient(90deg, ${s.accent}50, ${STEPS[i + 1].accent}20)`,
+                      background: "var(--color-surface-3)",
+                      border: "1px solid var(--color-border)",
                     }}
-                  />
-                )}
-                <div
-                  className="relative z-10 rounded-xl md:rounded-2xl border p-5 md:p-6 h-full"
-                  style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}
-                >
-                  <div className="flex items-center gap-3 mb-4 md:mb-5">
-                    <div
-                      className="flex h-10 w-10 md:h-12 md:w-12 items-center justify-center rounded-lg md:rounded-xl flex-shrink-0"
-                      style={{ background: `${s.accent}18`, border: `1px solid ${s.accent}28` }}
-                    >
-                      <Icon size={17} style={{ color: s.accent }} />
-                    </div>
-                    <span
-                      className="font-display text-[10px] md:text-xs font-bold tracking-widest"
-                      style={{ color: s.accent }}
-                    >
-                      {s.step}
-                    </span>
+                  >
+                    <Icon size={15} style={{ color: "var(--color-text-secondary)" }} />
                   </div>
-                  <h3
-                    className="font-display text-[13px] md:text-sm font-bold mb-1.5 md:mb-2"
-                    style={{ color: "var(--color-text-primary)" }}
+                  <span
+                    className="font-display font-bold tabular-nums shrink-0"
+                    style={{
+                      fontSize: "11px",
+                      letterSpacing: "0.08em",
+                      color: "var(--color-accent)",
+                    }}
                   >
-                    {s.title}
-                  </h3>
-                  <p
-                    className="text-[12px] md:text-sm leading-relaxed"
-                    style={{ color: "var(--color-text-secondary)" }}
-                  >
-                    {s.desc}
-                  </p>
+                    {s.step}
+                  </span>
                 </div>
+                <h3
+                  className="font-display text-sm font-bold mb-2"
+                  style={{ color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}
+                >
+                  {s.title}
+                </h3>
+                <p
+                  className="text-[12px] md:text-sm leading-relaxed"
+                  style={{ color: "var(--color-text-secondary)" }}
+                >
+                  {s.desc}
+                </p>
               </div>
             );
           })}
         </div>
 
-        {/* Request pipeline — horizontally scrollable on mobile */}
-        <div>
-          <p
-            className="text-center text-[10px] md:text-xs font-bold uppercase tracking-widest mb-4 md:mb-6"
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            Request pipeline
-          </p>
+        {/* Request pipeline */}
+        <div
+          className="border"
+          style={{ borderColor: "var(--color-border)", background: "var(--color-surface-3)", borderRadius: 0 }}
+        >
           <div
-            className="rounded-xl md:rounded-2xl border p-4 md:p-6 overflow-x-auto"
-            style={{ borderColor: "var(--color-border)", background: "var(--color-surface-3)" }}
+            className="border-b px-6 py-3"
+            style={{ borderColor: "var(--color-border)" }}
           >
-            <div className="flex items-center gap-1.5 w-fit mx-auto">
+            <p className="section-label" style={{ fontSize: "9px" }}>Request pipeline</p>
+          </div>
+          <div className="p-4 md:p-6 overflow-x-auto">
+            <div className="flex items-center gap-1.5 w-fit">
               {FLOW.map((node, i) => {
                 const Icon = node.icon;
                 return (
                   <div key={node.label} className="flex items-center gap-1.5">
                     <div
-                      className="flex flex-col items-center gap-1.5 md:gap-2 rounded-lg md:rounded-xl border px-3 md:px-4 py-2.5 md:py-3 min-w-[80px] md:min-w-[100px]"
+                      className="flex flex-col items-center gap-1.5 border px-3 md:px-4 py-2.5 md:py-3 min-w-20 md:min-w-24"
                       style={{
                         borderColor: "var(--color-border-2)",
                         background: "var(--color-surface-2)",
+                        borderRadius: 0,
                       }}
                     >
                       <Icon size={13} style={{ color: "var(--color-accent)" }} />
                       <span
-                        className="text-[10px] md:text-xs font-medium text-center whitespace-nowrap"
-                        style={{ color: "var(--color-text-secondary)" }}
+                        className="text-[10px] font-medium text-center whitespace-nowrap"
+                        style={{
+                          color: "var(--color-text-secondary)",
+                          fontFamily: "var(--font-mono)",
+                        }}
                       >
                         {node.label}
                       </span>
                     </div>
                     {i < FLOW.length - 1 && (
                       <ChevronRight
-                        size={12}
+                        size={11}
                         style={{ color: "var(--color-text-muted)", flexShrink: 0 }}
                       />
                     )}
@@ -168,6 +168,7 @@ export function Architecture() {
             </div>
           </div>
         </div>
+
       </div>
     </section>
   );

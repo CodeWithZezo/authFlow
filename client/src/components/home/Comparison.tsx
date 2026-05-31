@@ -17,39 +17,43 @@ const COMPARE_ROWS = [
 export function Comparison() {
   return (
     <section id="compare" className="py-20 md:py-32">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <div className="mb-10 md:mb-16 text-center">
-          <p
-            className="text-[10px] md:text-xs font-bold uppercase tracking-widest mb-3 md:mb-4"
-            style={{ color: "var(--color-accent)" }}
-          >
-            Comparison
-          </p>
+      <div className="mx-auto max-w-3xl px-6 sm:px-8">
+
+        <div className="mb-12 md:mb-16">
+          <p className="section-label mb-4">Comparison</p>
           <h2
-            className="font-display text-3xl md:text-4xl font-bold tracking-tight mb-3 md:mb-4"
-            style={{ color: "var(--color-text-primary)", letterSpacing: "-0.02em" }}
+            className="font-display font-bold mb-4"
+            style={{
+              fontSize: "clamp(1.9rem, 4vw, 3rem)",
+              letterSpacing: "-0.04em",
+              lineHeight: 1.05,
+              color: "var(--color-text-primary)",
+            }}
           >
             Why self-host?
           </h2>
-          <p className="text-sm md:text-base" style={{ color: "var(--color-text-secondary)" }}>
+          <p
+            className="text-sm md:text-base"
+            style={{ color: "var(--color-text-secondary)", maxWidth: "44ch" }}
+          >
             You get the complete feature set — without the ongoing SaaS bill.
           </p>
         </div>
 
         <div
-          className="overflow-hidden rounded-xl md:rounded-2xl border"
-          style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
+          className="overflow-hidden border"
+          style={{ borderColor: "var(--color-border)", background: "var(--color-surface)", borderRadius: 0 }}
         >
           {/* Header */}
           <div
-            className="grid grid-cols-4 border-b px-3 sm:px-6 py-3 md:py-4"
+            className="grid grid-cols-4 border-b px-4 sm:px-6 py-3 md:py-4"
             style={{ borderColor: "var(--color-border)", background: "var(--color-surface-2)" }}
           >
             <div />
             {["AuthFlow", "Clerk", "Auth0"].map((name, i) => (
               <div key={name} className="text-center">
                 <span
-                  className="font-display text-xs md:text-sm font-bold"
+                  className={i === 0 ? "section-label" : "section-label"}
                   style={{ color: i === 0 ? "var(--color-accent)" : "var(--color-text-muted)" }}
                 >
                   {name}
@@ -62,11 +66,10 @@ export function Comparison() {
           {COMPARE_ROWS.map((row, i) => (
             <div
               key={row.feature}
-              className="grid grid-cols-4 px-3 sm:px-6 py-3 md:py-3.5 items-center"
+              className="grid grid-cols-4 px-4 sm:px-6 py-3 md:py-3.5 items-center"
               style={{
-                borderBottom:
-                  i < COMPARE_ROWS.length - 1 ? "1px solid var(--color-border)" : "none",
-                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
+                borderBottom: i < COMPARE_ROWS.length - 1 ? "1px solid var(--color-border)" : "none",
+                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
               }}
             >
               <span
@@ -80,11 +83,11 @@ export function Comparison() {
                   {val ? (
                     <Check
                       size={14}
-                      style={{ color: j === 0 ? "var(--color-accent)" : "var(--color-success)" }}
+                      style={{ color: j === 0 ? "var(--color-accent)" : "var(--color-text-secondary)" }}
                     />
                   ) : (
                     <span
-                      className="h-0.5 w-3 md:w-4 rounded-full inline-block"
+                      className="h-px w-3 md:w-4 inline-block"
                       style={{ background: "var(--color-border-2)" }}
                     />
                   )}
@@ -93,6 +96,7 @@ export function Comparison() {
             </div>
           ))}
         </div>
+
       </div>
     </section>
   );

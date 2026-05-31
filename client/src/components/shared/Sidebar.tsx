@@ -38,12 +38,12 @@ function NavItem({ to, icon: Icon, label, onNavigate }: NavItemProps) {
       )}
     >
       {active && (
-        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full bg-accent" />
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-accent" />
       )}
       <Icon
         size={16}
         className={cn(
-          "flex-shrink-0 transition-colors",
+          "shrink-0 transition-colors",
           active ? "text-[var(--color-accent)]" : "text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)]"
         )}
       />
@@ -76,14 +76,14 @@ function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
       <button
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex w-full items-center gap-3 rounded-[var(--radius)] px-3 py-2.5",
+          "flex w-full items-center gap-3 rounded-(--radius) px-3 py-2.5",
           "border border-[var(--color-border)] bg-[var(--color-surface-2)]",
           "hover:border-[var(--color-border-2)] hover:bg-[var(--color-surface-3)]",
           "active:scale-[0.99] transition-all duration-150 cursor-pointer",
           open && "border-[var(--color-accent)]/30"
         )}
       >
-        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-[var(--color-accent)] text-white text-xs font-bold">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center bg-[var(--color-accent)] text-white text-xs font-bold">
           {activeOrg ? getInitials(activeOrg.name) : "?"}
         </div>
 
@@ -98,7 +98,7 @@ function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
           )}
         </div>
 
-        <ChevronsUpDown size={14} className="flex-shrink-0 text-[var(--color-text-muted)]" />
+        <ChevronsUpDown size={14} className="shrink-0 text-[var(--color-text-muted)]" />
       </button>
 
       {open && (
@@ -106,7 +106,7 @@ function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
           <div className={cn(
             "absolute left-0 right-0 top-full z-20 mt-1.5",
-            "overflow-hidden rounded-[var(--radius-lg)]",
+            "overflow-hidden rounded-(--radius-lg)",
             "border border-[var(--color-border)] bg-[var(--color-surface-2)]",
             "shadow-[var(--shadow-lg)] animate-scale-in"
           )}>
@@ -118,7 +118,7 @@ function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
                     key={org._id}
                     onClick={() => handleSelect(org)}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-[var(--radius-sm)] px-2 py-2",
+                      "flex w-full items-center gap-3 rounded-(--radius-sm) px-2 py-2",
                       "text-left text-sm transition-colors",
                       "hover:bg-[var(--color-surface-3)]",
                       activeOrg?._id === org._id
@@ -126,7 +126,7 @@ function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
                         : "text-[var(--color-text-secondary)]"
                     )}
                   >
-                    <div className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-[var(--color-accent-dim)] text-[var(--color-accent)] text-xs font-bold">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center bg-[var(--color-accent-dim)] text-[var(--color-accent)] text-xs font-bold">
                       {getInitials(org.name)}
                     </div>
                     <span className="flex-1 truncate font-medium">{org.name}</span>
@@ -143,7 +143,7 @@ function OrgSwitcher({ onNavigate }: { onNavigate?: () => void }) {
                 to="/orgs/new"
                 onClick={() => { setOpen(false); onNavigate?.(); }}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-[var(--radius-sm)] px-2 py-2",
+                  "flex items-center gap-2.5 rounded-(--radius-sm) px-2 py-2",
                   "text-sm text-[var(--color-text-secondary)]",
                   "hover:bg-[var(--color-surface-3)] hover:text-[var(--color-text-primary)]",
                   "transition-colors"
@@ -176,7 +176,7 @@ function UserSection() {
   return (
     <div className="border-t border-[var(--color-border)] p-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[var(--color-accent)] to-violet-600 text-white text-xs font-bold">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-white text-xs font-bold">
           {getInitials(user.fullName)}
         </div>
 
@@ -190,7 +190,7 @@ function UserSection() {
           disabled={status.logout.loading}
           title="Sign out"
           className={cn(
-            "flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg",
+            "flex h-7 w-7 shrink-0 items-center justify-center",
             "text-[var(--color-text-muted)] hover:text-red-400",
             "hover:bg-red-400/10 transition-all duration-150"
           )}
@@ -216,14 +216,14 @@ export function Sidebar({ onClose }: SidebarProps) {
 
   return (
     <aside className={cn(
-      "flex h-full w-64 sm:w-60 flex-shrink-0 flex-col",
+      "flex h-full w-64 sm:w-60 shrink-0 flex-col",
       "border-r border-[var(--color-border)] bg-[var(--color-surface)]"
     )}>
 
       {/* Logo */}
       <div className="flex h-14 items-center justify-between border-b border-[var(--color-border)] px-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
+          <div className="flex h-8 w-8 items-center justify-center bg-[var(--color-accent)]">
             <Layers size={16} className="text-white" />
           </div>
           <span className="font-display text-base font-bold tracking-tight">AuthFlow</span>
@@ -232,7 +232,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         {onClose && (
           <button
             onClick={onClose}
-            className="lg:hidden flex h-8 w-8 items-center justify-center rounded-lg text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-colors"
+            className="lg:hidden flex h-8 w-8 items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-colors"
           >
             <X size={16} />
           </button>
@@ -264,9 +264,9 @@ export function Sidebar({ onClose }: SidebarProps) {
 
         {/* Account */}
         <SectionLabel>Account</SectionLabel>
-        <NavItem to="/account/profile"  icon={Users}            label="Profile"   onNavigate={onClose} />
-        <NavItem to="/account/sessions" icon={MonitorSmartphone} label="Sessions" onNavigate={onClose} />
-        <NavItem to="/account/security" icon={KeyRound}         label="Security"  onNavigate={onClose} />
+        <NavItem to="/account/profile"  icon={Users}             label="Profile"   onNavigate={onClose} />
+        <NavItem to="/account/sessions" icon={MonitorSmartphone} label="Sessions"  onNavigate={onClose} />
+        <NavItem to="/account/security" icon={KeyRound}          label="Security"  onNavigate={onClose} />
 
         {/* Membership badge */}
         {userMembership && (

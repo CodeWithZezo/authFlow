@@ -13,7 +13,7 @@ export function Footer() {
           {/* Brand */}
           <div className="flex items-center gap-2.5">
             <div
-              className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center rounded-lg md:rounded-xl"
+              className="flex h-7 w-7 md:h-8 md:w-8 items-center justify-center"
               style={{ background: "var(--color-accent)" }}
             >
               <Layers size={13} className="text-white" />

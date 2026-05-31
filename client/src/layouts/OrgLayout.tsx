@@ -80,7 +80,7 @@ export function OrgLayout() {
         <div className="flex items-start gap-3 sm:gap-5">
 
           {/* Avatar */}
-          <div className="flex h-11 w-11 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--color-accent)] to-violet-600 text-white text-lg sm:text-xl font-bold shadow-[var(--shadow-glow)]">
+          <div className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center bg-accent text-white text-lg sm:text-xl font-bold">
             {getInitials(activeOrg.name)}
           </div>
 

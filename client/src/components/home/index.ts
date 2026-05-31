@@ -3,7 +3,6 @@
 // import { Navbar, Hero, StatsBar, ... } from "@/components/home"
 
 export { Counter }       from "./Counter";
-export { ParticleCanvas } from "./ParticleCanvas";
 export { Navbar }        from "./Navbar";
 export { Hero }          from "./Hero";
 export { StatsBar }      from "./StatsBar";

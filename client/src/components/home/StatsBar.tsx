@@ -2,10 +2,10 @@
 import { Counter } from "./Counter";
 
 const STATS = [
-  { label: "API endpoints",       value: 40,  suffix: "+" },
-  { label: "Single-use refresh",  value: 100, suffix: "%" },
-  { label: "Distinct user systems", value: 2, suffix: "" },
-  { label: "Open source forever", value: 100, suffix: "%" },
+  { label: "API endpoints",         value: 40,  suffix: "+" },
+  { label: "Single-use refresh",    value: 100, suffix: "%" },
+  { label: "Distinct user systems", value: 2,   suffix: ""  },
+  { label: "Open source forever",   value: 100, suffix: "%" },
 ];
 
 export function StatsBar() {
@@ -14,19 +14,27 @@ export function StatsBar() {
       className="border-y"
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 md:py-12">
-        <div className="grid grid-cols-2 gap-y-8 gap-x-4 sm:grid-cols-4">
-          {STATS.map((s) => (
-            <div key={s.label} className="text-center space-y-1">
+      <div className="mx-auto max-w-7xl px-6 sm:px-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x" style={{ "--tw-divide-opacity": 1 } as React.CSSProperties}>
+          {STATS.map((s, i) => (
+            <div
+              key={s.label}
+              className="py-10 md:py-14 px-6 md:px-10"
+              style={{
+                borderLeft: i === 0 ? "none" : "1px solid var(--color-border)",
+              }}
+            >
               <p
-                className="font-display text-3xl md:text-4xl font-bold tabular-nums"
-                style={{ color: "var(--color-accent)" }}
+                className="font-display font-bold tabular-nums leading-none mb-2"
+                style={{
+                  fontSize: "clamp(2.6rem, 5vw, 4rem)",
+                  letterSpacing: "-0.04em",
+                  color: "var(--color-text-primary)",
+                }}
               >
                 <Counter target={s.value} suffix={s.suffix} />
               </p>
-              <p className="text-[11px] md:text-xs" style={{ color: "var(--color-text-muted)" }}>
-                {s.label}
-              </p>
+              <p className="section-label">{s.label}</p>
             </div>
           ))}
         </div>

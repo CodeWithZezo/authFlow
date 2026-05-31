@@ -5,22 +5,10 @@ import { MockBanner } from "@/components/shared/MockBanner";
 
 export function AuthLayout() {
   return (
-    <div className="flex min-h-screen bg-[var(--color-bg)]">
+    <div className="flex min-h-screen bg-bg">
 
       {/* ── Left: Brand panel ──────────────────────────────────────────── */}
-      <div className="relative hidden lg:flex lg:w-[46%] flex-col justify-between overflow-hidden bg-[var(--color-surface)] border-r border-[var(--color-border)] p-12">
-
-        {/* Ambient gradient orbs */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full"
-          style={{ background: "radial-gradient(circle, #6c63ff18 0%, transparent 70%)" }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-40 -right-20 h-[400px] w-[400px] rounded-full"
-          style={{ background: "radial-gradient(circle, #6c63ff10 0%, transparent 70%)" }}
-        />
+      <div className="relative hidden lg:flex lg:w-[46%] flex-col justify-between overflow-hidden bg-surface border-r border-border p-12">
 
         {/* Grid texture */}
         <div
@@ -35,13 +23,10 @@ export function AuthLayout() {
 
         {/* Logo */}
         <div className="relative flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
+          <div className="flex h-9 w-9 items-center justify-center bg-accent">
             <Layers size={18} className="text-white" />
           </div>
-          <span
-            className="font-display text-xl font-bold tracking-tight"
-            style={{ color: "var(--color-text-primary)" }}
-          >
+          <span className="font-display text-xl font-bold tracking-tight text-text-primary">
             AuthFlow
           </span>
         </div>
@@ -55,15 +40,15 @@ export function AuthLayout() {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-start gap-4 animate-slide-up hover:translate-x-0.5 transition-transform"
+              className="flex items-start gap-4 animate-slide-up"
               style={{ animationDelay: `${i * 80}ms`, animationFillMode: "both" }}
             >
-              <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-dim)] border border-[var(--color-accent)]/20">
-                <div className="h-1.5 w-1.5 rounded-full bg-[var(--color-accent)]" />
-              </div>
+              <span
+                className="mt-1.5 inline-block w-0.5 h-4 shrink-0 bg-accent"
+              />
               <div>
-                <p className="font-display text-sm font-semibold text-[var(--color-text-primary)]">{item.label}</p>
-                <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{item.desc}</p>
+                <p className="font-display text-sm font-semibold text-text-primary">{item.label}</p>
+                <p className="text-xs text-text-muted mt-0.5">{item.desc}</p>
               </div>
             </div>
           ))}
@@ -71,7 +56,7 @@ export function AuthLayout() {
 
         {/* Bottom quote */}
         <div className="relative">
-          <p className="text-xs text-[var(--color-text-muted)] leading-relaxed">
+          <p className="text-xs text-text-muted leading-relaxed">
             Built for teams who need fine-grained control over their SaaS infrastructure.
           </p>
         </div>
@@ -81,19 +66,19 @@ export function AuthLayout() {
       <div className="flex flex-1 flex-col items-center justify-center px-4 sm:px-6 py-8 sm:py-12 min-h-screen">
 
         {/* Mock data banner */}
-        <div className="w-full max-w-[440px] mb-4">
+        <div className="w-full max-w-110 mb-4">
           <MockBanner />
         </div>
 
         {/* Mobile logo */}
         <div className="mb-8 flex items-center gap-2 lg:hidden">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent)] shadow-[var(--shadow-glow)]">
+          <div className="flex h-9 w-9 items-center justify-center bg-accent">
             <Layers size={17} className="text-white" />
           </div>
           <span className="font-display text-xl font-bold">AuthFlow</span>
         </div>
 
-        <div className="w-full max-w-[440px] animate-slide-up">
+        <div className="w-full max-w-110 animate-slide-up">
           <Outlet />
         </div>
       </div>

@@ -32,11 +32,11 @@ export function TechStack() {
           {TECH.map((t) => (
             <div
               key={t.name}
-              className="flex items-center gap-1.5 md:gap-2 rounded-full border px-3 md:px-4 py-1 md:py-1.5 transition-colors"
+              className="flex items-center gap-1.5 md:gap-2 border px-3 md:px-4 py-1 md:py-1.5 transition-colors"
               style={{ borderColor: `${t.color}20`, background: `${t.color}08` }}
             >
               <span
-                className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                className="h-1.5 w-1.5 rounded-full shrink-0"
                 style={{ background: t.color }}
               />
               <span

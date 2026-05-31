@@ -17,10 +17,10 @@ export function StatsCard({ label, value, icon: Icon, accent = "var(--color-acce
       <div className="card p-5 animate-pulse">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
-            <div className="h-3 w-20 rounded-full bg-[var(--color-surface-3)]" />
-            <div className="h-7 w-12 rounded-lg bg-[var(--color-surface-3)]" />
+            <div className="h-3 w-20 bg-[var(--color-surface-3)]" />
+            <div className="h-7 w-12 bg-[var(--color-surface-3)]" />
           </div>
-          <div className="h-9 w-9 rounded-xl bg-[var(--color-surface-3)]" />
+          <div className="h-9 w-9 bg-[var(--color-surface-3)]" />
         </div>
       </div>
     );
@@ -46,7 +46,7 @@ export function StatsCard({ label, value, icon: Icon, accent = "var(--color-acce
           )}
         </div>
         <div
-          className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-110"
+          className="flex h-10 w-10 shrink-0 items-center justify-center"
           style={{ background: `color-mix(in oklch, ${accent} 15%, transparent)` }}
         >
           <Icon size={18} style={{ color: accent }} />

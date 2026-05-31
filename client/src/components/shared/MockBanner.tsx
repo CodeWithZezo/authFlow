@@ -19,7 +19,7 @@ export function MockBanner() {
       {/* ── Main row ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3 px-5 py-2.5">
         {/* Icon */}
-        <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-amber-500/20">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center bg-amber-500/20">
           <ServerCrash size={14} className="text-amber-400" />
         </div>
 
@@ -34,10 +34,10 @@ export function MockBanner() {
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setExpanded((v) => !v)}
-            className="flex items-center gap-1 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition-colors"
+            className="flex items-center gap-1 border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition-colors"
           >
             {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             {expanded ? "Less" : "What's mock?"}
@@ -45,7 +45,7 @@ export function MockBanner() {
           <button
             onClick={() => setDismissed(true)}
             title="Dismiss"
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-amber-400/60 hover:text-amber-300 hover:bg-amber-500/20 transition-colors"
+            className="flex h-7 w-7 items-center justify-center text-amber-400/60 hover:text-amber-300 hover:bg-amber-500/20 transition-colors"
           >
             <X size={13} />
           </button>
