@@ -12,6 +12,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { changePasswordSchema, type ChangePasswordFormValues } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input }  from "@/components/ui/input";
+import { InlineError, FormError } from "@/components/shared/index";
 import { cn }     from "@/lib/utils";
 
 // ─── Password strength rules ───────────────────────────────────────────────
@@ -119,9 +120,7 @@ function ChangePasswordForm() {
             {showCurrent ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         </div>
-        {errors.currentPassword && (
-          <p className="text-xs text-red-400">{errors.currentPassword.message}</p>
-        )}
+        <FormError message={errors.currentPassword?.message} />
       </div>
 
       {/* New password */}
@@ -147,7 +146,7 @@ function ChangePasswordForm() {
           </button>
         </div>
         {errors.newPassword
-          ? <p className="text-xs text-red-400">{errors.newPassword.message}</p>
+          ? <FormError message={errors.newPassword.message} />
           : <StrengthIndicator password={newPassword ?? ""} />
         }
       </div>
@@ -174,18 +173,11 @@ function ChangePasswordForm() {
             {showConfirm ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         </div>
-        {errors.confirmNewPassword && (
-          <p className="text-xs text-red-400">{errors.confirmNewPassword.message}</p>
-        )}
+        <FormError message={errors.confirmNewPassword?.message} />
       </div>
 
       {/* Server error */}
-      {status.changePassword.error && (
-        <div className="flex items-center gap-3 rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 animate-slide-up">
-          <AlertTriangle size={14} className="flex-shrink-0" />
-          {status.changePassword.error}
-        </div>
-      )}
+      <InlineError message={status.changePassword.error} />
 
       {/* Success banner */}
       {success && (

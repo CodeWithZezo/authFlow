@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { useSessionStore } from "@/store/session.store";
 import { timeAgo, cn } from "@/lib/utils";
 import { Button }   from "@/components/ui/button";
-import { Spinner }  from "@/components/shared/index";
+import { Spinner, EmptyState }  from "@/components/shared/index";
 import type { Session } from "@/types";
 
 // ─── Session card ─────────────────────────────────────────────────────────────
@@ -168,10 +168,12 @@ export function SessionsPage() {
           <Spinner size={22} />
         </div>
       ) : sessions.length === 0 ? (
-        <div className="card flex flex-col items-center justify-center py-14 text-center">
-          <MonitorSmartphone size={28} className="mb-3 text-[var(--color-text-muted)]" />
-          <p className="font-display text-base font-semibold">No active sessions</p>
-          <p className="mt-1 text-sm text-[var(--color-text-muted)]">You'll see sessions here once you log in.</p>
+        <div className="card">
+          <EmptyState
+            icon={MonitorSmartphone}
+            title="No active sessions"
+            description="You'll see sessions here once you log in from a device."
+          />
         </div>
       ) : (
         <div className="space-y-3">

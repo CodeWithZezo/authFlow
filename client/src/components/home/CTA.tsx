@@ -19,11 +19,12 @@ export function CTA() {
           <h2
             className="font-display font-bold mb-5"
             style={{
-              fontSize: "clamp(2rem, 5vw, 3.6rem)",
+              fontSize: "clamp(1.75rem, 7vw, 3.6rem)",
               letterSpacing: "-0.04em",
               lineHeight: 1.05,
               color: "var(--color-text-primary)",
               maxWidth: "18ch",
+              textWrap: "balance",
             }}
           >
             Own your auth stack.{" "}

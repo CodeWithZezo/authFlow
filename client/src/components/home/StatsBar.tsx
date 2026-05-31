@@ -15,19 +15,19 @@ export function StatsBar() {
       style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
     >
       <div className="mx-auto max-w-7xl px-6 sm:px-8">
-        <div className="grid grid-cols-2 sm:grid-cols-4 divide-x" style={{ "--tw-divide-opacity": 1 } as React.CSSProperties}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 divide-y divide-x-0 sm:divide-y-0 sm:divide-x" style={{ "--tw-divide-opacity": 1 } as React.CSSProperties}>
           {STATS.map((s, i) => (
             <div
               key={s.label}
-              className="py-10 md:py-14 px-6 md:px-10"
+              className="py-8 px-4 md:py-14 md:px-10"
               style={{
-                borderLeft: i === 0 ? "none" : "1px solid var(--color-border)",
+                borderLeft: i === 0 ? "none" : undefined,
               }}
             >
               <p
                 className="font-display font-bold tabular-nums leading-none mb-2"
                 style={{
-                  fontSize: "clamp(2.6rem, 5vw, 4rem)",
+                  fontSize: "clamp(2rem, 8vw, 4rem)",
                   letterSpacing: "-0.04em",
                   color: "var(--color-text-primary)",
                 }}

@@ -1,3 +1,30 @@
+export { Skeleton, SkeletonText, SkeletonRow } from "./Skeleton";
+
+// ==================== InlineError / FormError ====================
+// InlineError — left-bordered strip for form-level (store) errors.
+// FormError   — small hint for field-level validation errors.
+
+export function InlineError({ message, className }: { message?: string | null; className?: string }) {
+  if (!message) return null;
+  return (
+    <div
+      className={cn(
+        "border-l-2 bg-[var(--color-error-dim)] px-4 py-2.5 text-sm text-[var(--color-error)] animate-slide-up",
+        className
+      )}
+      style={{ borderLeftColor: "var(--color-error)" }}
+    >
+      {message}
+    </div>
+  );
+}
+
+export function FormError({ message, className }: { message?: string | null; className?: string }) {
+  if (!message) return null;
+  return <p className={cn("text-xs text-[var(--color-error)]", className)}>{message}</p>;
+}
+
+
 // ==================== src/components/shared/PageHeader.tsx ====================
 import type { ReactNode } from "react";
 import type { BreadcrumbItem } from "@/types";

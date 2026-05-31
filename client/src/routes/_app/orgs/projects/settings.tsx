@@ -11,6 +11,7 @@ import { updateProjectSchema, type UpdateProjectFormValues } from "@/lib/validat
 import { Status } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input }  from "@/components/ui/input";
+import { InlineError } from "@/components/shared/index";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
@@ -60,11 +61,7 @@ export function ProjectSettingsPage() {
           <p className="text-xs text-[var(--color-text-muted)] mt-0.5">Update project info and status.</p>
         </div>
 
-        {status.updateProject.error && (
-          <div className="rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {status.updateProject.error}
-          </div>
-        )}
+        <InlineError message={status.updateProject.error} />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-1.5">

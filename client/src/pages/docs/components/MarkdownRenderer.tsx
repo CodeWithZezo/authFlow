@@ -361,7 +361,7 @@ function buildComponents(): Components {
         style={{
           color: "var(--color-accent)",
           textDecoration: "none",
-          borderBottom: "1px solid rgba(108,99,255,0.35)",
+          borderBottom: "1px solid color-mix(in srgb, var(--color-accent) 35%, transparent)",
           transition: "border-color 0.15s",
         }}
         onMouseEnter={(e) => {
@@ -370,7 +370,7 @@ function buildComponents(): Components {
         }}
         onMouseLeave={(e) => {
           (e.currentTarget as HTMLElement).style.borderColor =
-            "rgba(108,99,255,0.35)";
+            "color-mix(in srgb, var(--color-accent) 35%, transparent)";
         }}
       >
         {children}

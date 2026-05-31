@@ -25,7 +25,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { RoleGuard }    from "@/components/shared/RoleGuard";
-import { RoleBadge, StatusBadge, EmptyState } from "@/components/shared/index";
+import { RoleBadge, StatusBadge, EmptyState, SkeletonRow, FormError } from "@/components/shared/index";
 
 // ─── Add member modal ────────────────────────────────────────────────────────
 function AddMemberModal({ onClose }: { onClose: () => void }) {
@@ -91,9 +91,7 @@ function AddMemberModal({ onClose }: { onClose: () => void }) {
             </Select>
           </div>
 
-          {status.addMember.error && (
-            <p className="text-xs text-red-400">{status.addMember.error}</p>
-          )}
+          <FormError message={status.addMember.error} />
 
           <div className="flex gap-3 pt-1">
             <Button variant="secondary" type="button" className="flex-1" onClick={onClose}>Cancel</Button>
@@ -282,7 +280,7 @@ function MemberRow({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function OrgMembersPage() {
-  const { members } = useOrgStore();
+  const { members, status } = useOrgStore();
   const { user }            = useAuthStore();
   const [showAdd, setShowAdd]   = useState(false);
   const [search, setSearch]     = useState("");
@@ -324,7 +322,20 @@ export function OrgMembersPage() {
 
       {/* Table */}
       <div className="card overflow-hidden">
-        {filtered.length === 0 ? (
+        {status.fetchMembers.loading && members.length === 0 ? (
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-[var(--color-surface-2)]">
+                {["Member", "Role", "Status", "Joined", ""].map((h) => (
+                  <th key={h} className="px-5 py-3 text-xs font-medium text-[var(--color-text-muted)]">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={5} />)}
+            </tbody>
+          </table>
+        ) : filtered.length === 0 ? (
           <EmptyState
             icon={Users}
             title={search ? "No members match" : "No members yet"}

@@ -12,6 +12,7 @@ import { useMockStore } from "@/store/mock.store";
 import { loginSchema, type LoginFormValues } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InlineError, FormError } from "@/components/shared/index";
 import { cn } from "@/lib/utils";
 
 export function LoginPage() {
@@ -64,12 +65,7 @@ export function LoginPage() {
       </div>
 
       {/* Error banner */}
-      {status.login.error && (
-        <div className="flex items-center gap-3 rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 animate-slide-up">
-          <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
-          {status.login.error}
-        </div>
-      )}
+      <InlineError message={status.login.error} />
 
       {/* Form */}
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6" noValidate>
@@ -92,9 +88,7 @@ export function LoginPage() {
               className="pl-9"
             />
           </div>
-          {errors.email && (
-            <p className="text-xs text-red-400">{errors.email.message}</p>
-          )}
+          <FormError message={errors.email?.message} />
         </div>
 
         {/* Password */}
@@ -131,9 +125,7 @@ export function LoginPage() {
               {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
-          {errors.password && (
-            <p className="text-xs text-red-400">{errors.password.message}</p>
-          )}
+          <FormError message={errors.password?.message} />
         </div>
 
         {/* Submit */}

@@ -17,6 +17,7 @@ import { Button }     from "@/components/ui/button";
 import { Input }      from "@/components/ui/input";
 import { RoleGuard }  from "@/components/shared/RoleGuard";
 import { StatsCard }  from "@/components/shared/StatsCard";
+import { Skeleton }   from "@/components/shared/index";
 
 // ─── Inline edit name ────────────────────────────────────────────────────────
 function InlineEditName() {
@@ -134,8 +135,31 @@ function DeleteOrgDialog({ onClose }: { onClose: () => void }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function OrgOverviewPage() {
-  const { activeOrg, members } = useOrgStore();
+  const { activeOrg, members, status } = useOrgStore();
   const [showDelete, setShowDelete] = useState(false);
+
+  if (status.fetchOrg.loading && !activeOrg) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+          {[Users, FolderKanban, Calendar].map((Icon, i) => (
+            <StatsCard key={i} label="" value="" icon={Icon} loading />
+          ))}
+        </div>
+        <div className="card px-6 py-5 space-y-4">
+          <Skeleton className="h-3 w-36" />
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-4">
+                <Skeleton className="h-3 w-24 shrink-0" />
+                <Skeleton className="h-3 flex-1" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeOrg) return null;
 

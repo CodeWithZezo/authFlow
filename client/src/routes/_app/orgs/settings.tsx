@@ -10,6 +10,7 @@ import { useOrgStore }  from "@/store/org.store";
 import { updateOrgSchema, type UpdateOrgFormValues } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input }  from "@/components/ui/input";
+import { InlineError } from "@/components/shared/index";
 
 export function OrgSettingsPage() {
   const { orgId } = useParams<{ orgId: string }>();
@@ -48,11 +49,7 @@ export function OrgSettingsPage() {
           </p>
         </div>
 
-        {status.updateOrg.error && (
-          <div className="rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {status.updateOrg.error}
-          </div>
-        )}
+        <InlineError message={status.updateOrg.error} />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           <div className="space-y-1.5">

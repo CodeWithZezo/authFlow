@@ -28,6 +28,10 @@
   --color-accent-hover: #e63e10;
   --color-accent-dim: #ff4d1c14;
 
+  /* Error — desaturated brick, distinct from accent and danger */
+  --color-error: #c0392b;
+  --color-error-dim: #c0392b14;
+
   /* Semantic */
   --color-success: #22c55e;
   --color-warning: #f59e0b;

@@ -8,7 +8,7 @@ export function Footer() {
       className="border-t py-10 md:py-12"
       style={{ borderColor: "var(--color-border)", background: "var(--color-bg)" }}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl px-6 sm:px-8">
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:justify-between sm:gap-6">
           {/* Brand */}
           <div className="flex items-center gap-2.5">

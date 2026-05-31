@@ -17,7 +17,7 @@ import {
 export default function Home() {
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen overflow-x-hidden"
       style={{ background: "var(--color-bg)", color: "var(--color-text-primary)" }}
     >
       <Navbar />

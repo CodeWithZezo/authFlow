@@ -8,7 +8,7 @@ import { cn, formatDate, getInitials, truncate } from "@/lib/utils";
 import { type Project, Status, ORG_ROLES_ADMIN } from "@/types";
 import { Button }        from "@/components/ui/button";
 import { Input }         from "@/components/ui/input";
-import { StatusBadge, EmptyState } from "@/components/shared/index";
+import { StatusBadge, EmptyState, Skeleton, SkeletonText } from "@/components/shared/index";
 import { RoleGuard }     from "@/components/shared/RoleGuard";
 
 // ─── Status filter pill ───────────────────────────────────────────────────────
@@ -163,16 +163,15 @@ export function ProjectsListPage() {
       {status.fetchProjects.loading && projects.length === 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="card p-5 space-y-3 animate-pulse">
+            <div key={i} className="card p-5 space-y-3">
               <div className="flex items-start gap-4">
-                <div className="h-11 w-11 rounded-xl bg-[var(--color-surface-3)]" />
+                <Skeleton className="h-11 w-11 shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-32 rounded-full bg-[var(--color-surface-3)]" />
-                  <div className="h-3 w-16 rounded-full bg-[var(--color-surface-3)]" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-16" />
                 </div>
               </div>
-              <div className="h-3 w-full rounded-full bg-[var(--color-surface-3)]" />
-              <div className="h-3 w-3/4 rounded-full bg-[var(--color-surface-3)]" />
+              <SkeletonText lines={2} />
             </div>
           ))}
         </div>

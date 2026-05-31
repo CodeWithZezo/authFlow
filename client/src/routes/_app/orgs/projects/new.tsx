@@ -9,6 +9,7 @@ import { useProjectStore } from "@/store/project.store";
 import { createProjectSchema, type CreateProjectFormValues } from "@/lib/validators";
 import { Button }   from "@/components/ui/button";
 import { Input }    from "@/components/ui/input";
+import { InlineError, FormError } from "@/components/shared/index";
 import { cn }       from "@/lib/utils";
 
 export function CreateProjectPage() {
@@ -53,12 +54,7 @@ export function CreateProjectPage() {
           </div>
         </div>
 
-        {status.createProject.error && (
-          <div className="mb-5 flex items-center gap-3 rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 animate-slide-up">
-            <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
-            {status.createProject.error}
-          </div>
-        )}
+        <InlineError message={status.createProject.error} className="mb-5" />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
           <div className="space-y-1.5">
@@ -66,7 +62,7 @@ export function CreateProjectPage() {
               Project name <span className="text-[var(--color-accent)]">*</span>
             </label>
             <Input {...register("name")} placeholder="My Awesome Project" autoFocus error={errors.name?.message} />
-            {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
+            <FormError message={errors.name?.message} />
           </div>
 
           <div className="space-y-1.5">
@@ -83,7 +79,7 @@ export function CreateProjectPage() {
                 "focus:border-[var(--color-accent)] focus:shadow-[0_0_0_3px_var(--color-accent-dim)]"
               )}
             />
-            {errors.description && <p className="text-xs text-red-400">{errors.description.message}</p>}
+            <FormError message={errors.description?.message} />
           </div>
 
           <div className={cn(

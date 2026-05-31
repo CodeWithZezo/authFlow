@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Mail, Phone, Shield, User, CheckCircle2,
-  Camera, Trash2, Edit2, Save, X, AlertTriangle,
+  Camera, Trash2, Edit2, Save, X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { useOrgStore }  from "@/store/org.store";
 import { updateProfileSchema, type UpdateProfileFormValues } from "@/lib/validators";
 import { getInitials, cn } from "@/lib/utils";
-import { RoleBadge, Spinner } from "@/components/shared/index";
+import { RoleBadge, Spinner, InlineError, FormError } from "@/components/shared/index";
 import { Button }  from "@/components/ui/button";
 import { Input }   from "@/components/ui/input";
 
@@ -132,7 +132,7 @@ function EditProfileForm({ onCancel }: { onCancel: () => void }) {
           <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
           <Input {...register("fullName")} placeholder="Your full name" className="pl-9" autoFocus />
         </div>
-        {errors.fullName && <p className="text-xs text-red-400">{errors.fullName.message}</p>}
+        <FormError message={errors.fullName?.message} />
       </div>
 
       <div className="space-y-1.5">
@@ -141,15 +141,10 @@ function EditProfileForm({ onCancel }: { onCancel: () => void }) {
           <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none" />
           <Input {...register("phone")} placeholder="+1 555 000 0000" className="pl-9" />
         </div>
-        {errors.phone && <p className="text-xs text-red-400">{errors.phone.message}</p>}
+        <FormError message={errors.phone?.message} />
       </div>
 
-      {status.updateProfile.error && (
-        <div className="flex items-center gap-3 rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 animate-slide-up">
-          <AlertTriangle size={14} className="flex-shrink-0" />
-          {status.updateProfile.error}
-        </div>
-      )}
+      <InlineError message={status.updateProfile.error} />
 
       <div className="flex gap-3 pt-1">
         <Button type="button" variant="secondary" className="flex-1" onClick={onCancel}>

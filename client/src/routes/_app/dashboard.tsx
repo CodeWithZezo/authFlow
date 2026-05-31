@@ -10,7 +10,7 @@ import { useOrgStore }  from "@/store/org.store";
 import type { Org } from "@/types";
 import { Button }       from "@/components/ui/button";
 import { StatsCard }    from "@/components/shared/StatsCard";
-import { RoleBadge }    from "@/components/shared/index";
+import { RoleBadge, EmptyState } from "@/components/shared/index";
 import { cn, formatDate, getInitials } from "@/lib/utils";
 
 // ─── Quick-action card ────────────────────────────────────────────────────────
@@ -164,22 +164,20 @@ export function DashboardPage() {
           </div>
 
           {orgs.length === 0 ? (
-            <div className={cn(
-              "card flex flex-col items-center justify-center py-14 text-center",
-            )}>
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-surface-2)] border border-[var(--color-border)]">
-                <Building2 size={22} className="text-[var(--color-text-muted)]" />
-              </div>
-              <p className="font-display text-base font-semibold">No organizations yet</p>
-              <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-                Create your first organization to get started
-              </p>
-              <Link to="/orgs/new" className="mt-5">
-                <Button size="sm">
-                  <Plus size={13} />
-                  Create Organization
-                </Button>
-              </Link>
+            <div className="card">
+              <EmptyState
+                icon={Building2}
+                title="No organizations yet"
+                description="Create your first organization to get started"
+                action={
+                  <Link to="/orgs/new">
+                    <Button size="sm">
+                      <Plus size={13} />
+                      Create Organization
+                    </Button>
+                  </Link>
+                }
+              />
             </div>
           ) : (
             <div className="space-y-2">

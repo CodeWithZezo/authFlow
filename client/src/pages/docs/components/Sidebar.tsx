@@ -280,8 +280,8 @@ function NavItem({ section, isActive, isFocused, showDescription, onSelect }: Na
       <div
         className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md"
         style={{
-          background: highlighted ? "rgba(108,99,255,0.15)" : "var(--color-surface-2)",
-          border: `1px solid ${highlighted ? "rgba(108,99,255,0.25)" : "var(--color-border)"}`,
+          background: highlighted ? "color-mix(in srgb, var(--color-accent) 15%, transparent)" : "var(--color-surface-2)",
+          border: `1px solid ${highlighted ? "color-mix(in srgb, var(--color-accent) 25%, transparent)" : "var(--color-border)"}`,
         }}
       >
         <Icon

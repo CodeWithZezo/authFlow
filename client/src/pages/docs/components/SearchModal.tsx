@@ -135,7 +135,7 @@ function highlight(text: string, query: string): React.ReactNode {
       {text.slice(0, idx)}
       <mark
         style={{
-          background: "rgba(108,99,255,0.25)",
+          background: "color-mix(in srgb, var(--color-accent) 25%, transparent)",
           color: "var(--color-accent)",
           borderRadius: "3px",
           padding: "0 2px",
@@ -344,7 +344,7 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
         style={{
           borderColor: "var(--color-border-2)",
           background: "var(--color-surface)",
-          boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(108,99,255,0.1)",
+          boxShadow: "0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px color-mix(in srgb, var(--color-accent) 10%, transparent)",
         }}
         onKeyDown={handleKeyDown}
       >
@@ -458,9 +458,9 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
                       className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg"
                       style={{
                         background: isFocused
-                          ? "rgba(108,99,255,0.15)"
+                          ? "color-mix(in srgb, var(--color-accent) 15%, transparent)"
                           : "var(--color-surface-3)",
-                        border: `1px solid ${isFocused ? "rgba(108,99,255,0.25)" : "var(--color-border)"}`,
+                        border: `1px solid ${isFocused ? "color-mix(in srgb, var(--color-accent) 25%, transparent)" : "var(--color-border)"}`,
                       }}
                     >
                       <Icon
@@ -500,7 +500,7 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
                                 style={{
                                   background: "var(--color-accent-dim)",
                                   color: "var(--color-accent)",
-                                  border: "1px solid rgba(108,99,255,0.2)",
+                                  border: "1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)",
                                 }}
                               >
                                 current

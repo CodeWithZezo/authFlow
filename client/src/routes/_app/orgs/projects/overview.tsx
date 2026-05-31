@@ -17,7 +17,7 @@ import { cn, formatDate, formatDateTime } from "@/lib/utils";
 import { Button }      from "@/components/ui/button";
 import { Input }       from "@/components/ui/input";
 import { StatsCard }   from "@/components/shared/StatsCard";
-import { StatusBadge } from "@/components/shared/index";
+import { StatusBadge, Skeleton } from "@/components/shared/index";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
@@ -207,6 +207,29 @@ export function ProjectOverviewPage() {
   const { activeProject, members, updateProject, status } = useProjectStore();
   const [showDelete, setShowDelete] = useState(false);
 
+  if (status.fetchProject.loading && !activeProject) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[Users, Shield, Calendar, Clock].map((Icon, i) => (
+            <StatsCard key={i} label="" value="" icon={Icon} loading />
+          ))}
+        </div>
+        <div className="card px-6 py-5 space-y-4">
+          <Skeleton className="h-3 w-36" />
+          <div className="space-y-4">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between gap-4">
+                <Skeleton className="h-3 w-24 shrink-0" />
+                <Skeleton className="h-3 flex-1" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!activeProject) return null;
 
   const isAdmin = useProjectStore.getState().userMembership
@@ -284,7 +307,7 @@ export function ProjectOverviewPage() {
       {/* Quick links */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {[
-          { label: "Project Policy",   desc: "Auth rules and access control",    path: "policy",           icon: Shield,  accent: "#6c63ff" },
+          { label: "Project Policy",   desc: "Auth rules and access control",    path: "policy",           icon: Shield,  accent: "var(--color-accent)" },
           { label: "Password Policy",  desc: "Password strength requirements",   path: "password-policy",  icon: KeyRound, accent: "#22c55e" },
         ].map(({ label, desc, path, icon: Icon, accent }) => (
           <a

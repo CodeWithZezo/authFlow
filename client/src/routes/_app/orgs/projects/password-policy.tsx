@@ -18,7 +18,7 @@ import {
 import { formatDateTime } from "@/lib/utils";
 import { Button }     from "@/components/ui/button";
 import { ToggleRow }  from "@/components/ui/toggle";
-import { Spinner }    from "@/components/shared/index";
+import { Spinner, FormError } from "@/components/shared/index";
 import { cn }         from "@/lib/utils";
 
 // ─── Slider for minLength ────────────────────────────────────────────────────
@@ -124,9 +124,7 @@ function CreatePasswordPolicyForm() {
         onChange={(v) => setValue("requireSpecialChars", v)}
       />
 
-      {status.createPasswordPolicy.error && (
-        <p className="pt-4 text-xs text-red-400">{status.createPasswordPolicy.error}</p>
-      )}
+      <FormError message={status.createPasswordPolicy.error} className="pt-4" />
 
       <div className="pt-5">
         <Button

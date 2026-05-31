@@ -11,6 +11,7 @@ import { createOrgSchema, type CreateOrgFormValues } from "@/lib/validators";
 import { toSlug, cn } from "@/lib/utils";
 import { Button }       from "@/components/ui/button";
 import { Input }        from "@/components/ui/input";
+import { InlineError, FormError } from "@/components/shared/index";
 
 export function CreateOrgPage() {
   const navigate = useNavigate();
@@ -72,12 +73,7 @@ export function CreateOrgPage() {
         </div>
 
         {/* Error */}
-        {status.createOrg.error && (
-          <div className="mb-5 flex items-center gap-3 rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 animate-slide-up">
-            <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
-            {status.createOrg.error}
-          </div>
-        )}
+        <InlineError message={status.createOrg.error} className="mb-5" />
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
 
@@ -92,7 +88,7 @@ export function CreateOrgPage() {
               autoFocus
               error={errors.name?.message}
             />
-            {errors.name && <p className="text-xs text-red-400">{errors.name.message}</p>}
+            <FormError message={errors.name?.message} />
           </div>
 
           {/* Slug */}
@@ -118,7 +114,7 @@ export function CreateOrgPage() {
               />
             </div>
             {errors.slug
-              ? <p className="text-xs text-red-400">{errors.slug.message}</p>
+              ? <FormError message={errors.slug.message} />
               : <p className="text-xs text-[var(--color-text-muted)]">
                   Lowercase letters, numbers, and hyphens only. Cannot be changed later.
                 </p>

@@ -125,10 +125,11 @@ export function Features() {
           <h2
             className="font-display font-bold mb-4"
             style={{
-              fontSize: "clamp(1.9rem, 4vw, 3rem)",
+              fontSize: "clamp(1.6rem, 6vw, 3rem)",
               letterSpacing: "-0.04em",
               lineHeight: 1.05,
               color: "var(--color-text-primary)",
+              textWrap: "balance",
             }}
           >
             Everything you'd expect.

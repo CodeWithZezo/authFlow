@@ -34,10 +34,11 @@ export function Hero() {
             <h1
               className="font-display animate-slide-up mb-6"
               style={{
-                fontSize: "clamp(2.4rem, 6vw, 4.5rem)",
+                fontSize: "clamp(2rem, 9vw, 4.5rem)",
                 fontWeight: 800,
                 letterSpacing: "-0.04em",
                 lineHeight: 1.05,
+                textWrap: "balance",
                 animationDelay: "60ms",
                 animationFillMode: "both",
               }}
@@ -103,7 +104,7 @@ export function Hero() {
 
           {/* ── Right: terminal panel ── */}
           <div
-            className="animate-slide-up"
+            className="min-w-0 animate-slide-up"
             style={{ animationDelay: "240ms", animationFillMode: "both" }}
           >
             <div
@@ -127,9 +128,9 @@ export function Hero() {
               </div>
 
               {/* Code */}
-              <div className="overflow-x-auto p-5 md:p-7">
+              <div className="min-w-0 overflow-x-auto p-4 md:p-7">
                 <pre
-                  className="text-[11px] md:text-[13px] leading-7 min-w-[420px]"
+                  className="text-[11px] md:text-[13px] leading-7 min-w-0"
                   style={{ fontFamily: "var(--font-mono)" }}
                 >
                   <div>{T.cm("// 1. Create your organization")}</div>

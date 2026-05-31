@@ -11,6 +11,7 @@ import { useMockStore } from "@/store/mock.store";
 import { signupSchema, type SignupFormValues } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { InlineError, FormError } from "@/components/shared/index";
 import { cn } from "@/lib/utils";
 
 // ─── Password strength rules ────────────────────────────────────────────────
@@ -116,12 +117,7 @@ export function SignupPage() {
       </div>
 
       {/* Error banner */}
-      {status.signup.error && (
-        <div className="flex items-center gap-3 rounded-[var(--radius)] border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400 animate-slide-up">
-          <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-red-400" />
-          {status.signup.error}
-        </div>
-      )}
+      <InlineError message={status.signup.error} />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 sm:space-y-6" noValidate>
 
@@ -139,7 +135,7 @@ export function SignupPage() {
               className="pl-9"
             />
           </div>
-          {errors.fullName && <p className="text-xs text-red-400">{errors.fullName.message}</p>}
+          <FormError message={errors.fullName?.message} />
         </div>
 
         {/* Email */}
@@ -156,7 +152,7 @@ export function SignupPage() {
               className="pl-9"
             />
           </div>
-          {errors.email && <p className="text-xs text-red-400">{errors.email.message}</p>}
+          <FormError message={errors.email?.message} />
         </div>
 
         {/* Phone (optional) */}
@@ -176,7 +172,7 @@ export function SignupPage() {
               className="pl-9"
             />
           </div>
-          {errors.phone && <p className="text-xs text-red-400">{errors.phone.message}</p>}
+          <FormError message={errors.phone?.message} />
         </div>
 
         {/* Password */}
@@ -201,7 +197,7 @@ export function SignupPage() {
               {showPwd ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
-          {errors.password && <p className="text-xs text-red-400">{errors.password.message}</p>}
+          <FormError message={errors.password?.message} />
           <PasswordStrength password={password ?? ""} />
         </div>
 
@@ -227,9 +223,7 @@ export function SignupPage() {
               {showConfirm ? <EyeOff size={15} /> : <Eye size={15} />}
             </button>
           </div>
-          {errors.confirmPassword && (
-            <p className="text-xs text-red-400">{errors.confirmPassword.message}</p>
-          )}
+          <FormError message={errors.confirmPassword?.message} />
         </div>
 
         {/* Terms notice */}

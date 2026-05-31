@@ -15,7 +15,7 @@ import { ToggleRow } from "@/components/ui/toggle";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import { Spinner } from "@/components/shared/index";
+import { Spinner, FormError } from "@/components/shared/index";
 
 // ─── Multi-check pill group ────────────────────────────────────────────────
 function PillGroup<T extends string>({
@@ -189,7 +189,7 @@ function PolicyForm({
         renderLabel={(s) => s.charAt(0).toUpperCase() + s.slice(1)}
       />
 
-      {error && <p className="pt-4 text-xs text-red-400">{error}</p>}
+      <FormError message={error} className="pt-4" />
 
       <div className="flex gap-3 pt-5">
         {onDelete && (

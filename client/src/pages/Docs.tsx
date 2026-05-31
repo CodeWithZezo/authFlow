@@ -794,7 +794,7 @@ const { user } = await res.json();
                 style={{
                   color: "var(--color-accent)",
                   background: "var(--color-accent-dim)",
-                  borderColor: "rgba(108,99,255,0.2)",
+                  borderColor: "color-mix(in srgb, var(--color-accent) 20%, transparent)",
                 }}
               >
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
@@ -876,7 +876,7 @@ const { user } = await res.json();
               {[
                 ["Runtime", "Node.js 18+", "#22c55e"],
                 ["Language", "TypeScript", "#38bdf8"],
-                ["Framework", "Express.js", "#6c63ff"],
+                ["Framework", "Express.js", "var(--color-accent)"],
                 ["Database", "MongoDB (Mongoose)", "#22c55e"],
                 ["Auth", "JWT — httpOnly cookies", "#f59e0b"],
                 ["Password Hashing", "bcrypt · 10 salt rounds", "#a78bfa"],
@@ -941,7 +941,7 @@ const { user } = await res.json();
                   action: "Create an Organization",
                   endpoint: "POST /api/v1/organizations",
                   note: "The creating user must have isVerified = true.",
-                  accent: "#6c63ff",
+                  accent: "var(--color-accent)",
                 },
                 {
                   step: 2,
@@ -2394,7 +2394,7 @@ const { avatarUrl } = await res.json();`}
             id="examples"
             title="Code Examples"
             icon={ArrowRight}
-            accent="#6c63ff"
+            accent="var(--color-accent)"
           >
             <div className="mb-4 flex flex-wrap gap-2">
               {exampleKeys.map((key) => (
