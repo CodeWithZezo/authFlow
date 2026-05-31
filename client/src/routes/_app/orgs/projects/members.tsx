@@ -223,11 +223,13 @@ function MemberRow({ membership, currentUserId }: { membership: ProjectMembershi
         <div className="relative flex justify-end">
           <button
             onClick={() => setMenuOpen((v) => !v)}
+            aria-label={`Open options for ${displayName}`}
+            aria-expanded={menuOpen}
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-lg",
               "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]",
               "hover:bg-[var(--color-surface-3)] transition-all",
-              "opacity-0 group-hover:opacity-100"
+              "opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
             )}
           >
             <MoreHorizontal size={15} />

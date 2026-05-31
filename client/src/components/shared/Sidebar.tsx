@@ -31,8 +31,10 @@ function NavItem({ to, icon: Icon, label, onNavigate }: NavItemProps) {
     <Link
       to={to}
       onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
       className={cn(
         "nav-item group relative",
+        "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2",
         active
           ? "nav-item-active"
           : "hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text-primary)]"
@@ -190,6 +192,7 @@ function UserSection() {
           onClick={handleLogout}
           disabled={status.logout.loading}
           title="Sign out"
+          aria-label="Sign out"
           className={cn(
             "flex h-7 w-7 shrink-0 items-center justify-center",
             "text-[var(--color-text-muted)] hover:text-red-400",
@@ -251,6 +254,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         {onClose && (
           <button
             onClick={onClose}
+            aria-label="Close navigation"
             className="lg:hidden flex h-8 w-8 items-center justify-center text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-2)] transition-colors"
           >
             <X size={16} />
@@ -259,7 +263,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       </div>
 
       {/* Scrollable nav area */}
-      <div className="flex flex-1 flex-col overflow-y-auto px-3 py-4 gap-0.5">
+      <nav aria-label="Main navigation" className="flex flex-1 flex-col overflow-y-auto px-3 py-4 gap-0.5">
 
         {/* Org switcher */}
         <div className="mb-4">
@@ -295,10 +299,11 @@ export function Sidebar({ onClose }: SidebarProps) {
             <RoleBadge role={userMembership.role} />
           </div>
         )}
-      </div>
+      </nav>
 
       {/* User section at bottom */}
       <UserSection />
     </aside>
   );
 }
+

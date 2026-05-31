@@ -135,7 +135,7 @@ export function ProjectLayout() {
         </div>
 
         {/* Tab bar — scrollable on mobile */}
-        <div className="mt-4 sm:mt-5 flex gap-1 border-t border-[var(--color-border)] pt-3 sm:pt-4 overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-none">
+        <nav aria-label="Project sections" className="mt-4 sm:mt-5 flex gap-1 border-t border-[var(--color-border)] pt-3 sm:pt-4 overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-none">
           {TABS.map((tab) => {
             if (tab.path === "settings" && !isAdmin) return null;
             const active = activeTab === tab.path;
@@ -143,9 +143,11 @@ export function ProjectLayout() {
               <Link
                 key={tab.path}
                 to={`/orgs/${orgId}/projects/${projectId}/${tab.path}`}
+                aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-1.5 sm:gap-2 rounded-[var(--radius)] px-2.5 sm:px-3 py-2",
                   "text-sm font-medium transition-all duration-150 whitespace-nowrap flex-shrink-0",
+                  "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2",
                   active
                     ? "bg-[var(--color-accent-dim)] text-[var(--color-text-primary)] border border-[var(--color-accent)]/20"
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]"
@@ -156,7 +158,7 @@ export function ProjectLayout() {
               </Link>
             );
           })}
-        </div>
+        </nav>
       </div>
 
       {/* ── Page content ───────────────────────────────────────────────── */}

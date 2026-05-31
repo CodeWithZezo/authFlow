@@ -31,6 +31,7 @@ export function AccountLayout() {
               className={({ isActive }) =>
                 cn(
                   "flex items-center gap-2 px-3 py-2 rounded-[var(--radius)] text-sm font-medium whitespace-nowrap transition-all flex-shrink-0",
+                  "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2",
                   isActive
                     ? "bg-[var(--color-accent-dim)] text-[var(--color-text-primary)] border border-[var(--color-accent)]/20"
                     : "text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-surface-2)]"
@@ -56,6 +57,7 @@ export function AccountLayout() {
               className={({ isActive }) =>
                 cn(
                   "nav-item",
+                  "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2",
                   isActive
                     ? "nav-item-active"
                     : "hover:bg-[var(--color-surface-2)] hover:text-[var(--color-text-primary)]"

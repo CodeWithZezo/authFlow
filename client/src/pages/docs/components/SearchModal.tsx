@@ -382,6 +382,7 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
           {query && (
             <button
               onClick={() => setQuery("")}
+              aria-label="Clear search"
               className="flex-shrink-0 rounded p-1 transition-colors hover:bg-[var(--color-surface-2)]"
             >
               <X size={13} style={{ color: "var(--color-text-muted)" }} />
@@ -455,7 +456,7 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
                     data-idx={i}
                     onClick={() => handleSelect(r)}
                     onMouseEnter={() => setFocusedIdx(i)}
-                    className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-all"
+                    className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-all focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                     style={{
                       background: isFocused
                         ? "var(--color-surface-2)"
@@ -463,7 +464,6 @@ export function SearchModal({ open, onClose, onNavigate, activeSlug }: SearchMod
                       border: isFocused
                         ? "1px solid var(--color-border)"
                         : "1px solid transparent",
-                      outline: "none",
                     }}
                   >
                     {/* Icon */}

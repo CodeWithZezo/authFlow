@@ -139,22 +139,28 @@ export function Topbar({ onMenuToggle, menuOpen }: TopbarProps) {
         </button>
 
         {/* Search icon-only on mobile */}
-        <button className={cn(
-          "sm:hidden flex h-9 w-9 items-center justify-center",
-          "text-text-muted hover:text-text-primary",
-          "hover:bg-surface-2 transition-all duration-150",
-          "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
-        )}>
+        <button
+          aria-label="Search"
+          className={cn(
+            "sm:hidden flex h-9 w-9 items-center justify-center",
+            "text-text-muted hover:text-text-primary",
+            "hover:bg-surface-2 transition-all duration-150",
+            "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+          )}
+        >
           <Search size={16} />
         </button>
 
         {/* Notifications */}
-        <button className={cn(
-          "relative flex h-9 w-9 items-center justify-center",
-          "text-text-muted hover:text-text-primary",
-          "hover:bg-surface-2 transition-all duration-150",
-          "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
-        )}>
+        <button
+          aria-label="Notifications"
+          className={cn(
+            "relative flex h-9 w-9 items-center justify-center",
+            "text-text-muted hover:text-text-primary",
+            "hover:bg-surface-2 transition-all duration-150",
+            "focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
+          )}
+        >
           <Bell size={16} />
           <span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-accent animate-[pulse-glow_2s_ease-in-out_infinite]" />
         </button>
@@ -163,6 +169,7 @@ export function Topbar({ onMenuToggle, menuOpen }: TopbarProps) {
         {user && (
           <Link
             to="/account/profile"
+            aria-label={`${user.fullName} – account settings`}
             className="focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
           >
             <div className={cn(

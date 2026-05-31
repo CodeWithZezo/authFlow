@@ -245,7 +245,8 @@ function NavItem({ section, isActive, isFocused, showDescription, onSelect }: Na
     <button
       data-slug={section.slug}
       onClick={onSelect}
-      className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-all"
+      aria-current={isActive ? "page" : undefined}
+      className="flex w-full items-start gap-2.5 rounded-lg px-3 py-2 text-left transition-all focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
       style={{
         background: isActive
           ? "var(--color-accent-dim)"
@@ -255,7 +256,6 @@ function NavItem({ section, isActive, isFocused, showDescription, onSelect }: Na
         border: isActive
           ? "1px solid rgba(108,99,255,0.2)"
           : "1px solid transparent",
-        outline: "none",
         cursor: "pointer",
       }}
       onMouseEnter={(e) => {
