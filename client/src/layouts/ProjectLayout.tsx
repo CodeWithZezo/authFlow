@@ -97,7 +97,7 @@ export function ProjectLayout() {
           <div className={cn(
             "flex h-11 w-11 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-2xl",
             "bg-gradient-to-br text-white text-lg sm:text-xl font-bold shadow-[var(--shadow)]",
-            gradientClass
+            colorClass
           )}>
             {getInitials(activeProject.name)}
           </div>

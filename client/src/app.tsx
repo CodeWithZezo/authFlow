@@ -5,6 +5,7 @@ import { Toaster } from "sonner";
 
 import { AuthLayout }     from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
+import { OfflineScreen }  from "@/components/shared/OfflineScreen";
 import  Home  from "./pages/Home";
 
 const LoginPage  = lazy(() => import("@/routes/_auth/login").then(m  => ({ default: m.LoginPage })));
@@ -115,6 +116,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
 
+      <OfflineScreen />
       <Toaster
         position="bottom-right"
         theme="dark"

@@ -275,7 +275,6 @@ function NavItem({ section, isActive, isFocused, showDescription, onSelect }: Na
           (e.currentTarget as HTMLButtonElement).style.background = "transparent";
         }
       }}
-      aria-current={isActive ? "page" : undefined}
     >
       <div
         className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md"
