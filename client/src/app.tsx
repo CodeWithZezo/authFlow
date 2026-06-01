@@ -5,9 +5,10 @@ import { Toaster } from "sonner";
 
 import { AuthLayout }     from "@/layouts/AuthLayout";
 import { ProtectedRoute } from "@/components/shared/ProtectedRoute";
-import { LoginPage }  from "@/routes/_auth/login";
-import { SignupPage } from "@/routes/_auth/signup";
 import  Home  from "./pages/Home";
+
+const LoginPage  = lazy(() => import("@/routes/_auth/login").then(m  => ({ default: m.LoginPage })));
+const SignupPage = lazy(() => import("@/routes/_auth/signup").then(m => ({ default: m.SignupPage })));
 
 // Docs — lazy loaded
 const DocsPage = lazy(() =>
@@ -69,8 +70,8 @@ export default function App() {
         {/* ── Auth (public) ── */}
         <Route element={<AuthLayout />}>
 
-          <Route path="login"  element={<LoginPage />} />
-          <Route path="signup" element={<SignupPage />} />
+          <Route path="login"  element={<S><LoginPage /></S>} />
+          <Route path="signup" element={<S><SignupPage /></S>} />
         </Route>
 
         {/* ── Protected ── */}
