@@ -178,14 +178,14 @@ function buildComponents(): Components {
       return (
         <div
           className="my-5 overflow-hidden rounded-xl border"
-          style={{ borderColor: "var(--color-border)", background: "#1a1b26" }}
+          style={{ borderColor: "var(--color-border)", background: "var(--color-surface)" }}
         >
           {/* Header */}
           <div
             className="flex items-center justify-between border-b px-4 py-2"
             style={{
               borderColor: "var(--color-border)",
-              background: "var(--color-surface)",
+              background: "var(--color-surface-2)",
             }}
           >
             <div className="flex items-center gap-1.5">
@@ -399,7 +399,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
     <article style={{ maxWidth: "72ch", width: "100%" }}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[rehypeSlug, [rehypeHighlight, { detect: true }]]}
+        rehypePlugins={[rehypeSlug, rehypeHighlight]}
         components={components}
       >
         {content}

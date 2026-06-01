@@ -335,6 +335,15 @@ mark {
   }
 }
 
+/* ─── Highlight.js reset ────────────────────────────────────────────────────── */
+/* atom-one-dark.css sets its own background and padding; our <pre> wrapper owns those. */
+.hljs,
+pre code.hljs {
+  background: transparent !important;
+  padding: 0 !important;
+  overflow-x: visible !important;
+}
+
 /* Prevent iOS input zoom */
 @media screen and (max-width: 767px) {
   input[type="text"],
